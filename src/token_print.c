@@ -34,6 +34,7 @@ void token_print(Token token){
     case TOKEN_STRING:
         printf("<string> \"");
         print_aux_cstr(token.data);
+        printf("\"");
         break;
     case TOKEN_SEMICOLON:
         printf(";");

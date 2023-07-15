@@ -44,6 +44,7 @@ int add_type(Type type);
 int add_expression(Expression expression);
 int add_statement_from_existing(int expression_index);
 int add_statement_from_new(Expression expression);
+int add_operands2(int a, int b);
 int add_global(Global global);
 bool aux_cstr_equals(int a, int b);
 void print_aux_cstr(int index);

@@ -7,14 +7,17 @@
 #include "../include/token_print.h"
 #include "../include/type_print.h"
 #include "../include/global_print.h"
+#include "../include/expression.h"
 
 int parse_i = 0;
 bool had_parse_error = false;
 
 static void instead_got(){
-    printf("  Instead got: `");
-    token_print(tokens[parse_i]);
-    printf("`\n");
+    if(parse_i < num_tokens){
+        printf("  Instead got: `");
+        token_print(tokens[parse_i]);
+        printf("`\n");
+    }
 }
 
 static void stop_parsing(){
@@ -23,11 +26,15 @@ static void stop_parsing(){
 }
 
 static bool is_token(TokenKind kind){
-    return tokens[parse_i].kind == kind;
+    return parse_i < num_tokens && tokens[parse_i].kind == kind;
 }
 
 static int current_line(){
-    return tokens[parse_i].line;
+    if(parse_i < num_tokens){
+        return tokens[parse_i].line;
+    } else {
+        return 0;
+    }
 }
 
 static int eat_word(){
@@ -41,7 +48,7 @@ static int eat_int(){
 }
 
 static bool eat_token(TokenKind kind){
-    if(tokens[parse_i].kind == kind){
+    if(parse_i < num_tokens && tokens[parse_i].kind == kind){
         parse_i++;
         return true;
     } else {
@@ -132,11 +139,116 @@ static Type parse_type(){
     return type;
 }
 
+static bool is_declaration(){
+    // Returns whether next statement during parsing is a declaration.
+    // Trys to match current token parsing context against `TypeName[1][2][3][4] name`-like sequence.
+    // If a match, then a declaration should be parsed.
+
+    int prev_parse_i = parse_i;
+    bool ok = eat_token(TOKEN_WORD);
+
+    for(int i = 1; ok && is_token(TOKEN_OPEN_BRACKET); i++){
+        if(
+            !eat_token(TOKEN_OPEN_BRACKET)
+         || !eat_token(TOKEN_INT)
+         || !eat_token(TOKEN_CLOSE_BRACKET)
+         || i > 4
+        ){
+            ok = false;
+            break;
+        }
+    }
+
+    ok = ok && is_token(TOKEN_WORD);
+    parse_i = prev_parse_i;
+    return ok;
+}
+
+static bool eat_semicolon(){
+    if(!eat_token(TOKEN_SEMICOLON)){
+        printf("error on line %d: Expected ';' after statement\n", current_line());
+        stop_parsing();
+        return false;
+    } else {
+        return true;
+    }
+}
+
+static int add_statement_else_print_error(Expression expression){
+    int statement = add_statement_from_new(expression);
+
+    if(statement >= STATEMENTS_CAPACITY){
+        printf("Out of memory: Exceeded maximum number of total statements\n");
+        stop_parsing();
+    }
+
+    return statement;
+}
+
+static int parse_function_body(Function function){
+    // { ... }
+    //       ^ ending token index
+    //   ^  starting token index
+
+    while(parse_i < num_tokens && !is_token(TOKEN_END)){
+        if(is_declaration()){
+            Type type = parse_type();
+            if(had_parse_error) return 1;
+
+            int variable_type = add_type(type);
+            if(variable_type >= TYPES_CAPACITY){
+                printf("Out of memory: Exceeded maximum number of types\n");
+                return 1;
+            }
+
+            if(!is_token(TOKEN_WORD)){
+                printf("error on line %d: Expected variable name after type\n", current_line());
+                instead_got();
+                return 1;
+            }
+
+            int variable_name = eat_word();
+            int ops = add_operands2(variable_type, variable_name);
+            if(ops >= OPERANDS_CAPACITY){
+                stop_parsing();
+                return 1;
+            }
+
+            if(!eat_semicolon()){
+                return 1;
+            }
+
+            Expression declaration = (Expression){
+                .kind = EXPRESSION_DECLARE,
+                .ops = ops,
+            };
+
+            if(add_statement_else_print_error(declaration) >= STATEMENTS_CAPACITY){
+                return 1;
+            }
+        } else {
+            printf("error on line %d: Expected statement\n", current_line());
+            instead_got();
+            stop_parsing();
+        }
+
+        if(had_parse_error) break;
+    }
+
+    return (int) had_parse_error;
+}
+
 int parse(){
     while(parse_i < num_tokens){
         // Parse type
         Type type = parse_type();
         if(had_parse_error) break;
+
+        int symbol_type = add_type(type);
+        if(symbol_type >= TYPES_CAPACITY){
+            printf("Out of memory: Exceeded maximum number of types\n");
+            return 1;
+        }
 
         if(!is_token(TOKEN_WORD)){
             printf("error on line %d: Expected function name after type\n", current_line());
@@ -149,16 +261,15 @@ int parse(){
         if(eat_token(TOKEN_SEMICOLON)){
             // Is a global variable
 
-            int global_type = add_type(type);
-            if(global_type >= GLOBALS_CAPACITY){
+            int global = add_global((Global){
+                .name = symbol_name,
+                .type = symbol_type,
+            });
+
+            if(global >= GLOBALS_CAPACITY){
                 printf("Out of memory: Exceeded maximum number of global variables\n");
                 return 1;
             }
-
-            add_global((Global){
-                .name = symbol_name,
-                .type = global_type,
-            });
             continue;
         }
 
@@ -182,16 +293,24 @@ int parse(){
             break;
         }
 
+        int begin = num_statements;
+
+        Function function = {
+            .name = symbol_name,
+            .arity = 0,
+            .begin = begin,
+            .num_stmts = 0,
+            .return_type = symbol_type,
+        };
+
+        if(parse_function_body(function)) break;
+        function.num_stmts = num_statements - begin;
+
         if(!eat_token(TOKEN_END)){
             printf("error on line %d: Expected '}' after function body\n", current_line());
             instead_got();
             break;
         }
-    }
-
-    for(int i = 0; i < num_globals; i++){
-        global_print(globals[i]);
-        printf("\n");
     }
 
     return (int) had_parse_error;

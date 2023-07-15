@@ -119,7 +119,7 @@ LexedToken lex_main(){
         return result;
     }
 
-    printf("error:%d: %c %d\n", line_number, code_buffer[0], code_buffer[0]);
+    printf("error on line %d: Unknown character `%c` (ASCII %d)\n", line_number, code_buffer[0], code_buffer[0]);
     result.token.kind = TOKEN_ERROR;
     result.consumed = 1;
     return result;
@@ -167,6 +167,8 @@ int lex(){
                     aux[num_aux++] = code_buffer[i];
                 }
                 aux[num_aux++] = '\0';
+            } else if(token.kind == TOKEN_ERROR){
+                return 1;
             }
 
             for(int i = lexed.consumed; i < code_buffer_length; i++){

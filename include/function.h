@@ -5,11 +5,20 @@
 #include "type.h"
 
 typedef struct {
+    // Name of function
     unsigned int name;
+    
+    // Number of parameters this function takes
+    // NOTE: Exact parameters can be determined by looking at the first `arity` statements (which will be declaration statements)
     unsigned char arity;
-    Type args[16];
-    Type return_type;
+
+    // Return type of function
+    int return_type;
+
+    // Beginning of functions
     unsigned int begin;
+
+    // Number of statements in function
     unsigned int num_stmts;
 } Function;
 

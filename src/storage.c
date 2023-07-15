@@ -82,6 +82,19 @@ int add_statement_from_new(Expression expression){
     }
 }
 
+int add_operands2(int a, int b){
+    if(num_operands < OPERANDS_CAPACITY - 2){
+        int result = num_operands;
+        operands[num_operands] = a;
+        operands[num_operands + 1] = b;
+        num_operands += 2;
+        return result;
+    } else {
+        printf("Out of memory: Exceeded maximum number of total expression operands\n");
+        return OPERANDS_CAPACITY;
+    }
+}
+
 int add_global(Global global){
     if(num_globals < GLOBALS_CAPACITY){
         globals[num_globals] = global;
@@ -92,15 +105,12 @@ int add_global(Global global){
 }
 
 bool aux_cstr_equals(int a, int b){
-    int i = 0;
-    while(true){
-        if(aux[a + i] != aux[b + i]){
-            return false;
-        }
+    for(int i = 0; aux[a + i] == aux[b + i]; i++){
         if(aux[a + i] == '\0'){
             return true;
         }
     }
+    return false;
 }
 
 void print_aux_cstr(int index){

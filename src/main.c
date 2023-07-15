@@ -15,11 +15,13 @@
 int main(void){
     if(lex()) return 1;
 
+    /*
     for(int i = 0; i < num_tokens; i++){
         token_print(tokens[i]);
         printf("\n");
     }
     printf("\n");
+    */
 
     if(parse()) return 1;
 

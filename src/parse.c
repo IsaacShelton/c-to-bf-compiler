@@ -6,6 +6,7 @@
 #include "../include/storage.h"
 #include "../include/token_print.h"
 #include "../include/type_print.h"
+#include "../include/global_print.h"
 
 int parse_i = 0;
 bool had_parse_error = false;
@@ -137,27 +138,27 @@ int parse(){
         Type type = parse_type();
         if(had_parse_error) break;
 
-
         if(!is_token(TOKEN_WORD)){
             printf("error on line %d: Expected function name after type\n", current_line());
             instead_got();
             break;
         }
 
-        int function_name = eat_word();
+        int symbol_name = eat_word();
 
         if(eat_token(TOKEN_SEMICOLON)){
-            // Is actually global variable, not function
-            printf("Global Variable!!!!\n");
-            printf("Got type: `");
-            type_print(type);
-            printf("`\n");
+            // Is a global variable
 
-            printf("Got name: ");
-            print_aux_cstr(function_name);
-            printf("\n");
+            int global_type = add_type(type);
+            if(global_type >= GLOBALS_CAPACITY){
+                printf("Out of memory: Exceeded maximum number of global variables\n");
+                return 1;
+            }
 
-            // TODO: Add global variable
+            add_global((Global){
+                .name = symbol_name,
+                .type = global_type,
+            });
             continue;
         }
 
@@ -186,6 +187,11 @@ int parse(){
             instead_got();
             break;
         }
+    }
+
+    for(int i = 0; i < num_globals; i++){
+        global_print(globals[i]);
+        printf("\n");
     }
 
     return (int) had_parse_error;

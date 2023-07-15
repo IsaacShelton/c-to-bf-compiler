@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+/bin/cat $1 | ./brainlovec > $1.bf
+! grep '[^][\+\<\>\.\,\-]' $1.bf
+exit $?
+

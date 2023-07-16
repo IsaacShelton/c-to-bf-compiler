@@ -47,6 +47,11 @@ static int eat_int(){
     return tokens[parse_i++].data;
 }
 
+static int eat_string(){
+    // Expects `is_token(TOKEN_STRING)` to be true
+    return tokens[parse_i++].data;
+}
+
 static bool eat_token(TokenKind kind){
     if(parse_i < num_tokens && tokens[parse_i].kind == kind){
         parse_i++;
@@ -185,6 +190,52 @@ static int add_statement_else_print_error(Expression expression){
     return statement;
 }
 
+static Expression parse_expression_print(){
+    Expression expression = (Expression){
+        .kind = EXPRESSION_PRINT,
+        .ops = 0,
+    };
+
+    if(!is_token(TOKEN_STRING)){
+        printf("error on line %d: Expected string after '(' in print statement\n", current_line());
+        instead_got();
+        stop_parsing();
+        return expression;
+    }
+
+    expression.ops = eat_string();
+
+    if(!eat_token(TOKEN_CLOSE)){
+        printf("error on line %d: Expected ')' after string in print statement\n", current_line());
+        instead_got();
+        stop_parsing();
+        return expression;
+    }
+
+    return expression;
+}
+
+static Expression parse_expression(){
+    Expression expression = (Expression){
+        .kind = 0,
+        .ops = 0,
+    };
+
+    if(is_token(TOKEN_WORD)){
+        int name = eat_word();
+
+        if(eat_token(TOKEN_OPEN)){
+            if(aux_cstr_equals_print(name)){
+                return parse_expression_print();
+            }
+        }
+    }
+    
+    printf("error on line %d: Expected expression\n", current_line());
+    stop_parsing();
+    return expression;
+}
+
 static int parse_function_body(Function function){
     // { ... }
     //       ^ ending token index
@@ -227,12 +278,16 @@ static int parse_function_body(Function function){
                 return 1;
             }
         } else {
-            printf("error on line %d: Expected statement\n", current_line());
-            instead_got();
-            stop_parsing();
-        }
+            Expression expression = parse_expression();
+            if(had_parse_error) return 1;
 
-        if(had_parse_error) break;
+            if(
+               !eat_semicolon()
+            || add_statement_else_print_error(expression) >= STATEMENTS_CAPACITY
+            ){
+                return 1;
+            }
+        }
     }
 
     return (int) had_parse_error;
@@ -305,6 +360,13 @@ int parse(){
 
         if(parse_function_body(function)) break;
         function.num_stmts = num_statements - begin;
+
+        if(num_functions >= FUNCTIONS_CAPACITY){
+            printf("Out of memory: Exceeded maximum number of functions\n");
+            break;
+        }
+
+        functions[num_functions++] = function;
 
         if(!eat_token(TOKEN_END)){
             printf("error on line %d: Expected '}' after function body\n", current_line());

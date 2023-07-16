@@ -15,7 +15,7 @@ typedef struct {
     // Return type of function
     int return_type;
 
-    // Beginning of functions
+    // Beginning of function's statements
     unsigned int begin;
 
     // Number of statements in function

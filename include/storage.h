@@ -47,6 +47,8 @@ int add_statement_from_new(Expression expression);
 int add_operands2(int a, int b);
 int add_global(Global global);
 bool aux_cstr_equals(int a, int b);
+bool aux_cstr_equals_print(int a);
+bool aux_cstr_equals_main(int a);
 void print_aux_cstr(int index);
 
 #endif // _BRAINLOVE_STORAGE_H

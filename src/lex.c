@@ -182,18 +182,35 @@ int lex(){
             tokens[num_tokens - 1].data = num_aux;
 
             int read = 0;
+            bool escape = false;
 
             for(; read < code_buffer_length; read++){
                 char string_c = code_buffer[read];
 
-                if(string_c == '"'){
+                if(string_c == '\n'){
+                    line_number++;
+                }
+
+                if(escape){
+                    escape = false;
+
+                    if(string_c == 'n'){
+                        string_c = '\n';
+                    } else if(string_c == '\t'){
+                        string_c = '\t';
+                    }
+                } else if(string_c == '"'){
                     break;
+                } else if(string_c == '\\'){
+                    escape = true;
+                    continue;
                 }
 
                 if(num_aux == AUX_CAPACITY){
                     printf("Out of memory: Auxiliary memory used up\n");
                     return 1;
                 }
+
                 aux[num_aux++] = string_c;
             }
 
@@ -225,9 +242,6 @@ int lex(){
             } else {
                 read += 1;
                 for(int i = read; i < code_buffer_length; i++){
-                    if(code_buffer[i - read] == '\n'){
-                        line_number++;
-                    }
                     code_buffer[i - read] = code_buffer[i];
                 }
                 code_buffer_length -= read;

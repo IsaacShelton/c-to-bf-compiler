@@ -1,6 +1,11 @@
 #!/usr/bin/env sh
 
-/bin/cat $1 | ./brainlovec > $1.bf
-! grep '[^][\+\<\>\.\,\-]' $1.bf
-exit $?
+/bin/cat $1 | ./brainlovec > $1.min.bf
+! grep '[^][\+\<\>\.\,0-9\-]' $1.min.bf
+if [ "$?" = "0" ]; then
+    /bin/cat $1.min.bf | ./subprograms/decompress > $1.bf
+else
+    /bin/rm -f $1.min.bf
+fi
+exit $exit_code
 

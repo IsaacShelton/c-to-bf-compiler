@@ -113,6 +113,25 @@ bool aux_cstr_equals(int a, int b){
     return false;
 }
 
+bool aux_cstr_equals_print(int a){
+    return a < AUX_CAPACITY - 5
+        && aux[a    ] == 'p'
+        && aux[a + 1] == 'r'
+        && aux[a + 2] == 'i'
+        && aux[a + 3] == 'n'
+        && aux[a + 4] == 't'
+        && aux[a + 5] == '\0';
+}
+
+bool aux_cstr_equals_main(int a){
+    return a < AUX_CAPACITY - 4
+        && aux[a    ] == 'm'
+        && aux[a + 1] == 'a'
+        && aux[a + 2] == 'i'
+        && aux[a + 3] == 'n'
+        && aux[a + 4] == '\0';
+}
+
 void print_aux_cstr(int index){
     for(int i = index; aux[i]; i++){
         putchar(aux[i]);

@@ -1,10 +1,11 @@
 
-#ifndef _BRAINLOVE_TYPE_PRINT_H
-#define _BRAINLOVE_TYPE_PRINT_H
+#ifndef _SMOOCH_TYPE_PRINT_H
+#define _SMOOCH_TYPE_PRINT_H
 
 #include "type.h"
+#include "utypes.h"
 
-void type_print(Type type);
+u0 type_print(Type type);
 
-#endif // _BRAINLOVE_TYPE_PRINT_H
+#endif // _SMOOCH_TYPE_PRINT_H
 

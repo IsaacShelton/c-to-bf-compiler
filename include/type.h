@@ -1,11 +1,13 @@
 
-#ifndef _BRAINLOVE_AST_TYPE_H
-#define _BRAINLOVE_AST_TYPE_H
+#ifndef _SMOOCH_AST_TYPE_H
+#define _SMOOCH_AST_TYPE_H
+
+#include "utypes.h"
 
 typedef struct {
-    unsigned int name;
-    unsigned int dimensions;
+    u32 name;
+    u32 dimensions;
 } Type;
 
-#endif // _BRAINLOVE_AST_TYPE_H
+#endif // _SMOOCH_AST_TYPE_H
 

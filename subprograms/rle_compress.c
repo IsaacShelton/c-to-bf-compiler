@@ -10,7 +10,7 @@ int main(int argc, const char **argv){
         if(c == prev){
             count++;
         } else if(prev){
-            if(count > 1) fprintf(stdout, "%d", count);
+            if(count > 1) printf("%d", count);
             putc(prev, stdout);
             count = 1;
         }
@@ -19,7 +19,7 @@ int main(int argc, const char **argv){
     }
 
     if(prev){
-        if(count > 1) fprintf(stdout, "%d", count);
+        if(count > 1) printf("%d", count);
         putc(prev, stdout);
     }
 

@@ -1,6 +1,8 @@
 
-#ifndef _BRAINLOVE_TOKEN_H
-#define _BRAINLOVE_TOKEN_H
+#ifndef _SMOOCH_TOKEN_H
+#define _SMOOCH_TOKEN_H
+
+#include "utypes.h"
 
 enum {
     TOKEN_NONE,
@@ -16,15 +18,16 @@ enum {
     TOKEN_OPEN_BRACKET,
     TOKEN_CLOSE_BRACKET,
     TOKEN_INT,
+    TOKEN_NEXT,
 };
 
-typedef unsigned char TokenKind;
+typedef u8 TokenKind;
 
 typedef struct {
     TokenKind kind;
-    int data;
-    int line;
+    u24 line;
+    u32 data;
 } Token;
 
-#endif // _BRAINLOVE_TOKEN_H
+#endif // _SMOOCH_TOKEN_H
 

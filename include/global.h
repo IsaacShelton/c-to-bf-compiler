@@ -1,11 +1,13 @@
 
-#ifndef _BRAINLOVE_GLOBAL_H
-#define _BRAINLOVE_GLOBAL_H
+#ifndef _SMOOCH_GLOBAL_H
+#define _SMOOCH_GLOBAL_H
+
+#include "utypes.h"
 
 typedef struct {
-    int name;
-    int type;
+    u32 name;
+    u32 type;
 } Global;
 
-#endif // _BRAINLOVE_GLOBAL_H
+#endif // _SMOOCH_GLOBAL_H
 

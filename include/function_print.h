@@ -1,10 +1,11 @@
 
-#ifndef _BRAINLOVE_FUNCTION_PRINT_H
-#define _BRAINLOVE_FUNCTION_PRINT_H
+#ifndef _SMOOCH_FUNCTION_PRINT_H
+#define _SMOOCH_FUNCTION_PRINT_H
 
+#include "utypes.h"
 #include "function.h"
 
-void function_print(Function function);
+u0 function_print(Function function);
 
-#endif // _BRAINLOVE_FUNCTION_PRINT_H
+#endif // _SMOOCH_FUNCTION_PRINT_H
 

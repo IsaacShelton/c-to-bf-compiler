@@ -1,8 +1,10 @@
 
-#ifndef _BRAINLOVE_LEX_H
-#define _BRAINLOVE_LEX_H
+#ifndef _SMOOCH_LEX_H
+#define _SMOOCH_LEX_H
 
-int lex();
+#include "utypes.h"
 
-#endif // _BRAINLOVE_LEX_H
+u32 lex();
+
+#endif // _SMOOCH_LEX_H
 

@@ -1,9 +1,10 @@
 
-#ifndef _BRAINLOVE_TOKEN_PRINT_H
-#define _BRAINLOVE_TOKEN_PRINT_H
+#ifndef _SMOOCH_TOKEN_PRINT_H
+#define _SMOOCH_TOKEN_PRINT_H
 
 #include "token.h"
+#include "utypes.h"
 
-void token_print(Token token);
+u0 token_print(Token token);
 
-#endif // _BRAINLOVE_TOKEN_PRINT_H
+#endif // _SMOOCH_TOKEN_PRINT_H

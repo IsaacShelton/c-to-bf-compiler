@@ -1,11 +1,15 @@
 
-#ifndef _BRAINLOVE_TYPE_EQUALS_H
-#define _BRAINLOVE_TYPE_EQUALS_H
+#ifndef _SMOOCH_TYPE_EQUALS_H
+#define _SMOOCH_TYPE_EQUALS_H
 
-#include <stdbool.h>
-#include "../include/type.h"
+#include "type.h"
+#include "utypes.h"
 
-bool type_equals(Type a, Type b);
+// NOTE: If using registered types (indices inside of global `types` array),
+//       You should just check if two indicies are equal.
+//       e.g. return_type == u0_type
+// Determines if two `Type` values are equal.
+u1 type_equals(Type a, Type b);
 
-#endif // _BRAINLOVE_TYPE_EQUALS_H
+#endif // _SMOOCH_TYPE_EQUALS_H
 

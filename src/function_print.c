@@ -6,17 +6,30 @@
 #include "../include/type_print.h"
 #include "../include/expression_print.h"
 
-void function_print(Function function){
+u0 function_print(Function function){
     type_print(types[function.return_type]);
     printf(" ");
     print_aux_cstr(function.name);
     printf("(");
+
+    u32 i = 0;
+
+    while(i < function.num_stmts && i < function.arity){
+        expression_print(expressions[statements[function.begin + i]]);
+        i++;
+
+        if(i != function.arity){
+            printf(", ");
+        }
+    }
+
     printf("){\n");
 
-    for(int i = 0; i < function.num_stmts; i++){
+    while(i < function.num_stmts){
         printf("    ");
         expression_print(expressions[statements[function.begin + i]]);
         printf(";\n");
+        i++;
     }
 
     printf("}");

@@ -1,18 +1,18 @@
 
-#ifndef _BRAIN_VARIABLE_FIND_H
-#define _BRAIN_VARIABLE_FIND_H
+#ifndef _SMOOCH_VARIABLE_FIND_H
+#define _SMOOCH_VARIABLE_FIND_H
 
-#include <stdbool.h>
+#include "utypes.h"
 
 typedef struct {
-    int name; // name index in `aux`
-    int type; // type index in `types`
-    int depth; // scope depth, depth of 0 means global, anything else means in a scope
-    int declaration; // index of declaration, (global index if global otherwise statement index)
-    bool defined; // whether defined
+    u32 name; // name index in `aux`
+    u32 type; // type index in `types`
+    u32 depth; // scope depth, depth of 0 means global, anything else means in a scope
+    u32 declaration; // index of declaration, (global index if global otherwise statement index)
+    u1 defined; // whether defined
 } Variable;
 
-Variable variable_find(int function_beginning, int current_statement, int name);
+Variable variable_find(u32 function_beginning, u32 current_statement, u32 name);
 
-#endif // _BRAIN_VARIABLE_FIND_H
+#endif // _SMOOCH_VARIABLE_FIND_H
 

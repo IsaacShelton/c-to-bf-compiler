@@ -12,12 +12,13 @@
 #include "../include/token_print.h"
 #include "../include/function_print.h"
 #include "../include/function_emit.h"
+#include "../include/infer.h"
 
 int main(void){
     if(lex()) return 1;
 
     /*
-    for(int i = 0; i < num_tokens; i++){
+    for(u32 i = 0; i < num_tokens; i++){
         token_print(tokens[i]);
         printf("\n");
     }
@@ -25,9 +26,10 @@ int main(void){
     */
 
     if(parse()) return 1;
+    if(infer()) return 1;
 
     /*
-    for(int i = 0; i < num_functions; i++){
+    for(u32 i = 0; i < num_functions; i++){
         function_print(functions[i]);
         printf("\n");
     }
@@ -36,8 +38,8 @@ int main(void){
     // Write
 
     // Find main function
-    int main_function_index = FUNCTIONS_CAPACITY;
-    for(int i = 0; i < FUNCTIONS_CAPACITY; i++){
+    u32 main_function_index = FUNCTIONS_CAPACITY;
+    for(u32 i = 0; i < FUNCTIONS_CAPACITY; i++){
         if(aux_cstr_equals_main(functions[i].name)){
             main_function_index = i;
             break;

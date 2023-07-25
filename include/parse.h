@@ -1,8 +1,10 @@
 
-#ifndef _BRAINLOVE_PARSE_H
-#define _BRAINLOVE_PARSE_H
+#ifndef _SMOOCH_PARSE_H
+#define _SMOOCH_PARSE_H
 
-int parse();
+#include "utypes.h"
 
-#endif // _BRAINLOVE_PARSE_H
+u32 parse();
+
+#endif // _SMOOCH_PARSE_H
 

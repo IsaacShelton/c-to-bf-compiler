@@ -1,10 +1,11 @@
 
-#ifndef _BRAINLOVE_GLOBAL_PRINT_H
-#define _BRAINLOVE_GLOBAL_PRINT_H
+#ifndef _SMOOCH_GLOBAL_PRINT_H
+#define _SMOOCH_GLOBAL_PRINT_H
 
+#include "utypes.h"
 #include "global.h"
 
-void global_print(Global global);
+u0 global_print(Global global);
 
-#endif // _BRAINLOVE_GLOBAL_PRINT_H
+#endif // _SMOOCH_GLOBAL_PRINT_H
 

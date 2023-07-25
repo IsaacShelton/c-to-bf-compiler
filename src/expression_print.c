@@ -5,7 +5,7 @@
 #include "../include/storage.h"
 #include "../include/type_print.h"
 
-void expression_print(Expression expression){
+u0 expression_print(Expression expression){
     switch(expression.kind){
     case EXPRESSION_DECLARE:
         type_print(types[operands[expression.ops]]);
@@ -14,8 +14,31 @@ void expression_print(Expression expression){
         break;
     case EXPRESSION_PRINT:
         printf("print(\"");
-        print_aux_cstr(expression.ops);
+        print_aux_cstr_escaped(expression.ops);
         printf("\")");
+        break;
+    case EXPRESSION_CALL: {
+            u32 name = operands[expression.ops];
+            u32 arity = operands[expression.ops + 1];
+            print_aux_cstr(name);
+            printf("(");
+            for(u32 i = 0; i < arity; i++){
+                expression_print(expressions[operands[expression.ops + 2 + i]]);
+                if(i + 1 != arity){
+                    printf(", ");
+                }
+            }
+            printf(")");
+        }
+        break;
+    case EXPRESSION_IMPLEMENT_PUT:
+        printf("<implementation of put>");
+        break;
+    case EXPRESSION_INT:
+        printf("%d", expression.ops);
+        break;
+    case EXPRESSION_U8:
+        printf("%du8", expression.ops);
         break;
     default:
         printf("<unknown expression>");

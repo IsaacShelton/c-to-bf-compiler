@@ -1,0 +1,42 @@
+#!/usr/bin/env dash
+
+echo "WARNING: USING DASH"
+self="$(dirname -- "$0")"
+
+if [ ! -f "$1" ]; then
+    echo "ERROR: Input file '$1' does not exist"
+    exit 1
+fi
+
+bf=${1%.smooch}.bf
+rlebf=${1%.smooch}.rlebf
+
+/bin/cat "$1" | "$self/smoochc" > "$rlebf"
+! grep '[^][\+\<\>\.\,0-9\-]' "$rlebf"
+
+if [ "$?" = "0" ]; then
+    if [ "$#" = "2" ]; then
+        ending="$(echo -n "$2" | tail -c 4)"
+
+        if [ "$ending" = ".kbf" ]; then
+            /bin/cat "$rlebf" | "$self/subprograms/rle_decompress" | "$self/subprograms/kiss" > "$2"
+            /bin/rm -f "$rlebf"
+            echo "Wrote kissed brainf*ck file to $2"
+            exit 0
+        else
+            /bin/cat "$rlebf" | "$self/subprograms/rle_decompress" > "$2"
+            /bin/rm -f "$rlebf"
+            echo "Wrote brainf*ck file to $2"
+            exit 0
+        fi
+    fi
+    
+    /bin/cat "$rlebf" | "$self/subprograms/rle_decompress" > "$bf"
+    /bin/rm -f "$rlebf"
+    echo "Wrote brainf*ck file to $bf"
+    exit 0
+else
+    /bin/rm -f "$rlebf"
+    exit 1
+fi
+

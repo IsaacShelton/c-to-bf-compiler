@@ -4,7 +4,7 @@
 #include "../include/storage.h"
 #include "../include/type_print.h"
 
-void global_print(Global global){
+u0 global_print(Global global){
     type_print(types[global.type]);
     printf(" ");
     print_aux_cstr(global.name);

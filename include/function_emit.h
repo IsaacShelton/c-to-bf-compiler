@@ -1,10 +1,11 @@
 
-#ifndef _BRAINLOVE_FUNCTION_EMIT
-#define _BRAINLOVE_FUNCTION_EMIT
+#ifndef _SMOOCH_FUNCTION_EMIT
+#define _SMOOCH_FUNCTION_EMIT
 
+#include "utypes.h"
 #include "function.h"
 
-int function_emit(Function function, int current_cell_index);
+u32 function_emit(Function function, u32 current_cell_index);
 
-#endif // _BRAINLOVE_FUNCTION_EMIT
+#endif // _SMOOCH_FUNCTION_EMIT
 

@@ -8,17 +8,17 @@
 #include "../include/storage.h"
 
 typedef struct {
-    bool ok;
+    u1 ok;
     Token token;
-    int consumed;
+    u32 consumed;
 } LexedToken;
 
 typedef struct {
-    char c;
+    u8 c;
     TokenKind kind;
 } SimpleToken;
 
-SimpleToken simple_tokens[7] = {
+SimpleToken simple_tokens[8] = {
     (SimpleToken){ .c = '{', .kind = TOKEN_BEGIN },
     (SimpleToken){ .c = '}', .kind = TOKEN_END },
     (SimpleToken){ .c = '(', .kind = TOKEN_OPEN },
@@ -26,13 +26,14 @@ SimpleToken simple_tokens[7] = {
     (SimpleToken){ .c = ';', .kind = TOKEN_SEMICOLON },
     (SimpleToken){ .c = '[', .kind = TOKEN_OPEN_BRACKET },
     (SimpleToken){ .c = ']', .kind = TOKEN_CLOSE_BRACKET },
+    (SimpleToken){ .c = ',', .kind = TOKEN_NEXT },
 };
 
-static bool is_ident(char c){
+static u1 is_ident(u8 c){
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || (c >= '0' && c <= '9');
 }
 
-int line_number = 1;
+u32 line_number = 1;
 
 LexedToken lex_main(){
     LexedToken result = (LexedToken){
@@ -51,9 +52,9 @@ LexedToken lex_main(){
     }
 
     // Handle whitespace
-    int whitespace = 0;
-    for(int i = 0; i < code_buffer_length; i++){
-        char c = code_buffer[i];
+    u32 whitespace = 0;
+    for(u32 i = 0; i < code_buffer_length; i++){
+        u8 c = code_buffer[i];
 
         if(c == ' ' || c == '\n' || c == '\t'){
             whitespace++;
@@ -68,8 +69,9 @@ LexedToken lex_main(){
     }
 
     // Handle simple tokens
-    for(int i = 0; i < sizeof simple_tokens / sizeof(SimpleToken); i++){
+    for(u32 i = 0; i < sizeof simple_tokens / sizeof(SimpleToken); i++){
         SimpleToken simple = simple_tokens[i];
+
         if(code_buffer[0] == simple.c){
             result.token.kind = simple.kind;
             result.consumed = 1;
@@ -77,7 +79,7 @@ LexedToken lex_main(){
         }
     }
 
-    char lead = code_buffer[0];
+    u8 lead = code_buffer[0];
 
     // Handle strings
     if(lead == '"'){
@@ -88,15 +90,17 @@ LexedToken lex_main(){
 
     // Handle integers
     if(lead >= '0' && lead <= '9'){
-        result.token.kind = TOKEN_INT;
-        result.token.data = lead - '0';
+        u32 value = lead - '0';
 
-        int i = 1;
+        u32 i = 1;
         lead = code_buffer[i];
         while(lead >= '0' && lead <= '9'){
+            value = 10 * value + lead - '0';
             lead = code_buffer[++i];
         }
 
+        result.token.kind = TOKEN_INT;
+        result.token.data = value;
         result.consumed = i;
         return result;
     }
@@ -104,7 +108,7 @@ LexedToken lex_main(){
     // Handle identifiers
     if(is_ident(lead)){
         result.token.kind = TOKEN_WORD;
-        int i = 1;
+        u32 i = 1;
 
         while(i < code_buffer_length){
             if(is_ident(code_buffer[i])){
@@ -125,8 +129,8 @@ LexedToken lex_main(){
     return result;
 }
 
-int lex(){
-    char c = get();
+u32 lex(){
+    u8 c = get();
 
     // Lex
     while(true){
@@ -146,10 +150,10 @@ int lex(){
                     printf("Out of memory: Too many tokens\n");
                     return 1;
                 }
-                token.line = line_number;
+                token.line = u24_pack(line_number);
                 tokens[num_tokens++] = token;
             } else {
-                for(int i = 0; i < lexed.consumed; i++){
+                for(u32 i = 0; i < lexed.consumed; i++){
                     if(code_buffer[i] == '\n') line_number++;
                 }
             }
@@ -163,7 +167,7 @@ int lex(){
                     return 1;
                 }
 
-                for(int i = 0; i < lexed.consumed; i++){
+                for(u32 i = 0; i < lexed.consumed; i++){
                     aux[num_aux++] = code_buffer[i];
                 }
                 aux[num_aux++] = '\0';
@@ -171,21 +175,22 @@ int lex(){
                 return 1;
             }
 
-            for(int i = lexed.consumed; i < code_buffer_length; i++){
+            for(u32 i = lexed.consumed; i < code_buffer_length; i++){
                 code_buffer[i - lexed.consumed] = code_buffer[i];
             }
             code_buffer_length -= lexed.consumed;
         }
 
         // Special additional code for lexing strings, so they are not limited to code buffer capacity
+        // TODO: Refactor to merge buffer-only and past-buffer cases
         if(token.kind == TOKEN_STRING){
             tokens[num_tokens - 1].data = num_aux;
 
-            int read = 0;
-            bool escape = false;
+            u32 read = 0;
+            u1 escape = false;
 
             for(; read < code_buffer_length; read++){
-                char string_c = code_buffer[read];
+                u8 string_c = code_buffer[read];
 
                 if(string_c == '\n'){
                     line_number++;
@@ -225,12 +230,23 @@ int lex(){
                         return 1;
                     }
 
-                    if(c == '"'){
-                        break;
-                    }
-
                     if(c == '\n'){
                         line_number++;
+                    }
+
+                    if(escape){
+                        escape = false;
+
+                        if(c == 'n'){
+                            c = '\n';
+                        } else if(c == '\t'){
+                            c = '\t';
+                        }
+                    } else if(c == '"'){
+                        break;
+                    } else if(c == '\\'){
+                        escape = true;
+                        continue;
                     }
 
                     if(num_aux == AUX_CAPACITY){
@@ -241,7 +257,7 @@ int lex(){
                 }
             } else {
                 read += 1;
-                for(int i = read; i < code_buffer_length; i++){
+                for(u32 i = read; i < code_buffer_length; i++){
                     code_buffer[i - read] = code_buffer[i];
                 }
                 code_buffer_length -= read;

@@ -1,9 +1,11 @@
 
-#ifndef _BRAINLOVE_EMIT_H
-#define _BRAINLOVE_EMIT_H
+#ifndef _SMOOCH_EMIT_H
+#define _SMOOCH_EMIT_H
 
-void set_cell_to_value(char new_value, char old_value);
-void emit_print_aux_cstr(int string);
+#include "utypes.h"
 
-#endif // _BRAINLOVE_EMIT_H
+u0 set_cell_to_value(u8 new_value, u8 old_value);
+u0 emit_print_aux_cstr(u32 string);
+
+#endif // _SMOOCH_EMIT_H
 

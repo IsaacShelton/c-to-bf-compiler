@@ -1,26 +1,30 @@
 
-#ifndef _BRAINLOVE_AST_FUNCTION_H
-#define _BRAINLOVE_AST_FUNCTION_H
+#ifndef _SMOOCH_AST_FUNCTION_H
+#define _SMOOCH_AST_FUNCTION_H
 
 #include "type.h"
+#include "utypes.h"
 
 typedef struct {
     // Name of function
-    unsigned int name;
+    u32 name;
     
     // Number of parameters this function takes
     // NOTE: Exact parameters can be determined by looking at the first `arity` statements (which will be declaration statements)
-    unsigned char arity;
+    u8 arity;
 
     // Return type of function
-    int return_type;
+    u32 return_type;
 
     // Beginning of function's statements
-    unsigned int begin;
+    u32 begin;
 
     // Number of statements in function
-    unsigned int num_stmts;
+    u32 num_stmts;
+
+    // Whether function is recursive
+    u1 is_recursive;
 } Function;
 
-#endif // _BRAINLOVE_AST_FUNCTION_H
+#endif // _SMOOCH_AST_FUNCTION_H
 

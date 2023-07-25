@@ -8,11 +8,14 @@
 #include "../include/type_print.h"
 #include "../include/global_print.h"
 #include "../include/expression.h"
+#include "../include/builtin_functions.h"
+#include "../include/expression_print.h"
+#include "../include/builtin_types.h"
 
-int parse_i = 0;
-bool had_parse_error = false;
+u32 parse_i = 0;
+u1 had_parse_error = false;
 
-static void instead_got(){
+static u0 instead_got(){
     if(parse_i < num_tokens){
         printf("  Instead got: `");
         token_print(tokens[parse_i]);
@@ -20,34 +23,34 @@ static void instead_got(){
     }
 }
 
-static void stop_parsing(){
+static u0 stop_parsing(){
     had_parse_error = true;
     parse_i = num_tokens;
 }
 
-static bool is_token(TokenKind kind){
+static u1 is_token(TokenKind kind){
     return parse_i < num_tokens && tokens[parse_i].kind == kind;
 }
 
-static int current_line(){
+static u32 current_line(){
     if(parse_i < num_tokens){
-        return tokens[parse_i].line;
+        return u24_unpack(tokens[parse_i].line);
     } else {
         return 0;
     }
 }
 
-static int eat_word(){
+static u32 eat_word(){
     // Expects `is_token(TOKEN_WORD)` to be true
     return tokens[parse_i++].data;
 }
 
-static int eat_int(){
+static u32 eat_int(){
     // Expects `is_token(TOKEN_INT)` to be true
     return tokens[parse_i++].data;
 }
 
-static int eat_string(){
+static u32 eat_string(){
     // Expects `is_token(TOKEN_STRING)` to be true
     return tokens[parse_i++].data;
 }
@@ -78,8 +81,8 @@ static Type parse_type(){
     type.name = eat_word();
 
     // Parse dimensions
-    unsigned int type_dimensions[4] = {0, 0, 0, 0};
-    int next_dim = 0;
+    u32 type_dimensions[4] = {0, 0, 0, 0};
+    u32 next_dim = 0;
 
     while(eat_token(TOKEN_OPEN_BRACKET)){
         if(next_dim == 4){
@@ -95,7 +98,7 @@ static Type parse_type(){
             return type;
         }
 
-        int dim = eat_int();
+        u32 dim = eat_int();
 
         if(dim == 0){
             printf("error on line %d: Cannot have array dimension of 0\n", current_line());
@@ -115,8 +118,8 @@ static Type parse_type(){
 
     if(next_dim != 0){
         // Try to find existing slot with same value
-        for(int i = 0; i < UNIQUE_DIMENSIONS_CAPACITY; i++){
-            bool match = memcmp(dimensions[i], type_dimensions, sizeof(unsigned int[4]));
+        for(u32 i = 0; i < UNIQUE_DIMENSIONS_CAPACITY; i++){
+            u1 match = memcmp(dimensions[i], type_dimensions, sizeof(u32[4]));
 
             if(match){
                 type.dimensions = i;
@@ -133,7 +136,7 @@ static Type parse_type(){
                 return type;
             }
 
-            for(int i = 0; i < 4; i++){
+            for(u32 i = 0; i < 4; i++){
                 dimensions[num_dimensions][i] = type_dimensions[i];
             }
 
@@ -144,15 +147,15 @@ static Type parse_type(){
     return type;
 }
 
-static bool is_declaration(){
+static u1 is_declaration(){
     // Returns whether next statement during parsing is a declaration.
     // Trys to match current token parsing context against `TypeName[1][2][3][4] name`-like sequence.
     // If a match, then a declaration should be parsed.
 
-    int prev_parse_i = parse_i;
-    bool ok = eat_token(TOKEN_WORD);
+    u32 prev_parse_i = parse_i;
+    u1 ok = eat_token(TOKEN_WORD);
 
-    for(int i = 1; ok && is_token(TOKEN_OPEN_BRACKET); i++){
+    for(u32 i = 1; ok && is_token(TOKEN_OPEN_BRACKET); i++){
         if(
             !eat_token(TOKEN_OPEN_BRACKET)
          || !eat_token(TOKEN_INT)
@@ -169,7 +172,7 @@ static bool is_declaration(){
     return ok;
 }
 
-static bool eat_semicolon(){
+static u1 eat_semicolon(){
     if(!eat_token(TOKEN_SEMICOLON)){
         printf("error on line %d: Expected ';' after statement\n", current_line());
         stop_parsing();
@@ -179,8 +182,8 @@ static bool eat_semicolon(){
     }
 }
 
-static int add_statement_else_print_error(Expression expression){
-    int statement = add_statement_from_new(expression);
+static u32 add_statement_else_print_error(Expression expression){
+    u32 statement = add_statement_from_new(expression);
 
     if(statement >= STATEMENTS_CAPACITY){
         printf("Out of memory: Exceeded maximum number of total statements\n");
@@ -189,6 +192,8 @@ static int add_statement_else_print_error(Expression expression){
 
     return statement;
 }
+
+static Expression parse_expression();
 
 static Expression parse_expression_print(){
     Expression expression = (Expression){
@@ -215,6 +220,60 @@ static Expression parse_expression_print(){
     return expression;
 }
 
+static Expression parse_expression_call(u32 name){
+    Expression expression = (Expression){
+        .kind = EXPRESSION_CALL,
+        .ops = 0,
+    };
+
+    /* Operands layout */
+    /* { name, arity, arg1, arg2, ..., argN } */
+    u32 ops = add_operand(name);
+    u32 arity_location = add_operand(0);
+
+    if(/* (redundant) operands >= OPERANDS_CAPACITY || */ arity_location >= OPERANDS_CAPACITY){
+        stop_parsing();
+        return expression;
+    }
+
+    while(!is_token(TOKEN_CLOSE)){
+        Expression argument_expression = parse_expression();
+
+
+        u32 argument = add_expression(argument_expression);
+        if(argument >= EXPRESSIONS_CAPACITY){
+            stop_parsing();
+            return expression;
+        }
+
+        if(add_operand(argument) >= OPERANDS_CAPACITY){
+            stop_parsing();
+            return expression;
+        }
+
+        operands[arity_location]++;
+
+        if(!eat_token(TOKEN_NEXT)){
+            if(!is_token(TOKEN_CLOSE)){
+                printf("error on line %d: Expected ',' or ')' after argument in call\n", current_line());
+                instead_got();
+                stop_parsing();
+                return expression;
+            }
+        }
+    }
+
+    if(!eat_token(TOKEN_CLOSE)){
+        printf("error on line %d: Expected ')' after argument in call\n", current_line());
+        instead_got();
+        stop_parsing();
+        return expression;
+    }
+
+    expression.ops = ops;
+    return expression;
+}
+
 static Expression parse_expression(){
     Expression expression = (Expression){
         .kind = 0,
@@ -222,13 +281,24 @@ static Expression parse_expression(){
     };
 
     if(is_token(TOKEN_WORD)){
-        int name = eat_word();
+        u32 name = eat_word();
 
         if(eat_token(TOKEN_OPEN)){
             if(aux_cstr_equals_print(name)){
+                // Print call?
                 return parse_expression_print();
             }
+
+            // Regular call
+            return parse_expression_call(name);
         }
+    }
+
+    if(is_token(TOKEN_INT)){
+        return (Expression){
+            .kind = EXPRESSION_INT,
+            .ops = eat_int(),
+        };
     }
     
     printf("error on line %d: Expected expression\n", current_line());
@@ -236,7 +306,7 @@ static Expression parse_expression(){
     return expression;
 }
 
-static int parse_function_body(Function function){
+static u32 parse_function_body(Function function){
     // { ... }
     //       ^ ending token index
     //   ^  starting token index
@@ -246,7 +316,7 @@ static int parse_function_body(Function function){
             Type type = parse_type();
             if(had_parse_error) return 1;
 
-            int variable_type = add_type(type);
+            u32 variable_type = add_type(type);
             if(variable_type >= TYPES_CAPACITY){
                 printf("Out of memory: Exceeded maximum number of types\n");
                 return 1;
@@ -258,8 +328,8 @@ static int parse_function_body(Function function){
                 return 1;
             }
 
-            int variable_name = eat_word();
-            int ops = add_operands2(variable_type, variable_name);
+            u32 variable_name = eat_word();
+            u32 ops = add_operands2(variable_type, variable_name);
             if(ops >= OPERANDS_CAPACITY){
                 stop_parsing();
                 return 1;
@@ -290,16 +360,19 @@ static int parse_function_body(Function function){
         }
     }
 
-    return (int) had_parse_error;
+    return (u32) had_parse_error;
 }
 
-int parse(){
+u32 parse(){
+    if(add_builtin_types()) return 1;
+    if(add_builtin_functions()) return 1;
+
     while(parse_i < num_tokens){
         // Parse type
         Type type = parse_type();
         if(had_parse_error) break;
 
-        int symbol_type = add_type(type);
+        u32 symbol_type = add_type(type);
         if(symbol_type >= TYPES_CAPACITY){
             printf("Out of memory: Exceeded maximum number of types\n");
             return 1;
@@ -311,12 +384,12 @@ int parse(){
             break;
         }
 
-        int symbol_name = eat_word();
+        u32 symbol_name = eat_word();
 
         if(eat_token(TOKEN_SEMICOLON)){
             // Is a global variable
 
-            int global = add_global((Global){
+            u32 global = add_global((Global){
                 .name = symbol_name,
                 .type = symbol_type,
             });
@@ -348,7 +421,7 @@ int parse(){
             break;
         }
 
-        int begin = num_statements;
+        u32 begin = num_statements;
 
         Function function = {
             .name = symbol_name,
@@ -356,17 +429,15 @@ int parse(){
             .begin = begin,
             .num_stmts = 0,
             .return_type = symbol_type,
+            .is_recursive = 0,
         };
 
         if(parse_function_body(function)) break;
         function.num_stmts = num_statements - begin;
 
-        if(num_functions >= FUNCTIONS_CAPACITY){
-            printf("Out of memory: Exceeded maximum number of functions\n");
+        if(add_function(function) >= FUNCTIONS_CAPACITY){
             break;
         }
-
-        functions[num_functions++] = function;
 
         if(!eat_token(TOKEN_END)){
             printf("error on line %d: Expected '}' after function body\n", current_line());
@@ -375,6 +446,6 @@ int parse(){
         }
     }
 
-    return (int) had_parse_error;
+    return (u32) had_parse_error;
 }
 

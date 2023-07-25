@@ -4,7 +4,7 @@
 #include "../include/token.h"
 #include "../include/storage.h"
 
-void token_print(Token token){
+u0 token_print(Token token){
     switch(token.kind){
     case TOKEN_NONE:
         printf("<none>");

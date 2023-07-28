@@ -48,6 +48,12 @@ u0 token_print(Token token){
     case TOKEN_INT:
         printf("%d", token.data);
         break;
+    case TOKEN_EQUALS:
+        printf("==");
+        break;
+    case TOKEN_ASSIGN:
+        printf("=");
+        break;
     default:
         printf("<unknown>");
     }

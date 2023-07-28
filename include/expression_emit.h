@@ -4,7 +4,7 @@
 
 #include "expression.h"
 
-u32 expression_emit(Expression expression, u32 current_cell_index);
+u32 expression_emit(Expression expression);
 
 #endif // _SMOOCH_EXPRESSION_EMIT_H
 

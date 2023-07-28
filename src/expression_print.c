@@ -40,6 +40,11 @@ u0 expression_print(Expression expression){
     case EXPRESSION_U8:
         printf("%du8", expression.ops);
         break;
+    case EXPRESSION_ASSIGN:
+        print_aux_cstr(operands[expression.ops]);
+        printf(" = ");
+        expression_print(expressions[operands[expression.ops + 1]]);
+        break;
     default:
         printf("<unknown expression>");
     }

@@ -19,6 +19,8 @@ enum {
     TOKEN_CLOSE_BRACKET,
     TOKEN_INT,
     TOKEN_NEXT,
+    TOKEN_EQUALS,
+    TOKEN_ASSIGN,
 };
 
 typedef u8 TokenKind;

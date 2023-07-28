@@ -7,6 +7,8 @@
 #include "../include/builtin_types.h"
 #include "../include/type_print.h"
 #include "../include/type_emit.h"
+#include "../include/variable_find.h"
+#include "../include/emit_context.h"
 
 // ============= Inlined function calls =============
 // Have layout like: `global1 global2 unknown1 unknown2 return_value1 return_value2 return_value3 param1 param2 param3 param4 local1 local2`
@@ -151,21 +153,65 @@ static u32 function_sizeof_parameters_or_max(Function function){
     return size;
 }
 
-u32 function_emit(Function function, u32 current_cell_index){
-    for(u32 i = 0; i < function.num_stmts; i++){
-        u32 result_type = expression_emit(expressions[statements[function.begin + i]], 0);
+u32 function_emit(Function function, u32 start_function_cell_index, u32 start_current_cell_index){
+    EmitContext old_emit_context = emit_context;
+
+    emit_context = (EmitContext){
+        .function_cell_index = start_function_cell_index,
+        .current_cell_index = start_current_cell_index,
+        .function_begin_statement = function.begin,
+        .current_statement = function.begin,
+        .in_recursive_function = function.is_recursive,
+    };
+
+    for(u32 i = function.arity; i < function.num_stmts; i++){
+        Expression expression = expressions[statements[function.begin + i]];
+        emit_context.current_statement = function.begin + i;
+        u32 result_type = expression_emit(expression);
 
         if(result_type >= TYPES_CAPACITY){
             return 1;
         }
+
+        if(result_type != u0_type){
+            printf("\nError: Statement result ignored\n");
+            return 1;
+        }
     }
 
-    u32 parameters_size = function_sizeof_parameters_or_max(function);
-    if(parameters_size == -1) return -1;
+    /*
+    printf("\nCurrent cell index: %d\n", emit_context.current_cell_index);
+    printf("\nInside function: ");
+    print_aux_cstr(function.name);
+    printf("\n");
+    u32 name = aux_cstr_alloc((u8*) "variable");
+    if(name >= AUX_CAPACITY){
+        printf("\nerror: allocating string\n");
+        return 1;
+    }
+    Variable variable = variable_find(name);
 
-    if(parameters_size){
-        printf("%d<", parameters_size);
-    }    
+    printf("\nGot: %s ", variable.defined ? "defined" : "undefined");
+    if(variable.defined){
+        print_aux_cstr(variable.name);
+        printf(" ");
+        type_print(types[variable.type]);
+        printf(" ");
+        printf("depth:%d ", variable.depth);
+        printf("declaration:%d ", variable.declaration);
+        printf("location.on_stack:%s ", variable.location.on_stack ? "true" : "false");
+        printf("location.location:%d ", variable.location.location);
+    }
+    printf("\n");
+    */
+
+
+    if(emit_context.current_cell_index > start_function_cell_index){
+        printf("%d<", emit_context.current_cell_index - start_function_cell_index);
+    }
+
+    emit_context = old_emit_context;
+    emit_context.current_cell_index = start_function_cell_index;
     return 0;
 }
 

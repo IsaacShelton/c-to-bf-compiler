@@ -55,7 +55,7 @@ static u32 eat_string(){
     return tokens[parse_i++].data;
 }
 
-static bool eat_token(TokenKind kind){
+static u1 eat_token(TokenKind kind){
     if(parse_i < num_tokens && tokens[parse_i].kind == kind){
         parse_i++;
         return true;
@@ -150,7 +150,6 @@ static Type parse_type(){
 static u1 is_declaration(){
     // Returns whether next statement during parsing is a declaration.
     // Trys to match current token parsing context against `TypeName[1][2][3][4] name`-like sequence.
-    // If a match, then a declaration should be parsed.
 
     u32 prev_parse_i = parse_i;
     u1 ok = eat_token(TOKEN_WORD);
@@ -172,8 +171,36 @@ static u1 is_declaration(){
     return ok;
 }
 
+static u1 is_assignment(){
+    // Returns whether next statement during parsing is an assignment.
+    // Trys to match current token parsing context against `variable_name[1][2][3][4] =`-like sequence.
+
+    u32 prev_parse_i = parse_i;
+    u1 ok = eat_token(TOKEN_WORD);
+
+    for(u32 i = 1; ok && is_token(TOKEN_OPEN_BRACKET); i++){
+        if(
+            !eat_token(TOKEN_OPEN_BRACKET)
+         || !eat_token(TOKEN_INT)
+         || !eat_token(TOKEN_CLOSE_BRACKET)
+         || i > 4
+        ){
+            ok = false;
+            break;
+        }
+    }
+
+    ok = ok && is_token(TOKEN_ASSIGN);
+    parse_i = prev_parse_i;
+    return ok;
+}
+
 static u1 eat_semicolon(){
     if(!eat_token(TOKEN_SEMICOLON)){
+        if(parse_i > 0){
+            parse_i--;
+        }
+
         printf("error on line %d: Expected ';' after statement\n", current_line());
         stop_parsing();
         return false;
@@ -184,12 +211,7 @@ static u1 eat_semicolon(){
 
 static u32 add_statement_else_print_error(Expression expression){
     u32 statement = add_statement_from_new(expression);
-
-    if(statement >= STATEMENTS_CAPACITY){
-        printf("Out of memory: Exceeded maximum number of total statements\n");
-        stop_parsing();
-    }
-
+    if(statement >= STATEMENTS_CAPACITY) stop_parsing();
     return statement;
 }
 
@@ -238,7 +260,6 @@ static Expression parse_expression_call(u32 name){
 
     while(!is_token(TOKEN_CLOSE)){
         Expression argument_expression = parse_expression();
-
 
         u32 argument = add_expression(argument_expression);
         if(argument >= EXPRESSIONS_CAPACITY){
@@ -292,6 +313,12 @@ static Expression parse_expression(){
             // Regular call
             return parse_expression_call(name);
         }
+
+        // Else, normal variable
+        return (Expression){
+            .kind = EXPRESSION_VARIABLE,
+            .ops = name,
+        };
     }
 
     if(is_token(TOKEN_INT)){
@@ -317,10 +344,7 @@ static u32 parse_function_body(Function function){
             if(had_parse_error) return 1;
 
             u32 variable_type = add_type(type);
-            if(variable_type >= TYPES_CAPACITY){
-                printf("Out of memory: Exceeded maximum number of types\n");
-                return 1;
-            }
+            if(variable_type >= TYPES_CAPACITY) return 1;
 
             if(!is_token(TOKEN_WORD)){
                 printf("error on line %d: Expected variable name after type\n", current_line());
@@ -345,6 +369,33 @@ static u32 parse_function_body(Function function){
             };
 
             if(add_statement_else_print_error(declaration) >= STATEMENTS_CAPACITY){
+                return 1;
+            }
+        } else if(is_assignment()){
+            u32 variable_name = eat_word();
+
+            if(!eat_token(TOKEN_ASSIGN)){
+                printf("error on line %d: Expected '=' during assignment\n", current_line());
+                return 1;
+            }
+
+            Expression expression = parse_expression();
+            if(had_parse_error) return 1;
+
+            u32 new_value = add_expression(expression);
+            if(new_value >= EXPRESSIONS_CAPACITY) return 1;
+
+            u32 ops = add_operands2(variable_name, new_value);
+            if(ops >= OPERANDS_CAPACITY) return 1;
+
+            Expression assignment = (Expression){
+                .kind = EXPRESSION_ASSIGN,
+                .ops = ops,
+            };
+
+            if(
+               !eat_semicolon()
+            || add_statement_else_print_error(assignment) >= STATEMENTS_CAPACITY){
                 return 1;
             }
         } else {
@@ -373,15 +424,12 @@ u32 parse(){
         if(had_parse_error) break;
 
         u32 symbol_type = add_type(type);
-        if(symbol_type >= TYPES_CAPACITY){
-            printf("Out of memory: Exceeded maximum number of types\n");
-            return 1;
-        }
+        if(symbol_type >= TYPES_CAPACITY) return 1;
 
         if(!is_token(TOKEN_WORD)){
             printf("error on line %d: Expected function name after type\n", current_line());
             instead_got();
-            break;
+            return 1;
         }
 
         u32 symbol_name = eat_word();
@@ -393,24 +441,47 @@ u32 parse(){
                 .name = symbol_name,
                 .type = symbol_type,
             });
-
-            if(global >= GLOBALS_CAPACITY){
-                printf("Out of memory: Exceeded maximum number of global variables\n");
-                return 1;
-            }
+            if(global >= GLOBALS_CAPACITY) return 1;
             continue;
         }
 
         if(!eat_token(TOKEN_OPEN)){
             printf("error on line %d: Expected '(' after function name\n", current_line());
             instead_got();
-            break;
+            return 1;
         }
 
+        u32 begin = num_statements;
+
         while(!is_token(TOKEN_CLOSE)){
-            printf("error on line %d: args parsing not implemented yet\n", current_line());
-            stop_parsing();
-            break;
+            Type type = parse_type();
+            if(had_parse_error) return 1;
+
+            u32 parameter_type = add_type(type);
+            if(parameter_type >= TYPES_CAPACITY) return 1;
+
+            if(!is_token(TOKEN_WORD)){
+                printf("error on line %d: Expected parameter name after parameter type\n", current_line());
+                stop_parsing();
+                return 1;
+            }
+
+            u32 parameter_name = eat_word();
+            u32 ops = add_operands2(parameter_type, parameter_name);
+            if(ops >= OPERANDS_CAPACITY) return 1;
+
+            add_statement_from_new((Expression){
+                .kind = EXPRESSION_DECLARE,
+                .ops = ops,
+            });
+
+            if(!eat_token(TOKEN_NEXT)){
+                if(!is_token(TOKEN_CLOSE)){
+                    printf("error on line %d: Expected ',' or ')' after function parameter\n", current_line());
+                    stop_parsing();
+                    return 1;
+                }
+            }
         }
 
         parse_i++;
@@ -418,14 +489,12 @@ u32 parse(){
         if(!eat_token(TOKEN_BEGIN)){
             printf("error on line %d: Expected '{' after parameter list for function\n", current_line());
             instead_got();
-            break;
+            return 1;
         }
-
-        u32 begin = num_statements;
 
         Function function = {
             .name = symbol_name,
-            .arity = 0,
+            .arity = num_statements - begin,
             .begin = begin,
             .num_stmts = 0,
             .return_type = symbol_type,
@@ -436,13 +505,13 @@ u32 parse(){
         function.num_stmts = num_statements - begin;
 
         if(add_function(function) >= FUNCTIONS_CAPACITY){
-            break;
+            return 1;
         }
 
         if(!eat_token(TOKEN_END)){
             printf("error on line %d: Expected '}' after function body\n", current_line());
             instead_got();
-            break;
+            return 1;
         }
     }
 

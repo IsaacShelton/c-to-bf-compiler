@@ -123,6 +123,18 @@ LexedToken lex_main(){
         return result;
     }
 
+    // Handle equals
+    if(lead == '='){
+        if(code_buffer_length > 1 && code_buffer[1] == '='){
+            result.token.kind = TOKEN_EQUALS;
+            result.consumed = 2;
+        } else {
+            result.token.kind = TOKEN_ASSIGN;
+            result.consumed = 1;
+        }
+        return result;
+    }
+
     printf("error on line %d: Unknown character `%c` (ASCII %d)\n", line_number, code_buffer[0], code_buffer[0]);
     result.token.kind = TOKEN_ERROR;
     result.consumed = 1;

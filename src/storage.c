@@ -52,6 +52,7 @@ u32 add_type(Type type){
         return num_types++;
     }
 
+    printf("Out of memory: Exceeded maximum number of types\n");
     return TYPES_CAPACITY;
 }
 
@@ -90,6 +91,7 @@ u32 add_expression(Expression expression){
         expressions[num_expressions] = expression;
         return num_expressions++;
     } else {
+        printf("Out of memory: Exceeded maximum number of total expressions\n");
         return EXPRESSIONS_CAPACITY;
     }
 }
@@ -99,6 +101,7 @@ u32 add_statement_from_existing(u32 expression_index){
         statements[num_statements] = expression_index;
         return num_statements++;
     } else {
+        printf("Out of memory: Exceeded maximum number of total statements\n");
         return STATEMENTS_CAPACITY;
     }
 }
@@ -142,6 +145,7 @@ u32 add_global(Global global){
         return num_globals++;
     }
 
+    printf("Out of memory: Exceeded maximum number of global variables\n");
     return GLOBALS_CAPACITY;
 }
 

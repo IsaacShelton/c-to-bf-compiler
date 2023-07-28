@@ -53,6 +53,6 @@ int main(void){
     }
 
     // Emit main function
-    return function_emit(functions[main_function_index], 0);
+    return function_emit(functions[main_function_index], 0, 0);
 }
 

@@ -13,6 +13,8 @@ enum {
     EXPRESSION_IMPLEMENT_PUT,
     EXPRESSION_U8, /* { value } */
     EXPRESSION_INT, /* { value } */
+    EXPRESSION_VARIABLE, /* { name } */
+    EXPRESSION_ASSIGN, /* { name, value } */
 };
 typedef u8 ExpressionKind;
 

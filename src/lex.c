@@ -135,6 +135,20 @@ LexedToken lex_main(){
         return result;
     }
 
+    // Handle add
+    if(lead == '+'){
+        result.token.kind = TOKEN_ADD;
+        result.consumed = 1;
+        return result;
+    }
+
+    // Handle subtract
+    if(lead == '-'){
+        result.token.kind = TOKEN_SUBTRACT;
+        result.consumed = 1;
+        return result;
+    }
+
     printf("error on line %d: Unknown character `%c` (ASCII %d)\n", line_number, code_buffer[0], code_buffer[0]);
     result.token.kind = TOKEN_ERROR;
     result.consumed = 1;

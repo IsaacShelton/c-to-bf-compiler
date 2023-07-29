@@ -13,6 +13,7 @@
 #include "../include/function_print.h"
 #include "../include/function_emit.h"
 #include "../include/infer.h"
+#include "../include/mark_recursive_functions.h"
 
 int main(void){
     if(lex()) return 1;
@@ -27,6 +28,7 @@ int main(void){
 
     if(parse()) return 1;
     if(infer()) return 1;
+    if(mark_recursive_functions()) return 1;
 
     /*
     for(u32 i = 0; i < num_functions; i++){
@@ -48,7 +50,12 @@ int main(void){
 
     // Require main function
     if(main_function_index == FUNCTIONS_CAPACITY){
-        printf("error: No main function\n");
+        printf("\nerror: No main function\n");
+        return 1;
+    }
+
+    if(functions[main_function_index].is_recursive){
+        printf("\nerror: Recursion not yet supported\n");
         return 1;
     }
 

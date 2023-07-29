@@ -295,7 +295,7 @@ static Expression parse_expression_call(u32 name){
     return expression;
 }
 
-static Expression parse_expression(){
+static Expression parse_primary_expression(){
     Expression expression = (Expression){
         .kind = 0,
         .ops = 0,
@@ -331,6 +331,17 @@ static Expression parse_expression(){
     printf("error on line %d: Expected expression\n", current_line());
     stop_parsing();
     return expression;
+}
+
+static Expression parse_operator_expression(u8 precedence, Expression lhs, u1 leave_mutable){
+    return lhs;
+}
+
+static Expression parse_expression(){
+    Expression primary = parse_primary_expression();
+    if(had_parse_error) return primary;
+
+    return parse_operator_expression(0, primary, false);
 }
 
 static u32 parse_function_body(Function function){
@@ -498,7 +509,7 @@ u32 parse(){
             .begin = begin,
             .num_stmts = 0,
             .return_type = symbol_type,
-            .is_recursive = 0,
+            .is_recursive = true, // assume recursive until we prove otherwise
         };
 
         if(parse_function_body(function)) break;

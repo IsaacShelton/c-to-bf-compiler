@@ -21,6 +21,8 @@ enum {
     TOKEN_NEXT,
     TOKEN_EQUALS,
     TOKEN_ASSIGN,
+    TOKEN_ADD,
+    TOKEN_SUBTRACT,
 };
 
 typedef u8 TokenKind;

@@ -148,6 +148,35 @@ u32 expression_emit_variable(Expression expression){
     return variable.type;
 }
 
+static u32 expression_emit_additive(Expression expression, u1 is_plus){
+    u32 a = operands[expression.ops];
+    u32 b = operands[expression.ops + 1];
+
+    u32 a_type = expression_emit(expressions[a]);
+    if(a_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    u32 b_type = expression_emit(expressions[b]);
+    if(b_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    if(a_type != b_type){
+        printf("\nerror: Cannot ");
+        printf(is_plus ? "add" : "subtract");
+        printf(" incompatible types '");
+        type_print(types[a_type]);
+        printf("' and '");
+        type_print(types[b_type]);
+        printf("'\n");
+        return TYPES_CAPACITY;
+    }
+
+    if(a_type == u8_type){
+        emit_additive_u8(is_plus);
+        return a_type;
+    }
+
+    return TYPES_CAPACITY;
+}
+
 u32 expression_emit(Expression expression){
     switch(expression.kind){
     case EXPRESSION_DECLARE: {
@@ -181,6 +210,10 @@ u32 expression_emit(Expression expression){
         return expression_emit_assign(expression);
     case EXPRESSION_VARIABLE:
         return expression_emit_variable(expression);
+    case EXPRESSION_ADD:
+        return expression_emit_additive(expression, true);
+    case EXPRESSION_SUBTRACT:
+        return expression_emit_additive(expression, false);
     default:
         printf("\nerror: Unknown expression kind %d during expression_emit\n", expression.kind);
         return TYPES_CAPACITY;

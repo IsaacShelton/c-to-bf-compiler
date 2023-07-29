@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include "../include/emit.h"
 #include "../include/storage.h"
 #include "../include/emit_context.h"
 
@@ -137,5 +138,38 @@ u0 move_cells_static(u32 destination_index, u32 size, u1 destructive){
         // Copy cell to destination
         move_cell_static(destination_index + size - i - 1, destructive);
     }
+}
+
+u0 emit_additive_u8(u1 is_plus){
+    // Point to b
+    printf("<");
+
+    // While b is non-zero
+    printf("[");
+
+    // Go backwards to a
+    printf("<");
+
+    if(is_plus){
+        // Increment a
+        printf("+");
+    } else {
+        // Decrement a
+        printf("-");
+    }
+
+    // Go forwards to b
+    printf(">");
+
+    // Decrement b
+    printf("-");
+
+    // End while
+    printf("]");
+
+    // Point to result (previously a)
+    printf("<");
+
+    emit_context.current_cell_index--;
 }
 

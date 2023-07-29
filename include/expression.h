@@ -15,6 +15,8 @@ enum {
     EXPRESSION_INT, /* { value } */
     EXPRESSION_VARIABLE, /* { name } */
     EXPRESSION_ASSIGN, /* { name, value } */
+    EXPRESSION_ADD, /* { a, b } */
+    EXPRESSION_SUBTRACT, /* { a, b } */
 };
 typedef u8 ExpressionKind;
 

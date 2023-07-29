@@ -15,5 +15,7 @@ typedef struct { u8 bytes[3]; } u24;
 u24 u24_pack(u32 value);
 u32 u24_unpack(u24 value);
 
+typedef u8 ErrorCode;
+
 #endif // _SMOOCH_UTYPES_H
 

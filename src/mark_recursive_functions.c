@@ -23,6 +23,9 @@ ErrorCode mark_recursive_functions(){
     for(u32 function_i = 0; function_i < num_functions; function_i++){
         Function function = functions[function_i];
 
+        // Skip processing pre-known non-recursive functions
+        if(!function.is_recursive) continue;
+
         u32 function_arrows_begin = num_arrows;
         u32 statements_start = function.begin + function.arity;
         u32 statements_end = statements_start + function.num_stmts;
@@ -57,7 +60,8 @@ ErrorCode mark_recursive_functions(){
 
                     u32 to = find_function(operands[expression.ops]);
 
-                    if(to < FUNCTIONS_CAPACITY){
+                    // If target function exists and is possibly recursive
+                    if(to < FUNCTIONS_CAPACITY && functions[to].is_recursive){
                         if(num_arrows + 1 >= ARROWS_CAPACITY){
                             printf("\nout of memory: Exceeded maximum number of arrows during determination of recursive functions\n");
                             return 1;
@@ -126,6 +130,11 @@ ErrorCode mark_recursive_functions(){
     // Try printing arrows
     for(u32 i = 0; i < num_arrows; i++){
         printf("\narrow: %d -> %d\n", arrows[i].from, arrows[i].to);
+        printf("\n aka ");
+        print_aux_cstr(functions[arrows[i].from].name);
+        printf(" -> ");
+        print_aux_cstr(functions[arrows[i].to].name);
+        printf("\n");
     }
     */
 

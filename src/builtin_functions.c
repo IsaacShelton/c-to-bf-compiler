@@ -34,7 +34,7 @@ static u32 add_put_function(u32 u0_type, u32 u8_type){
         .return_type = u0_type,
         .begin = argument,
         .num_stmts = 2,
-        .is_recursive = true, // Every function must start as recursive, until marking says otherwise
+        .is_recursive = false,
     };
 
     if(add_function(function)) return 1;

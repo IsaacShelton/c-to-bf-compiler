@@ -260,6 +260,7 @@ static Expression parse_expression_call(u32 name){
 
     while(!is_token(TOKEN_CLOSE)){
         Expression argument_expression = parse_expression();
+        if(had_parse_error) return expression;
 
         u32 argument = add_expression(argument_expression);
         if(argument >= EXPRESSIONS_CAPACITY){
@@ -430,6 +431,8 @@ static Expression parse_secondary_expression(u8 precedence, Expression lhs){
         case TOKEN_SUBTRACT:
             lhs = parse_math(lhs, EXPRESSION_SUBTRACT, operator_precedence);
             break;
+        default:
+            return lhs;
         }
 
         if(had_parse_error) return lhs;

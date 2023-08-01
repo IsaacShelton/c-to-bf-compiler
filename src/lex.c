@@ -149,6 +149,15 @@ LexedToken lex_main(){
         return result;
     }
 
+    // Handle divide
+    if(lead == '/'){
+        if(code_buffer_length > 1 && code_buffer[1] == '/'){
+            result.token.kind = TOKEN_COMMENT;
+            result.consumed = 2;
+            return result;
+        }
+    }
+
     printf("error on line %d: Unknown character `%c` (ASCII %d)\n", line_number, code_buffer[0], code_buffer[0]);
     result.token.kind = TOKEN_ERROR;
     result.consumed = 1;
@@ -205,6 +214,12 @@ u32 lex(){
                 code_buffer[i - lexed.consumed] = code_buffer[i];
             }
             code_buffer_length -= lexed.consumed;
+        }
+
+        // Special additional code for line comments
+        if(token.kind == TOKEN_COMMENT){
+            printf("error: Comments not implemented yet\n");
+            return 1;
         }
 
         // Special additional code for lexing strings, so they are not limited to code buffer capacity

@@ -295,6 +295,8 @@ static Expression parse_expression_call(u32 name){
     return expression;
 }
 
+static Expression parse_secondary_expression(u8 precedence, Expression lhs);
+
 static Expression parse_primary_expression(){
     Expression expression = (Expression){
         .kind = 0,
@@ -333,7 +335,106 @@ static Expression parse_primary_expression(){
     return expression;
 }
 
-static Expression parse_operator_expression(u8 precedence, Expression lhs, u1 leave_mutable){
+static u1 is_terminating_token(TokenKind token_kind){
+    switch(token_kind){
+    case TOKEN_NEXT:
+    case TOKEN_CLOSE:
+    case TOKEN_SEMICOLON:
+    case TOKEN_CLOSE_BRACKET:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static u8 parse_get_precedence(u32 token_kind){
+    switch(token_kind){
+    case TOKEN_ADD:
+        return 2;
+    case TOKEN_SUBTRACT:
+        return 2;
+    default:
+        return 255;
+    }
+}
+
+static Expression parse_rhs(u32 operator_precedence){
+    // Returns right hand side of expression
+
+    // Skip over operator token
+    if(++parse_i >= num_tokens){
+        printf("\nerror: Expected right hand side of expression\n");
+        stop_parsing();
+        return (Expression){0};
+    }
+
+    Expression rhs = parse_primary_expression();
+    if(had_parse_error) return rhs;
+
+    TokenKind next_operator = tokens[parse_i].kind;
+    u8 next_precedence = parse_get_precedence(next_operator);
+
+    if(next_precedence < operator_precedence){
+        rhs = parse_secondary_expression(next_precedence, rhs);
+        if(had_parse_error) return rhs;
+    }
+
+    return rhs;
+}
+
+static Expression parse_math(Expression lhs, ExpressionKind expression_kind, u8 operator_precedence){
+    Expression rhs = parse_rhs(operator_precedence);
+    if(had_parse_error) return lhs;
+
+    u32 a = add_expression(lhs);
+    if(a >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return lhs;
+    }
+
+    u32 b = add_expression(rhs);
+    if(b >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return lhs;
+    }
+
+    u32 ops = add_operands2(a, b);
+    if(ops >= OPERANDS_CAPACITY){
+        stop_parsing();
+        return lhs;
+    }
+
+    return (Expression){
+        .kind = expression_kind,
+        .ops = ops,
+    };
+}
+
+static Expression parse_secondary_expression(u8 precedence, Expression lhs){
+    while(true){
+        if(parse_i >= num_tokens){
+            return lhs;
+        }
+
+        TokenKind operator = tokens[parse_i].kind;
+        u8 operator_precedence = parse_get_precedence(operator);
+
+        if(is_terminating_token(operator) || precedence < operator_precedence){
+            return lhs;
+        }
+
+        switch(operator){
+        case TOKEN_ADD:
+            lhs = parse_math(lhs, EXPRESSION_ADD, operator_precedence);
+            break;
+        case TOKEN_SUBTRACT:
+            lhs = parse_math(lhs, EXPRESSION_SUBTRACT, operator_precedence);
+            break;
+        }
+
+        if(had_parse_error) return lhs;
+    }
+
     return lhs;
 }
 
@@ -341,7 +442,7 @@ static Expression parse_expression(){
     Expression primary = parse_primary_expression();
     if(had_parse_error) return primary;
 
-    return parse_operator_expression(0, primary, false);
+    return parse_secondary_expression(255, primary);
 }
 
 static u32 parse_function_body(Function function){

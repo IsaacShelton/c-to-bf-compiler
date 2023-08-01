@@ -72,10 +72,10 @@ The kiss and dekiss tools allow for compressing and decompressing brainf\*ck. Ki
 - `dekiss main.kbf`
 
 ### The Programming Language (smooch)
-Smooch is a C-like language for writing BrainF*ck programs. Built from the ground up with enterprise in mind, it's capable of producing "normal" software and can be learnt in less than a minute.
+Smooch is a C-like language for writing BrainF*ck programs. Built from the ground up with enterprise in mind, it's capable of producing "normal" software and can be learned in less than a minute.
 
 Normal usage:
-`brainkiss main.smooch bf`
+`smooch main.smooch main.bf`
 
 Naked usage: `/bin/cat main.smooch | smooch > main.bf`
 

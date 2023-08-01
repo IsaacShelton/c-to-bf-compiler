@@ -8,6 +8,7 @@ enum {
     TOKEN_NONE,
     TOKEN_DONE,
     TOKEN_ERROR,
+    TOKEN_COMMENT,
     TOKEN_WORD,
     TOKEN_BEGIN,
     TOKEN_END,

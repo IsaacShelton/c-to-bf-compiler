@@ -96,7 +96,7 @@ u0 copy_cells_static(u32 start_index, u32 size){
     }
 }
 
-u0 move_cell_static(u32 destination_index, u1 destructive){
+u0 move_cell_static(u32 destination_index){
     u32 current_cell_index = emit_context.current_cell_index;
 
     if(destination_index >= current_cell_index) return;
@@ -125,18 +125,17 @@ u0 move_cell_static(u32 destination_index, u1 destructive){
 
     // End while
     printf("]");
-
-    if(destructive){
-        // Deallocate source cell
-        printf("<");
-        emit_context.current_cell_index--;
-    }
 }
 
 u0 move_cells_static(u32 destination_index, u32 size, u1 destructive){
     for(u32 i = 0; i < size; i++){
         // Copy cell to destination
-        move_cell_static(destination_index + size - i - 1, destructive);
+        move_cell_static(destination_index + size - i - 1);
+    }
+
+    if(destructive && size > 0){
+        printf("%d<", size - 1);
+        emit_context.current_cell_index -= size - 1;
     }
 }
 

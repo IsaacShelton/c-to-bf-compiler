@@ -1,8 +1,57 @@
 
 # Expressions
 
+- `1234`
+- `'A'`
+- `"Hello World"`
+- `{ 1, 2, 3, 4 }`
+- `true`
+- `false`
 - `Type variable_name;`
 - `function_name(arg1, arg2, argN);`
-- `variable_name = value;`
+- `a = b;`
+- `a += b;`
+- `a -= b;`
+- `a *= b;`
+- `a /= b;`
+- `a %= b;`
+- `a >>= b;`
+- `a <<= b;`
+- `a &= b;`
+- `a |= b;`
+- `a ^= b;`
 - `a + b`
+- `a - b`
+- `a * b`
+- `a / b`
+- `a % b`
+- `a << b`
+- `a >> b`
+- `a && b`
+- `a || b`
+- `~a`
+- `!a`
+- `-a`
+- `a++`
+- `a--`
+- `++a`
+- `--a`
+- `a ? b : c`
+- `(Type) a`
+- `if(condition){ statements; }`
+- `while(condition){ statements; }`
+- `for(start; condition; next){ statements; }`
+- `return a;`
+- `a[b]`
+- `a == b`
+- `a != b`
+- `a < b`
+- `a > b`
+- `a <= b`
+- `a >= b`
+- `(a)`
+- `a & b`
+- `a | b`
+- `a ^ b`
+- `switch(value){ case A: statements; break; case B: statements; break; default: statements; }`
 

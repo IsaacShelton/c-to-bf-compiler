@@ -112,7 +112,8 @@ static u32 expression_emit_assign(Expression expression){
 
     // Point to last cell of data
     printf("<");
-    move_cells_static(variable.location.location, type_size, true);
+    emit_context.current_cell_index--;
+    move_cells_static(variable.location.location, type_size, false);
     return u0_type;
 }
 

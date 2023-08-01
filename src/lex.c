@@ -157,6 +157,40 @@ LexedToken lex_main(){
             return result;
         }
     }
+    
+    // Handle character literal
+    if(lead == '\''){
+        result.token.kind = TOKEN_INT;
+
+        if(code_buffer_length >= 4 && code_buffer[1] == '\\' && code_buffer[3] == '\''){
+            switch(code_buffer[2]){
+            case 't':
+                result.token.data = '\t';
+                break;
+            case 'n':
+                result.token.data = '\n';
+                break;
+            case '0':
+                result.token.data = '\0';
+                break;
+            case '\\':
+                result.token.data = '\\';
+                break;
+            case '\'':
+                result.token.data = '\'';
+                break;
+            default:
+                result.token.data = code_buffer[2];
+            }
+
+            result.consumed = 4;
+        } else if(code_buffer_length >= 3 && code_buffer[2] == '\''){
+            result.token.data = code_buffer[1];
+            result.consumed = 3;
+        }
+
+        return result;
+    }
 
     printf("error on line %d: Unknown character `%c` (ASCII %d)\n", line_number, code_buffer[0], code_buffer[0]);
     result.token.kind = TOKEN_ERROR;

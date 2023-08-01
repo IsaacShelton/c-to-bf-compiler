@@ -248,15 +248,8 @@ static Expression parse_expression_call(u32 name){
         .ops = 0,
     };
 
-    /* Operands layout */
-    /* { name, arity, arg1, arg2, ..., argN } */
-    u32 ops = add_operand(name);
-    u32 arity_location = add_operand(0);
-
-    if(/* (redundant) operands >= OPERANDS_CAPACITY || */ arity_location >= OPERANDS_CAPACITY){
-        stop_parsing();
-        return expression;
-    }
+    u32 arguments[ARITY_CAPACITY];
+    u8 arity = 0;
 
     while(!is_token(TOKEN_CLOSE)){
         Expression argument_expression = parse_expression();
@@ -268,12 +261,13 @@ static Expression parse_expression_call(u32 name){
             return expression;
         }
 
-        if(add_operand(argument) >= OPERANDS_CAPACITY){
+        if(arity >= ARITY_CAPACITY){
+            printf("error on line %d: Exceeded maximum number of arguments to function call (limit is %d)\n", current_line(), ARITY_CAPACITY);
             stop_parsing();
             return expression;
         }
 
-        operands[arity_location]++;
+        arguments[arity++] = argument;
 
         if(!eat_token(TOKEN_NEXT)){
             if(!is_token(TOKEN_CLOSE)){
@@ -290,6 +284,27 @@ static Expression parse_expression_call(u32 name){
         instead_got();
         stop_parsing();
         return expression;
+    }
+
+    /* Operands layout */
+    /* { name, arity, arg1, arg2, ..., argN } */
+    u32 ops = add_operand(name);
+    if(ops >= OPERANDS_CAPACITY){
+        stop_parsing();
+        return expression;
+    }
+
+    u32 arity_location = add_operand(arity);
+    if(arity_location >= OPERANDS_CAPACITY){
+        stop_parsing();
+        return expression;
+    }
+
+    for(u8 i = 0; i < arity; i++){
+        if(add_operand(arguments[i]) >= OPERANDS_CAPACITY){
+            stop_parsing();
+            return expression;
+        }
     }
 
     expression.ops = ops;

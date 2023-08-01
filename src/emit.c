@@ -166,9 +166,6 @@ u0 emit_additive_u8(u1 is_plus){
     // End while
     printf("]");
 
-    // Point to result (previously a)
-    printf("<");
-
     emit_context.current_cell_index--;
 }
 

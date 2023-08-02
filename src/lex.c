@@ -6,12 +6,11 @@
 #include "../include/lex.h"
 #include "../include/io.h"
 #include "../include/storage.h"
-
-typedef struct {
-    u1 ok;
-    Token token;
-    u32 consumed;
-} LexedToken;
+#include "../include/lex_context.h"
+#include "../include/lex_result.h"
+#include "../include/lex_string.h"
+#include "../include/lex_character_literal.h"
+#include "../include/lex_line_comment.h"
 
 typedef struct {
     u8 c;
@@ -33,14 +32,12 @@ static u1 is_ident(u8 c){
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || (c >= '0' && c <= '9');
 }
 
-u32 line_number = 1;
-
 LexedToken lex_main(){
     LexedToken result = (LexedToken){
-        .ok = false,
         .token = (Token){
             .kind = TOKEN_NONE,
             .data = 0,
+            .line = u24_pack(lex_line_number),
         },
         .consumed = 0,
     };
@@ -160,45 +157,18 @@ LexedToken lex_main(){
     
     // Handle character literal
     if(lead == '\''){
-        result.token.kind = TOKEN_INT;
-
-        if(code_buffer_length >= 4 && code_buffer[1] == '\\' && code_buffer[3] == '\''){
-            switch(code_buffer[2]){
-            case 't':
-                result.token.data = '\t';
-                break;
-            case 'n':
-                result.token.data = '\n';
-                break;
-            case '0':
-                result.token.data = '\0';
-                break;
-            case '\\':
-                result.token.data = '\\';
-                break;
-            case '\'':
-                result.token.data = '\'';
-                break;
-            default:
-                result.token.data = code_buffer[2];
-            }
-
-            result.consumed = 4;
-        } else if(code_buffer_length >= 3 && code_buffer[2] == '\''){
-            result.token.data = code_buffer[1];
-            result.consumed = 3;
-        }
-
-        return result;
+        return lex_character_literal();
     }
 
-    printf("error on line %d: Unknown character `%c` (ASCII %d)\n", line_number, code_buffer[0], code_buffer[0]);
+    printf("error on line %d: Unknown character `%c` (ASCII %d)\n", lex_line_number, code_buffer[0], code_buffer[0]);
     result.token.kind = TOKEN_ERROR;
     result.consumed = 1;
     return result;
 }
 
 u32 lex(){
+    lex_line_number = 1;
+
     u8 c = get();
 
     // Lex
@@ -214,20 +184,23 @@ u32 lex(){
         Token token = lexed.token;
 
         if(token.kind != TOKEN_DONE){
-            if(token.kind != TOKEN_NONE){
+            if(token.kind == TOKEN_ERROR) return 1;
+
+            if(token.kind != TOKEN_NONE && token.kind != TOKEN_COMMENT){
+                // Append created token
                 if(num_tokens == TOKENS_CAPACITY){
                     printf("Out of memory: Too many tokens\n");
                     return 1;
                 }
-                token.line = u24_pack(line_number);
                 tokens[num_tokens++] = token;
             } else {
+                // Increase line number by skipped newlines
                 for(u32 i = 0; i < lexed.consumed; i++){
-                    if(code_buffer[i] == '\n') line_number++;
+                    if(code_buffer[i] == '\n') lex_line_number++;
                 }
             }
 
-            // Remember word by injecting aux
+            // If token is a word, remember content by injecting aux string
             if(token.kind == TOKEN_WORD){
                 tokens[num_tokens - 1].data = num_aux;
 
@@ -240,10 +213,9 @@ u32 lex(){
                     aux[num_aux++] = code_buffer[i];
                 }
                 aux[num_aux++] = '\0';
-            } else if(token.kind == TOKEN_ERROR){
-                return 1;
             }
 
+            // Advance code buffer
             for(u32 i = lexed.consumed; i < code_buffer_length; i++){
                 code_buffer[i - lexed.consumed] = code_buffer[i];
             }
@@ -252,97 +224,16 @@ u32 lex(){
 
         // Special additional code for line comments
         if(token.kind == TOKEN_COMMENT){
-            printf("error: Comments not implemented yet\n");
-            return 1;
+            LexUnboundedResult result = lex_line_comment(c);
+            if(result.error) return 1;
+            c = result.new_c;
         }
 
         // Special additional code for lexing strings, so they are not limited to code buffer capacity
-        // TODO: Refactor to merge buffer-only and past-buffer cases
         if(token.kind == TOKEN_STRING){
-            tokens[num_tokens - 1].data = num_aux;
-
-            u32 read = 0;
-            u1 escape = false;
-
-            for(; read < code_buffer_length; read++){
-                u8 string_c = code_buffer[read];
-
-                if(string_c == '\n'){
-                    line_number++;
-                }
-
-                if(escape){
-                    escape = false;
-
-                    if(string_c == 'n'){
-                        string_c = '\n';
-                    } else if(string_c == '\t'){
-                        string_c = '\t';
-                    }
-                } else if(string_c == '"'){
-                    break;
-                } else if(string_c == '\\'){
-                    escape = true;
-                    continue;
-                }
-
-                if(num_aux == AUX_CAPACITY){
-                    printf("Out of memory: Auxiliary memory used up\n");
-                    return 1;
-                }
-
-                aux[num_aux++] = string_c;
-            }
-
-            if(read == code_buffer_length){
-                code_buffer_length = 0;
-
-                while(true){
-                    c = get();
-
-                    if(c == 0){
-                        printf("error: Unterminated string\n");
-                        return 1;
-                    }
-
-                    if(c == '\n'){
-                        line_number++;
-                    }
-
-                    if(escape){
-                        escape = false;
-
-                        if(c == 'n'){
-                            c = '\n';
-                        } else if(c == '\t'){
-                            c = '\t';
-                        }
-                    } else if(c == '"'){
-                        break;
-                    } else if(c == '\\'){
-                        escape = true;
-                        continue;
-                    }
-
-                    if(num_aux == AUX_CAPACITY){
-                        printf("Out of memory: Auxiliary memory used up\n");
-                        return 1;
-                    }
-                    aux[num_aux++] = c;
-                }
-            } else {
-                read += 1;
-                for(u32 i = read; i < code_buffer_length; i++){
-                    code_buffer[i - read] = code_buffer[i];
-                }
-                code_buffer_length -= read;
-            }
-
-            if(num_aux == AUX_CAPACITY){
-                printf("Out of memory: Auxiliary memory used up\n");
-                return 1;
-            }
-            aux[num_aux++] = '\0';
+            LexUnboundedResult result = lex_string(c);
+            if(result.error) return 1;
+            c = result.new_c;
         }
 
         if(c == 0 && token.kind == TOKEN_DONE){

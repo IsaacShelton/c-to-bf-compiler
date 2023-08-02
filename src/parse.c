@@ -472,6 +472,40 @@ static Expression parse_expression(){
     return parse_secondary_expression(255, primary);
 }
 
+static ErrorCode parse_assignment_body(u32 variable_name){
+    if(!eat_token(TOKEN_ASSIGN)){
+        printf("error on line %d: Expected '=' during assignment\n", current_line());
+        stop_parsing();
+        return 1;
+    }
+
+    Expression expression = parse_expression();
+    if(had_parse_error) return 1;
+
+    u32 new_value = add_expression(expression);
+    if(new_value >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return 1;
+    }
+
+    u32 ops = add_operands2(variable_name, new_value);
+    if(ops >= OPERANDS_CAPACITY){
+        stop_parsing();
+        return 1;
+    }
+
+    Expression statement = (Expression){
+        .kind = EXPRESSION_ASSIGN,
+        .ops = ops,
+    };
+
+    return !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
+}
+
+static ErrorCode parse_assignment(){
+    return parse_assignment_body(eat_word());
+}
+
 static ErrorCode parse_declaration(){
     Type type = parse_type();
     if(had_parse_error) return 1;
@@ -490,7 +524,10 @@ static ErrorCode parse_declaration(){
     }
     
     u32 variable_type = add_type(type);
-    if(variable_type >= TYPES_CAPACITY) return 1;
+    if(variable_type >= TYPES_CAPACITY){
+        stop_parsing();
+        return 1;
+    }
 
     u32 ops = add_operands2(variable_type, variable_name);
     if(ops >= OPERANDS_CAPACITY){
@@ -498,20 +535,16 @@ static ErrorCode parse_declaration(){
         return 1;
     }
 
-    if(!eat_semicolon()){
-        return 1;
-    }
-
-    Expression declaration = (Expression){
+    Expression statement = (Expression){
         .kind = EXPRESSION_DECLARE,
         .ops = ops,
     };
 
-    if(add_statement_else_print_error(declaration) >= STATEMENTS_CAPACITY){
-        return 1;
+    if(is_token(TOKEN_ASSIGN)){
+        return add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY || parse_assignment_body(variable_name);
+    } else {
+        return !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
     }
-
-    return 0;
 }
 
 static u32 parse_function_body(Function function){
@@ -523,41 +556,12 @@ static u32 parse_function_body(Function function){
         if(is_declaration()){
             if(parse_declaration()) return 1;
         } else if(is_assignment()){
-            u32 variable_name = eat_word();
-
-            if(!eat_token(TOKEN_ASSIGN)){
-                printf("error on line %d: Expected '=' during assignment\n", current_line());
-                stop_parsing();
-                return 1;
-            }
-
-            Expression expression = parse_expression();
-            if(had_parse_error) return 1;
-
-            u32 new_value = add_expression(expression);
-            if(new_value >= EXPRESSIONS_CAPACITY) return 1;
-
-            u32 ops = add_operands2(variable_name, new_value);
-            if(ops >= OPERANDS_CAPACITY) return 1;
-
-            Expression assignment = (Expression){
-                .kind = EXPRESSION_ASSIGN,
-                .ops = ops,
-            };
-
-            if(
-               !eat_semicolon()
-            || add_statement_else_print_error(assignment) >= STATEMENTS_CAPACITY){
-                return 1;
-            }
+            if(parse_assignment()) return 1;
         } else {
-            Expression expression = parse_expression();
+            Expression statement = parse_expression();
             if(had_parse_error) return 1;
 
-            if(
-               !eat_semicolon()
-            || add_statement_else_print_error(expression) >= STATEMENTS_CAPACITY
-            ){
+            if(had_parse_error || !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY){
                 return 1;
             }
         }
@@ -609,9 +613,6 @@ u32 parse(){
             Type type = parse_type();
             if(had_parse_error) return 1;
 
-            u32 parameter_type = add_type(type);
-            if(parameter_type >= TYPES_CAPACITY) return 1;
-
             if(!is_token(TOKEN_WORD)){
                 printf("error on line %d: Expected parameter name after parameter type\n", current_line());
                 stop_parsing();
@@ -619,6 +620,15 @@ u32 parse(){
             }
 
             u32 parameter_name = eat_word();
+
+            if(is_token(TOKEN_OPEN_BRACKET)){
+                type.dimensions = parse_dimensions(dimensions[type.dimensions]);
+                if(type.dimensions >= UNIQUE_DIMENSIONS_CAPACITY) return 1;
+            }
+
+            u32 parameter_type = add_type(type);
+            if(parameter_type >= TYPES_CAPACITY) return 1;
+
             u32 ops = add_operands2(parameter_type, parameter_name);
             if(ops >= OPERANDS_CAPACITY) return 1;
 

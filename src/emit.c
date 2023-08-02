@@ -28,9 +28,22 @@ u0 emit_print_aux_cstr(u32 string){
     }
 }
 
+u0 emit_print_array(u32 max_length){
+    printf("%d<", max_length);
+
+    for(u32 i = 0; i < max_length; i++){
+        printf("[.>");
+    }
+
+    for(u32 i = 0; i < max_length; i++){
+        printf("<[-]]");
+    }
+
+    emit_context.current_cell_index -= max_length;
+}
+
 u0 copy_cell_static(u32 start_index){
     u32 current_cell_index = emit_context.current_cell_index;
-
     if(start_index >= current_cell_index) return;
 
     u32 offset = (current_cell_index - start_index);
@@ -98,7 +111,6 @@ u0 copy_cells_static(u32 start_index, u32 size){
 
 u0 move_cell_static(u32 destination_index){
     u32 current_cell_index = emit_context.current_cell_index;
-
     if(destination_index >= current_cell_index) return;
 
     u32 offset = (current_cell_index - destination_index);

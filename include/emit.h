@@ -7,6 +7,7 @@
 
 u0 set_cell_to_value(u8 new_value, u8 old_value);
 u0 emit_print_aux_cstr(u32 string);
+u0 emit_print_array(u32 max_length);
 u0 copy_cell_static(u32 start_index);
 u0 copy_cells_static(u32 start_index, u32 size);
 u0 move_cell_static(u32 destination_index);

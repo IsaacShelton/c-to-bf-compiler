@@ -8,6 +8,7 @@
 - `true`
 - `false`
 - `Type variable_name;`
+- `Type variable_name = value;`
 - `function_name(arg1, arg2, argN);`
 - `a = b;`
 - `a += b;`

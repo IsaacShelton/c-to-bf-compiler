@@ -64,6 +64,79 @@ static u1 eat_token(TokenKind kind){
     }
 }
 
+static u32 parse_dimensions(u32 start_type_dimensions[4]){
+    // Type dimensions is {0, 0, 0, 0} to start,
+    // Unless some dimensions for the type already exist.
+
+    u32 type_dimensions[4];
+    memcpy(type_dimensions, start_type_dimensions, sizeof(u32) * 4);
+
+    u32 next_dim = 0;
+
+    // Find next dimension for type dimensions
+    while(next_dim < UNIQUE_DIMENSIONS_CAPACITY && type_dimensions[next_dim] != 0){
+        next_dim++;
+    }
+
+    while(eat_token(TOKEN_OPEN_BRACKET)){
+        if(next_dim == 4){
+            printf("error on line %d: Cannot nest array dimensions more than 4 deep\n", current_line());
+            stop_parsing();
+            return UNIQUE_DIMENSIONS_CAPACITY;
+        }
+
+        if(!is_token(TOKEN_INT)){
+            printf("error on line %d: Expected number for dimension of type\n", current_line());
+            instead_got();
+            stop_parsing();
+            return UNIQUE_DIMENSIONS_CAPACITY;
+        }
+
+        u32 dim = eat_int();
+
+        if(dim == 0){
+            printf("error on line %d: Cannot have array dimension of 0\n", current_line());
+            stop_parsing();
+            return UNIQUE_DIMENSIONS_CAPACITY;
+        }
+
+        type_dimensions[next_dim++] = dim;
+
+        if(!eat_token(TOKEN_CLOSE_BRACKET)){
+            printf("error on line %d: Expected ']' after dimension in type\n", current_line());
+            instead_got();
+            stop_parsing();
+            return UNIQUE_DIMENSIONS_CAPACITY;
+        }
+    }
+
+    if(next_dim == 0){
+        return 0;
+    }
+
+    // Try to find existing slot with same value
+    for(u32 i = 0; i < UNIQUE_DIMENSIONS_CAPACITY; i++){
+        u1 match = memcmp(dimensions[i], type_dimensions, sizeof(u32[4])) == 0;
+
+        if(match){
+            return i;
+        }
+    }
+
+    // Insert if not found
+    if(num_dimensions + 1 >= UNIQUE_DIMENSIONS_CAPACITY){
+        printf("error on line %d: Maximum number of unique dimension pairs exceeded. Use fewer or reconfigure your compiler.\n", current_line());
+        stop_parsing();
+        return UNIQUE_DIMENSIONS_CAPACITY;
+    }
+
+    for(u32 i = 0; i < 4; i++){
+        dimensions[num_dimensions][i] = type_dimensions[i];
+    }
+
+    return num_dimensions++;
+}
+
 static Type parse_type(){
     Type type = {
         .name = 0,
@@ -79,71 +152,7 @@ static Type parse_type(){
     }
 
     type.name = eat_word();
-
-    // Parse dimensions
-    u32 type_dimensions[4] = {0, 0, 0, 0};
-    u32 next_dim = 0;
-
-    while(eat_token(TOKEN_OPEN_BRACKET)){
-        if(next_dim == 4){
-            printf("error on line %d: Cannot nest array dimensions more than 4 deep\n", current_line());
-            stop_parsing();
-            return type;
-        }
-
-        if(!is_token(TOKEN_INT)){
-            printf("error on line %d: Expected number for dimension of type\n", current_line());
-            instead_got();
-            stop_parsing();
-            return type;
-        }
-
-        u32 dim = eat_int();
-
-        if(dim == 0){
-            printf("error on line %d: Cannot have array dimension of 0\n", current_line());
-            stop_parsing();
-            return type;
-        }
-
-        type_dimensions[next_dim++] = dim;
-
-        if(!eat_token(TOKEN_CLOSE_BRACKET)){
-            printf("error on line %d: Expected ']' after dimension in type\n", current_line());
-            instead_got();
-            stop_parsing();
-            return type;
-        }
-    }
-
-    if(next_dim != 0){
-        // Try to find existing slot with same value
-        for(u32 i = 0; i < UNIQUE_DIMENSIONS_CAPACITY; i++){
-            u1 match = memcmp(dimensions[i], type_dimensions, sizeof(u32[4]));
-
-            if(match){
-                type.dimensions = i;
-                break;
-            }
-        }
-
-        if(type.dimensions == 0){
-            // Insert if not found
-
-            if(num_dimensions + 1 >= UNIQUE_DIMENSIONS_CAPACITY){
-                printf("error on line %d: Maximum number of unique dimension pairs exceeded. Use fewer or reconfigure your compiler.\n", current_line());
-                stop_parsing();
-                return type;
-            }
-
-            for(u32 i = 0; i < 4; i++){
-                dimensions[num_dimensions][i] = type_dimensions[i];
-            }
-
-            type.dimensions = num_dimensions++;
-        }
-    }
-
+    type.dimensions = parse_dimensions((u32[4]){0, 0, 0, 0});
     return type;
 }
 
@@ -463,6 +472,48 @@ static Expression parse_expression(){
     return parse_secondary_expression(255, primary);
 }
 
+static ErrorCode parse_declaration(){
+    Type type = parse_type();
+    if(had_parse_error) return 1;
+
+    if(!is_token(TOKEN_WORD)){
+        printf("error on line %d: Expected variable name after type\n", current_line());
+        instead_got();
+        return 1;
+    }
+
+    u32 variable_name = eat_word();
+
+    if(is_token(TOKEN_OPEN_BRACKET)){
+        type.dimensions = parse_dimensions(dimensions[type.dimensions]);
+        if(type.dimensions >= UNIQUE_DIMENSIONS_CAPACITY) return 1;
+    }
+    
+    u32 variable_type = add_type(type);
+    if(variable_type >= TYPES_CAPACITY) return 1;
+
+    u32 ops = add_operands2(variable_type, variable_name);
+    if(ops >= OPERANDS_CAPACITY){
+        stop_parsing();
+        return 1;
+    }
+
+    if(!eat_semicolon()){
+        return 1;
+    }
+
+    Expression declaration = (Expression){
+        .kind = EXPRESSION_DECLARE,
+        .ops = ops,
+    };
+
+    if(add_statement_else_print_error(declaration) >= STATEMENTS_CAPACITY){
+        return 1;
+    }
+
+    return 0;
+}
+
 static u32 parse_function_body(Function function){
     // { ... }
     //       ^ ending token index
@@ -470,42 +521,13 @@ static u32 parse_function_body(Function function){
 
     while(parse_i < num_tokens && !is_token(TOKEN_END)){
         if(is_declaration()){
-            Type type = parse_type();
-            if(had_parse_error) return 1;
-
-            u32 variable_type = add_type(type);
-            if(variable_type >= TYPES_CAPACITY) return 1;
-
-            if(!is_token(TOKEN_WORD)){
-                printf("error on line %d: Expected variable name after type\n", current_line());
-                instead_got();
-                return 1;
-            }
-
-            u32 variable_name = eat_word();
-            u32 ops = add_operands2(variable_type, variable_name);
-            if(ops >= OPERANDS_CAPACITY){
-                stop_parsing();
-                return 1;
-            }
-
-            if(!eat_semicolon()){
-                return 1;
-            }
-
-            Expression declaration = (Expression){
-                .kind = EXPRESSION_DECLARE,
-                .ops = ops,
-            };
-
-            if(add_statement_else_print_error(declaration) >= STATEMENTS_CAPACITY){
-                return 1;
-            }
+            if(parse_declaration()) return 1;
         } else if(is_assignment()){
             u32 variable_name = eat_word();
 
             if(!eat_token(TOKEN_ASSIGN)){
                 printf("error on line %d: Expected '=' during assignment\n", current_line());
+                stop_parsing();
                 return 1;
             }
 

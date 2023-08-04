@@ -81,6 +81,9 @@ static u32 expression_emit_call(Expression expression){
 }
 
 static u32 expression_emit_assign(Expression expression){
+    printf("\nerror: Assignment emitting is not implemented yet\n");
+    return TYPES_CAPACITY;
+
     u32 name = operands[expression.ops];
     Variable variable = variable_find(name);
 

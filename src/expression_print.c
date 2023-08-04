@@ -44,9 +44,11 @@ u0 expression_print(Expression expression){
         print_aux_cstr(expression.ops);
         break;
     case EXPRESSION_ASSIGN:
-        print_aux_cstr(operands[expression.ops]);
+        printf("(");
+        expression_print(expressions[operands[expression.ops]]);
         printf(" = ");
         expression_print(expressions[operands[expression.ops + 1]]);
+        printf(")");
         break;
     case EXPRESSION_ADD: {
             u32 a = operands[expression.ops];

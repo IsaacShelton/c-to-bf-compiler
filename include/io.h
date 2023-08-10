@@ -1,6 +1,6 @@
 
-#ifndef _SMOOCH_IO_H
-#define _SMOOCH_IO_H
+#ifndef _PECK_IO_H
+#define _PECK_IO_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,5 +21,5 @@ static inline void putbuf(u8 *buffer, u32 length){
     }
 }
 
-#endif // _SMOOCH_IO_H
+#endif // _PECK_IO_H
 

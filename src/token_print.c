@@ -4,7 +4,11 @@
 #include "../include/token.h"
 #include "../include/storage.h"
 
-u0 token_print(Token token){
+u0 token_print(Token token, u1 safe){
+    if(safe){
+        printf("token: ");
+    }
+
     switch(token.kind){
     case TOKEN_NONE:
         printf("<none>");
@@ -32,7 +36,7 @@ u0 token_print(Token token){
         printf(")");
         break;
     case TOKEN_STRING:
-        printf("<string> \"");
+        printf("\"");
         print_aux_cstr(token.data);
         printf("\"");
         break;
@@ -53,6 +57,18 @@ u0 token_print(Token token){
         break;
     case TOKEN_ASSIGN:
         printf("=");
+        break;
+    case TOKEN_ADD:
+        printf("+");
+        break;
+    case TOKEN_SUBTRACT:
+        printf("-");
+        break;
+    case TOKEN_DIVIDE:
+        printf("/");
+        break;
+    case TOKEN_MOD:
+        printf("%%");
         break;
     default:
         printf("<unknown>");

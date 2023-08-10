@@ -55,7 +55,7 @@ Output targets:
 
 
 ### Subprograms
-- `brainkiss/smooch` - Compiles C-like language into normal BrainF\*ck code
+- `brainkiss/peck` - Compiles C-like language into normal BrainF\*ck code
 - `brainkiss/kiss` - Compresses normal brainf\*ck code into kissed brainf\*ck with LZ77 based compression
 - `brainkiss/dekiss` - Decompresses kissed brainf\*ck code into normal brainf\*ck
 - `brainkiss/munch` - Intelligently compiles brainf\*ck into different languages and bitcodes
@@ -71,13 +71,13 @@ The kiss and dekiss tools allow for compressing and decompressing brainf\*ck. Ki
 - `kiss main.bf`
 - `dekiss main.kbf`
 
-### The Programming Language (smooch)
-Smooch is a C-like language for writing BrainF*ck programs. Built from the ground up with enterprise in mind, it's capable of producing "normal" software and can be learned in less than a minute.
+### The Programming Language (peck)
+A C-like language for writing BrainF*ck programs. Built from the ground up with enterprise in mind, it's capable of producing "normal" software and can be learned in less than a minute.
 
 Normal usage:
-`smooch main.smooch main.bf`
+`peck main.peck main.bf`
 
-Naked usage: `/bin/cat main.smooch | smooch > main.bf`
+Naked usage: `/bin/cat main.peck | peck > main.bf`
 
 ```
 u0 main(){

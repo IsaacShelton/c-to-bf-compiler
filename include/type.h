@@ -1,6 +1,6 @@
 
-#ifndef _SMOOCH_AST_TYPE_H
-#define _SMOOCH_AST_TYPE_H
+#ifndef _PECK_AST_TYPE_H
+#define _PECK_AST_TYPE_H
 
 #include "utypes.h"
 
@@ -9,5 +9,5 @@ typedef struct {
     u32 dimensions;
 } Type;
 
-#endif // _SMOOCH_AST_TYPE_H
+#endif // _PECK_AST_TYPE_H
 

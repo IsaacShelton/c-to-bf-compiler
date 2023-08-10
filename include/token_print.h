@@ -1,10 +1,10 @@
 
-#ifndef _SMOOCH_TOKEN_PRINT_H
-#define _SMOOCH_TOKEN_PRINT_H
+#ifndef _PECK_TOKEN_PRINT_H
+#define _PECK_TOKEN_PRINT_H
 
 #include "token.h"
 #include "utypes.h"
 
-u0 token_print(Token token);
+u0 token_print(Token token, u1 safe);
 
-#endif // _SMOOCH_TOKEN_PRINT_H
+#endif // _PECK_TOKEN_PRINT_H

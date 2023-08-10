@@ -1,6 +1,6 @@
 
-#ifndef _SMOOCH_STORAGE_H
-#define _SMOOCH_STORAGE_H
+#ifndef _PECK_STORAGE_H
+#define _PECK_STORAGE_H
 
 #include <stdbool.h>
 #include "config.h"
@@ -55,8 +55,12 @@ u32 aux_cstr_alloc(u8 null_terminated_name[16]);
 u1 aux_cstr_equals(u32 a, u32 b);
 u1 aux_cstr_equals_print(u32 a);
 u1 aux_cstr_equals_main(u32 a);
+u1 aux_cstr_equals_u0(u32 a);
+u1 aux_cstr_equals_u8(u32 a);
+u1 aux_cstr_equals_u16(u32 a);
+u1 aux_cstr_equals_u32(u32 a);
 u0 print_aux_cstr(u32 index);
 u0 print_aux_cstr_escaped(u32 index);
 
-#endif // _SMOOCH_STORAGE_H
+#endif // _PECK_STORAGE_H
 

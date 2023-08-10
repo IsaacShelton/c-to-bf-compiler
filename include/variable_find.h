@@ -1,6 +1,6 @@
 
-#ifndef _SMOOCH_VARIABLE_FIND_H
-#define _SMOOCH_VARIABLE_FIND_H
+#ifndef _PECK_VARIABLE_FIND_H
+#define _PECK_VARIABLE_FIND_H
 
 #include "utypes.h"
 #include "../include/expression_emit.h"
@@ -24,5 +24,5 @@ typedef struct {
 
 Variable variable_find(u32 name);
 
-#endif // _SMOOCH_VARIABLE_FIND_H
+#endif // _PECK_VARIABLE_FIND_H
 

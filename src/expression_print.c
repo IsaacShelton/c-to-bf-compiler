@@ -34,6 +34,9 @@ u0 expression_print(Expression expression){
     case EXPRESSION_IMPLEMENT_PUT:
         printf("<implementation of put>");
         break;
+    case EXPRESSION_IMPLEMENT_PRINTU8:
+        printf("<implementation of printu8>");
+        break;
     case EXPRESSION_INT:
         printf("%d", expression.ops);
         break;
@@ -70,6 +73,38 @@ u0 expression_print(Expression expression){
             printf(" - ");
             expression_print(expressions[b]);
             printf(")");
+        }
+        break;
+    case EXPRESSION_DIVIDE: {
+            u32 a = operands[expression.ops];
+            u32 b = operands[expression.ops + 1];
+
+            printf("(");
+            expression_print(expressions[a]);
+            printf(" / ");
+            expression_print(expressions[b]);
+            printf(")");
+        }
+        break;
+    case EXPRESSION_MOD: {
+            u32 a = operands[expression.ops];
+            u32 b = operands[expression.ops + 1];
+
+            printf("(");
+            expression_print(expressions[a]);
+            printf(" %% ");
+            expression_print(expressions[b]);
+            printf(")");
+        }
+        break;
+    case EXPRESSION_INDEX: {
+            u32 a = operands[expression.ops];
+            u32 b = operands[expression.ops + 1];
+
+            expression_print(expressions[a]);
+            printf("[");
+            expression_print(expressions[b]);
+            printf("]");
         }
         break;
     default:

@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <string.h>
 #include "../include/expression_emit.h"
 #include "../include/expression.h"
 #include "../include/storage.h"
@@ -80,30 +81,96 @@ static u32 expression_emit_call(Expression expression){
     return function.return_type;
 }
 
-static u32 expression_emit_assign(Expression expression){
-    printf("\nerror: Assignment emitting is not implemented yet\n");
-    return TYPES_CAPACITY;
+typedef struct {
+    u32 tape_location; // temporary
 
-    u32 name = operands[expression.ops];
-    Variable variable = variable_find(name);
+    u1 on_stack;
+    u32 type; // If >= TYPES_CAPACITY, then error occurred
+} Destination;
 
-    u32 new_value = operands[expression.ops + 1];
+static Destination expression_get_destination(Expression expression, u32 tape_anchor){
+    // Creates a u32 value on the tape with the mutable location for an expression.
+    // If result is `on_stack`, then the u32 offset will be relative to the stack pointer,
+    // Otherwise, the u32 offset will be relative to the supplied anchor cell
 
-    if(!variable.defined){
-        printf("\nerror: Variable '");
-        print_aux_cstr(name);
-        printf("' is not defined\n");
-        return TYPES_CAPACITY;
+    // Tape example
+    // | 0 | 0 | 0 | 0 | 0 | 7 | 1 | ? | ? | ? | ? |
+    //                           ^ chosen anchor cell
+    //                           ^ target location is 1 cell away
+
+    // Stack example
+    // stack: | 0 | 0 | 0 | 0 | 0 | 7 | ? | ? | ? | ? | ? |
+    //                                  ^ stack pointer
+    // tape: | ? | ? | ? | ? | ? | ? | 1 | ? | ? | ? | ? |
+    //                                 ^ target location is 1 stack cell away
+
+    // A destination result with a type >= TYPES_CAPACITY means an error occurred.
+    
+    if(expression.kind == EXPRESSION_VARIABLE){
+        u32 name = expression.ops;
+        Variable variable = variable_find(name);
+
+        if(!variable.defined){
+            printf("\nerror on line %d: Variable '", u24_unpack(expression.line));
+            print_aux_cstr(name);
+            printf("' is not defined\n");
+            return (Destination){ .type = TYPES_CAPACITY };
+        }
+
+        // emit_u32(tape_anchor - variable.location.location);
+
+        return (Destination){
+            .on_stack = false,
+            .tape_location = variable.location.location,
+            .type = variable.type,
+        };
+    } else if(expression.kind == EXPRESSION_INDEX){
+        printf("\nerror on line %d: Array index expression emitting not supported yet\n", u24_unpack(expression.line));
+        return (Destination){ .type = TYPES_CAPACITY };
+
+        /*
+        u32 index = expressions[operands[expression.ops + 1]];
+
+        Destination destination = expression_get_destination(index);
+        if(destination.type >= TYPES_CAPACITY){
+            return (Destination){ .type = TYPES_CAPACITY };
+        }
+
+        u32 dims[4];
+        memcpy(dims, dimensions[types[destination.type].dimensions], sizeof(u32) * 4);
+
+        if(dims[0] == 0){
+            printf("\nerror on line %d: \n", u24_unpack(expression.line));
+            return (Destination){ .type = TYPES_CAPACITY };
+        }
+
+        u32 offset_in_cells = 0;
+
+        return (Destination){
+            .tape_location = destination.tape_location + offset_in_cells,
+            .type = TYPES_CAPACITY,
+        };
+        */
+    } else {
+        printf("\nerror on line %d: Cannot assign value to that destination\n", u24_unpack(expression.line));
+        return (Destination){ .type = TYPES_CAPACITY };
     }
+}
+
+static u32 expression_emit_assign(Expression expression){
+    Expression destination_expression = expressions[operands[expression.ops]];
+
+    Destination destination = expression_get_destination(destination_expression, emit_context.current_cell_index);
+    if(destination.type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+    
+    u32 new_value = operands[expression.ops + 1];
 
     u32 new_value_type = expression_emit(expressions[new_value]);
     if(new_value_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
-    if(new_value_type != variable.type){
-        printf("\nerror: '");
-        print_aux_cstr(name);
-        printf("' is '");
-        type_print(types[variable.type]);
+    if(new_value_type != destination.type){
+        printf("\nerror: Destination is '");
+        type_print(types[destination.type]);
         printf("' and cannot be assigned to value of type '");
         type_print(types[new_value_type]);
         printf("'\n");
@@ -116,7 +183,7 @@ static u32 expression_emit_assign(Expression expression){
     // Point to last cell of data
     printf("<");
     emit_context.current_cell_index--;
-    move_cells_static(variable.location.location, type_size, false);
+    move_cells_static(destination.tape_location, type_size, false);
     return u0_type;
 }
 
@@ -178,6 +245,47 @@ static u32 expression_emit_additive(Expression expression, u1 is_plus){
         return a_type;
     }
 
+    printf("\nerror: Cannot ");
+    printf(is_plus ? "add" : "subtract");
+    printf(" values of type '");
+    type_print(types[a_type]);
+    printf("'\n");
+    return TYPES_CAPACITY;
+}
+
+static u32 expression_emit_divmod(Expression expression, u1 is_divide){
+    u32 a = operands[expression.ops];
+    u32 b = operands[expression.ops + 1];
+
+    u32 a_type = expression_emit(expressions[a]);
+    if(a_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    u32 b_type = expression_emit(expressions[b]);
+    if(b_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    if(a_type != b_type){
+        printf("\nerror: Cannot ");
+        printf(is_divide ? "divide" : "mod");
+        printf(" incompatible types '");
+        type_print(types[a_type]);
+        printf("' and '");
+        type_print(types[b_type]);
+        printf("'\n");
+        return TYPES_CAPACITY;
+    }
+
+    if(a_type == u8_type){
+        if(is_divide){
+            emit_divide_u8();
+        } else {
+            emit_mod_u8();
+        }
+        return a_type;
+    }
+
+    printf("\nerror: Cannot divide values of type '");
+    type_print(types[a_type]);
+    printf("'\n");
     return TYPES_CAPACITY;
 }
 
@@ -185,7 +293,10 @@ u32 expression_emit(Expression expression){
     switch(expression.kind){
     case EXPRESSION_DECLARE: {
             u32 variable_size = type_sizeof_or_max(operands[expression.ops]);
-            if(variable_size == -1) return 1;
+            if(variable_size == -1){
+                printf("    In variable declaration on line %d\n", u24_unpack(expression.line));
+                return TYPES_CAPACITY;
+            }
 
             for(u32 j = 0; j < variable_size; j++){
                 printf("[-]>");
@@ -201,6 +312,9 @@ u32 expression_emit(Expression expression){
         return expression_emit_call(expression);
     case EXPRESSION_IMPLEMENT_PUT:
         printf("<.>");
+        return u0_type;
+    case EXPRESSION_IMPLEMENT_PRINTU8:
+        emit_printu8();
         return u0_type;
     case EXPRESSION_INT:
         printf("[-]%d+>", expression.ops % 256);
@@ -218,6 +332,10 @@ u32 expression_emit(Expression expression){
         return expression_emit_additive(expression, true);
     case EXPRESSION_SUBTRACT:
         return expression_emit_additive(expression, false);
+    case EXPRESSION_DIVIDE:
+        return expression_emit_divmod(expression, true);
+    case EXPRESSION_MOD:
+        return expression_emit_divmod(expression, false);
     default:
         printf("\nerror: Unknown expression kind %d during expression_emit\n", expression.kind);
         return TYPES_CAPACITY;

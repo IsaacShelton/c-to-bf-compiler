@@ -1,4 +1,5 @@
 
+#include <signal.h>
 #include <stdio.h>
 #include "../include/emit.h"
 #include "../include/storage.h"
@@ -151,7 +152,24 @@ u0 move_cells_static(u32 destination_index, u32 size, u1 destructive){
     }
 }
 
+u0 emit_printu8(){
+    // a ?
+    //   ^
+
+    // Clear 9 cells
+    printf("[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]8<");
+    
+    // Print algorithm
+    printf(">10+<<[->+>-[>+>>]>[+[-<+>]>+>>]6<]>>[-]3>10+<[->-[>+>>]>[+[-<+>]>+>>]5<]>[-]>>[>6+[-<8+>]<.<<+>+>[-]]<[<[->-<]6+[->8+<]>.[-]]<<6+[-<8+>]<.[-]<<[-<+>]");
+
+    // Remain pointing to value cell
+    printf(">");
+}
+
 u0 emit_additive_u8(u1 is_plus){
+    // a b ?
+    //     ^
+
     // Point to b
     printf("<");
 
@@ -179,5 +197,42 @@ u0 emit_additive_u8(u1 is_plus){
     printf("]");
 
     emit_context.current_cell_index--;
+}
+
+u0 emit_divmod_u8(){
+    // n d ?
+    //     ^
+
+    // 0 d-n%d n%d n/d
+    // ^
+
+    // Setup
+    printf("[-]>[-]>[-]>[-]5<");
+
+    // Divmod algorithm
+    printf("[->[->+>>]>[<<+>>[-<+>]>+>>]5<]>[3>]>[[-<+>]>+>>]5<");
+
+    // Consume 'd'
+    emit_context.current_cell_index--;
+}
+
+u0 emit_divide_u8(){
+    // a b ?
+    //     ^
+
+    emit_divmod_u8();
+
+    // Go to n/d cell and move n/d to result cell
+    printf("3>[3<+3>-]2<");
+}
+
+u0 emit_mod_u8(){
+    // a b ?
+    //     ^
+
+    emit_divmod_u8();
+
+    // Go to n%d cell and move n%d to result cell
+    printf("2>[2<+2>-]<");
 }
 

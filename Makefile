@@ -5,12 +5,12 @@ OBJDIR=obj
 C_SOURCES=$(wildcard $(SRCDIR)/*.c)
 C_OBJECTS=$(C_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 CFLAGS=-c -Wall
-SMOOCHC=smoochc
+PECKC=peckc
 
-release: directories $(SMOOCHC)
+release: directories $(PECKC)
 
-$(SMOOCHC): $(C_OBJECTS)
-	$(CC) $(C_OBJECTS) -o $(SMOOCHC)
+$(PECKC): $(C_OBJECTS)
+	$(CC) $(C_OBJECTS) -o $(PECKC)
 
 $(C_OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $< -o $@
@@ -25,9 +25,9 @@ endif
 
 clean:
 ifeq ($(OS), Windows_NT)
-	if exist $(SMOOCHC) del $(SMOOCHC) /Q
+	if exist $(PECKC) del $(PECKC) /Q
 	del obj\*.* /Q
 else
-	rm -f 2> /dev/null $(SMOOCHC)
+	rm -f 2> /dev/null $(PECKC)
 	rm -f 2> /dev/null obj/*.*
 endif

@@ -17,7 +17,7 @@ typedef struct {
     TokenKind kind;
 } SimpleToken;
 
-SimpleToken simple_tokens[8] = {
+SimpleToken simple_tokens[9] = {
     (SimpleToken){ .c = '{', .kind = TOKEN_BEGIN },
     (SimpleToken){ .c = '}', .kind = TOKEN_END },
     (SimpleToken){ .c = '(', .kind = TOKEN_OPEN },
@@ -26,6 +26,7 @@ SimpleToken simple_tokens[8] = {
     (SimpleToken){ .c = '[', .kind = TOKEN_OPEN_BRACKET },
     (SimpleToken){ .c = ']', .kind = TOKEN_CLOSE_BRACKET },
     (SimpleToken){ .c = ',', .kind = TOKEN_NEXT },
+    (SimpleToken){ .c = '%', .kind = TOKEN_MOD },
 };
 
 static u1 is_ident(u8 c){
@@ -146,11 +147,15 @@ LexedToken lex_main(){
         return result;
     }
 
-    // Handle divide
+    // Handle divide or line comment
     if(lead == '/'){
         if(code_buffer_length > 1 && code_buffer[1] == '/'){
             result.token.kind = TOKEN_COMMENT;
             result.consumed = 2;
+            return result;
+        } else {
+            result.token.kind = TOKEN_DIVIDE;
+            result.consumed = 1;
             return result;
         }
     }

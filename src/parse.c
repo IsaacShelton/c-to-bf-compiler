@@ -38,6 +38,8 @@ ErrorCode parse_function(u32 symbol_name, u32 symbol_type){
     u32 begin = num_statements;
 
     while(!is_token(TOKEN_CLOSE)){
+        u24 line_number = current_line_packed();
+
         Type type = parse_type();
         if(had_parse_error) return 1;
 
@@ -62,6 +64,7 @@ ErrorCode parse_function(u32 symbol_name, u32 symbol_type){
 
         add_statement_from_new((Expression){
             .kind = EXPRESSION_DECLARE,
+            .line = line_number,
             .ops = ops,
         });
 

@@ -1,6 +1,6 @@
 
-#ifndef _SMOOCH_EMIT_CONTEXT_H
-#define _SMOOCH_EMIT_CONTEXT_H
+#ifndef _PECK_EMIT_CONTEXT_H
+#define _PECK_EMIT_CONTEXT_H
 
 #include "utypes.h"
 
@@ -14,5 +14,5 @@ typedef struct {
 
 EmitContext emit_context;
 
-#endif // _SMOOCH_EMIT_CONTEXT_H
+#endif // _PECK_EMIT_CONTEXT_H
 

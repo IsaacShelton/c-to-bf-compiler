@@ -1,4 +1,5 @@
 
+#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -20,7 +21,7 @@ int main(void){
 
     /*
     for(u32 i = 0; i < num_tokens; i++){
-        token_print(tokens[i]);
+        token_print(tokens[i], true);
         printf("\n");
     }
     printf("\n");
@@ -30,10 +31,12 @@ int main(void){
     if(infer()) return 1;
     if(mark_recursive_functions()) return 1;
 
+    /*
     for(u32 i = 0; i < num_functions; i++){
         function_print(functions[i]);
         printf("\n");
     }
+    */
 
     // Write
 

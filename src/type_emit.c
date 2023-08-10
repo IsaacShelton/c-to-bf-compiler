@@ -1,18 +1,37 @@
 
 #include <stdio.h>
+#include <string.h>
 #include "../include/type_emit.h"
 #include "../include/builtin_types.h"
 #include "../include/storage.h"
 #include "../include/type_print.h"
 
 u32 type_sizeof_or_max(u32 type_index){
-    if(type_index == u0_type) return 0;
-    if(type_index == u8_type) return 1;
-    if(type_index == u16_type) return 2;
+    u32 name = types[type_index].name;
+    u32 size;
 
-    printf("\nerror: Type '");
-    type_print(types[type_index]);
-    printf("' does not exist\n");
-    return -1;
+    if(aux_cstr_equals_u0(name)){
+        size = 0;
+    } else if(aux_cstr_equals_u8(name)){
+        size = 1;
+    } else if(aux_cstr_equals_u16(name)){
+        size = 2;
+    } else if(aux_cstr_equals_u32(name)){
+        size = 4;
+    } else {
+        printf("\nerror: Type '");
+        type_print(types[type_index]);
+        printf("' does not exist\n");
+        return -1;
+    }
+
+    u32 dims[4];
+    memcpy(dims, dimensions[types[type_index].dimensions], sizeof(u32) * 4);
+
+    for(u8 i = 0; i < 4 && dims[i]; i++){
+        size *= dims[i];
+    }
+
+    return size;
 }
 

@@ -1,10 +1,10 @@
 
-#ifndef _SMOOCH_INFER_H
-#define _SMOOCH_INFER_H
+#ifndef _PECK_INFER_H
+#define _PECK_INFER_H
 
 #include "utypes.h"
 
 u32 infer();
 
-#endif // _SMOOCH_INFER_H
+#endif // _PECK_INFER_H
 

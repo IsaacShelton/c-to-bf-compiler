@@ -1,6 +1,6 @@
 
-#ifndef _SMOOCH_AST_FUNCTION_H
-#define _SMOOCH_AST_FUNCTION_H
+#ifndef _PECK_AST_FUNCTION_H
+#define _PECK_AST_FUNCTION_H
 
 #include "type.h"
 #include "utypes.h"
@@ -26,5 +26,5 @@ typedef struct {
     u1 is_recursive;
 } Function;
 
-#endif // _SMOOCH_AST_FUNCTION_H
+#endif // _PECK_AST_FUNCTION_H
 

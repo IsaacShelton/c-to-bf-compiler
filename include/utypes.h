@@ -1,6 +1,6 @@
 
-#ifndef _SMOOCH_UTYPES_H
-#define _SMOOCH_UTYPES_H
+#ifndef _PECK_UTYPES_H
+#define _PECK_UTYPES_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -17,5 +17,5 @@ u32 u24_unpack(u24 value);
 
 typedef u8 ErrorCode;
 
-#endif // _SMOOCH_UTYPES_H
+#endif // _PECK_UTYPES_H
 

@@ -1,6 +1,6 @@
 
-#ifndef _SMOOCH_TYPE_EQUALS_H
-#define _SMOOCH_TYPE_EQUALS_H
+#ifndef _PECK_TYPE_EQUALS_H
+#define _PECK_TYPE_EQUALS_H
 
 #include "type.h"
 #include "utypes.h"
@@ -11,5 +11,5 @@
 // Determines if two `Type` values are equal.
 u1 type_equals(Type a, Type b);
 
-#endif // _SMOOCH_TYPE_EQUALS_H
+#endif // _PECK_TYPE_EQUALS_H
 

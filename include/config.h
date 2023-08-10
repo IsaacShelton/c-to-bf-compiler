@@ -1,6 +1,6 @@
 
-#ifndef _SMOOCH_CONFIG_H
-#define _SMOOCH_CONFIG_H
+#ifndef _PECK_CONFIG_H
+#define _PECK_CONFIG_H
 
 #define MEMORY_MULTIPLIER 1
 
@@ -20,4 +20,4 @@
 #define ARROWS_CAPACITY            MEMORY_MULTIPLIER * MEGABYTES / 4
 #define ARITY_CAPACITY             32
 
-#endif // _SMOOCH_CONFIG_H
+#endif // _PECK_CONFIG_H

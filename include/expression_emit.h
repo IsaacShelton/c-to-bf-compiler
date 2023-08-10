@@ -1,10 +1,10 @@
 
-#ifndef _SMOOCH_EXPRESSION_EMIT_H
-#define _SMOOCH_EXPRESSION_EMIT_H
+#ifndef _PECK_EXPRESSION_EMIT_H
+#define _PECK_EXPRESSION_EMIT_H
 
 #include "expression.h"
 
 u32 expression_emit(Expression expression);
 
-#endif // _SMOOCH_EXPRESSION_EMIT_H
+#endif // _PECK_EXPRESSION_EMIT_H
 

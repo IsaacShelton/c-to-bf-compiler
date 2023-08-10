@@ -1,6 +1,6 @@
 
-#ifndef _SMOOCH_GLOBAL_H
-#define _SMOOCH_GLOBAL_H
+#ifndef _PECK_GLOBAL_H
+#define _PECK_GLOBAL_H
 
 #include "utypes.h"
 
@@ -9,5 +9,5 @@ typedef struct {
     u32 type;
 } Global;
 
-#endif // _SMOOCH_GLOBAL_H
+#endif // _PECK_GLOBAL_H
 

@@ -1,6 +1,6 @@
 
-#ifndef _SMOOCH_TOKEN_H
-#define _SMOOCH_TOKEN_H
+#ifndef _PECK_TOKEN_H
+#define _PECK_TOKEN_H
 
 #include "utypes.h"
 
@@ -24,6 +24,8 @@ enum {
     TOKEN_ASSIGN,
     TOKEN_ADD,
     TOKEN_SUBTRACT,
+    TOKEN_DIVIDE,
+    TOKEN_MOD,
 };
 
 typedef u8 TokenKind;
@@ -34,5 +36,5 @@ typedef struct {
     u32 data;
 } Token;
 
-#endif // _SMOOCH_TOKEN_H
+#endif // _PECK_TOKEN_H
 

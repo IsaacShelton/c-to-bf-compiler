@@ -1,10 +1,10 @@
 
-#ifndef _SMOOCH_PARSE_H
-#define _SMOOCH_PARSE_H
+#ifndef _PECK_PARSE_H
+#define _PECK_PARSE_H
 
 #include "utypes.h"
 
 u32 parse();
 
-#endif // _SMOOCH_PARSE_H
+#endif // _PECK_PARSE_H
 

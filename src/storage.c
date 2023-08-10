@@ -180,7 +180,7 @@ u1 aux_cstr_equals(u32 a, u32 b){
 }
 
 u1 aux_cstr_equals_print(u32 a){
-    return a < AUX_CAPACITY - 5
+    return a + 5 < AUX_CAPACITY
         && aux[a    ] == 'p'
         && aux[a + 1] == 'r'
         && aux[a + 2] == 'i'
@@ -190,7 +190,7 @@ u1 aux_cstr_equals_print(u32 a){
 }
 
 u1 aux_cstr_equals_main(u32 a){
-    return a < AUX_CAPACITY - 4
+    return a + 4 < AUX_CAPACITY
         && aux[a    ] == 'm'
         && aux[a + 1] == 'a'
         && aux[a + 2] == 'i'
@@ -199,11 +199,41 @@ u1 aux_cstr_equals_main(u32 a){
 }
 
 u1 aux_cstr_equals_put(u32 a){
-    return a < AUX_CAPACITY - 4
+    return a + 3 < AUX_CAPACITY
         && aux[a    ] == 'p'
         && aux[a + 1] == 'u'
         && aux[a + 2] == 't'
-        && aux[a + 4] == '\0';
+        && aux[a + 3] == '\0';
+}
+
+u1 aux_cstr_equals_u0(u32 a){
+    return a + 2 < AUX_CAPACITY
+        && aux[a    ] == 'u'
+        && aux[a + 1] == '0'
+        && aux[a + 2] == '\0';
+}
+
+u1 aux_cstr_equals_u8(u32 a){
+    return a + 2 < AUX_CAPACITY
+        && aux[a    ] == 'u'
+        && aux[a + 1] == '8'
+        && aux[a + 2] == '\0';
+}
+
+u1 aux_cstr_equals_u16(u32 a){
+    return a + 3 < AUX_CAPACITY
+        && aux[a    ] == 'u'
+        && aux[a + 1] == '1'
+        && aux[a + 2] == '6'
+        && aux[a + 3] == '\0';
+}
+
+u1 aux_cstr_equals_u32(u32 a){
+    return a + 3 < AUX_CAPACITY
+        && aux[a    ] == 'u'
+        && aux[a + 1] == '3'
+        && aux[a + 2] == '2'
+        && aux[a + 3] == '\0';
 }
 
 u0 print_aux_cstr(u32 index){

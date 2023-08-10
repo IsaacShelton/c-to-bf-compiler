@@ -1,6 +1,6 @@
 
-#ifndef _SMOOCH_LEX_RESULT_H
-#define _SMOOCH_LEX_RESULT_H
+#ifndef _PECK_LEX_RESULT_H
+#define _PECK_LEX_RESULT_H
 
 #include "utypes.h"
 #include "token.h"
@@ -15,5 +15,5 @@ typedef struct {
     u8 new_c;
 } LexUnboundedResult;
 
-#endif // _SMOOCH_LEX_RESULT_H
+#endif // _PECK_LEX_RESULT_H
 

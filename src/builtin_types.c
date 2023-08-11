@@ -16,7 +16,7 @@ static u32 make_simple_type(u8 raw_name[16]){
     });
 }
 
-u32 add_builtin_types(){
+ErrorCode add_builtin_types(){
     // Create u0 type
     u8 u0_name[16] = "u0";
     u0_type = make_simple_type(u0_name);

@@ -12,6 +12,8 @@ u0 copy_cell_static(u32 start_index);
 u0 copy_cells_static(u32 start_index, u32 size);
 u0 move_cell_static(u32 destination_index);
 u0 move_cells_static(u32 destination_index, u32 size, u1 destructive);
+u0 move_cell_dynamic_u8(u32 destination_start_index);
+u0 move_cells_dynamic_u8(u32 destination_start_index, u32 size);
 
 u0 emit_printu8();
 u0 emit_additive_u8(u1 is_plus);

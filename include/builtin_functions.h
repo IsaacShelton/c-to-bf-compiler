@@ -4,7 +4,7 @@
 
 #include "utypes.h"
 
-u32 add_builtin_functions();
+ErrorCode add_builtin_functions();
 
 #endif // _PECK_BUILTIN_FUNCTIONS_H
 

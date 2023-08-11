@@ -82,8 +82,7 @@ static ErrorCode add_printu8_function(){
     return 0;
 }
 
-u32 add_builtin_functions(){
-    // Create put function
+ErrorCode add_builtin_functions(){
     if(add_put_function()) return 1;
     if(add_printu8_function()) return 1;
     return 0;

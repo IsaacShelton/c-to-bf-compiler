@@ -100,14 +100,126 @@ u0 copy_cell_static(u32 start_index){
     // End while
     printf("]");
 
-    // Increment current cell index
-    emit_context.current_cell_index += 1;
+    emit_context.current_cell_index++;
 }
 
 u0 copy_cells_static(u32 start_index, u32 size){
     for(u32 i = 0; i < size; i++){
         copy_cell_static(start_index);
     }
+}
+
+u0 copy_cells_dynamic_u8(u32 start_index, u32 size){
+    if(size != 1){
+        printf("\nwarning: can only use move_cells_dynamic_u8 with single cell for now\n");
+    }
+
+    copy_cell_dynamic_u8(start_index);
+}
+
+u0 copy_cell_dynamic_u8(u32 start_index){
+    if(start_index >= emit_context.current_cell_index){
+        printf("\nwarning: move_cell_dynamic_u8 failed, can only move backwards\n");
+        return;
+    }
+
+    u32 back_offset = emit_context.current_cell_index - start_index;
+
+    // index
+    //   ^
+
+    // value
+    //   ^
+
+    /* Example:
+        ++++++++++ +>
+        ++++++++++ ++>
+        ++++++++++ +++>
+        ++++++++++ ++++>
+        ++++++++++ +++++>
+        ++++++++++ ++++++> # Memory (array of 6 cells)
+
+        ++++ # Index (0 is leftmost and 5 is rightmost)
+
+        # Corrupt forward memory
+        >+>+>+>+>+>+>+>+>+
+        <<<<<<<<<
+
+        >[-]>[-]<< # Initialize moving window memory
+
+        [>+>+<<-] # Create two copies of index
+        >>[<<+>>-]<<
+
+        [
+          - # Decrement index
+          # Move two index values forward
+          >>[-] # Zero next cell
+          <[>+<-] # Move second cell to right
+          <[>+<-] # Move first cell to right
+          >
+        ]
+
+        # Copy
+        [-]>>[-]<<
+        <<<<<<
+        [>>>>>> + >>+<<  <<<<<<-]
+        >>>>>>
+
+        # Move second copy back into original
+        >>
+        [<<<<<< <<+>> >>>>>>-]
+
+        # Go back to where index was
+        <
+
+        # While index
+        [
+          - # Decrement
+          <
+          [<+>-] # Copy left
+          >
+          [<+>-] # Copy left
+          <
+        ]
+    */
+
+
+    printf(">[-]>[-]<<"); // Initialize moving window memory
+
+    printf("[>+>+<<-]"); // Create two copies of index
+    printf(">>[<<+>>-]<<");
+
+    printf("[");
+      printf("-"); // Decrement index
+      // Move two index values forward
+      printf(">>[-]"); // Zero next cell
+      printf("<[>+<-]"); // Move second cell to right
+      printf("<[>+<-]"); // Move first cell to right
+      printf(">");
+    printf("]");
+
+    // Copy
+    printf("[-]>>[-]<<");
+    printf("%d<", back_offset);
+    printf("[%d>+>>+<<%d<-]", back_offset, back_offset);
+    printf("%d>", back_offset);
+
+    // Move second copy back into original
+    printf(">>");
+    printf("[%d<<<+>>%d>-]", back_offset, back_offset);
+
+    // Go back to where index was
+    printf("<");
+
+    // While index
+    printf("[");
+      printf("-"); // Decrement
+      printf("<");
+      printf("[<+>-]"); // Copy left
+      printf(">");
+      printf("[<+>-]"); // Copy left
+      printf("<");
+    printf("]");
 }
 
 u0 move_cell_static(u32 destination_index){

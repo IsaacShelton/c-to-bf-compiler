@@ -135,24 +135,6 @@ while(stack_pointer != 0){
 }
 */
 
-static u32 function_sizeof_parameters_or_max(Function function){
-    u32 size = 0;
-
-    for(u32 i = 0; i < function.arity; i++){
-        Expression declare = expressions[statements[function.begin + i]];
-        u32 type = operands[declare.ops];
-        u32 type_size = type_sizeof_or_max(type);
-
-        if(type_size == -1){
-            return -1;
-        }
-
-        size += type_size;
-    }
-
-    return size;
-}
-
 u32 function_emit(Function function, u32 start_function_cell_index, u32 start_current_cell_index){
     EmitContext old_emit_context = emit_context;
 
@@ -178,33 +160,6 @@ u32 function_emit(Function function, u32 start_function_cell_index, u32 start_cu
             return 1;
         }
     }
-
-    /*
-    printf("\nCurrent cell index: %d\n", emit_context.current_cell_index);
-    printf("\nInside function: ");
-    print_aux_cstr(function.name);
-    printf("\n");
-    u32 name = aux_cstr_alloc((u8*) "variable");
-    if(name >= AUX_CAPACITY){
-        printf("\nerror: allocating string\n");
-        return 1;
-    }
-    Variable variable = variable_find(name);
-
-    printf("\nGot: %s ", variable.defined ? "defined" : "undefined");
-    if(variable.defined){
-        print_aux_cstr(variable.name);
-        printf(" ");
-        type_print(types[variable.type]);
-        printf(" ");
-        printf("depth:%d ", variable.depth);
-        printf("declaration:%d ", variable.declaration);
-        printf("location.on_stack:%s ", variable.location.on_stack ? "true" : "false");
-        printf("location.location:%d ", variable.location.location);
-    }
-    printf("\n");
-    */
-
 
     if(emit_context.current_cell_index > start_function_cell_index){
         printf("%d<", emit_context.current_cell_index - start_function_cell_index);

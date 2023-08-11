@@ -12,9 +12,14 @@ u0 expression_print(Expression expression){
         printf(" ");
         print_aux_cstr(operands[expression.ops + 1]);
         break;
-    case EXPRESSION_PRINT:
+    case EXPRESSION_PRINT_LITERAL:
         printf("print(\"");
         print_aux_cstr_escaped(expression.ops);
+        printf("\")");
+        break;
+    case EXPRESSION_PRINT_ARRAY:
+        printf("print(\"");
+        expression_print(expressions[expression.ops]);
         printf("\")");
         break;
     case EXPRESSION_CALL: {

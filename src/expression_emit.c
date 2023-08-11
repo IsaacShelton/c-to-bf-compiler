@@ -114,6 +114,16 @@ static u32 get_item_type(Type type){
     return add_type(item_type);
 }
 
+static u1 is_destination(Expression expression){
+    switch(expression.kind){
+    case EXPRESSION_VARIABLE:
+    case EXPRESSION_INDEX:
+        return true;
+    default:
+        return false;
+    }
+}
+
 static Destination expression_get_destination(Expression expression, u32 tape_anchor){
     // Creates a u32 value on the tape with the mutable location for an expression.
     // If result is `on_stack`, then the u32 offset will be relative to the stack pointer,
@@ -377,6 +387,17 @@ static u32 expression_emit_index(Expression expression){
     }
 }
 
+ErrorCode print_array_reference(Destination destination, u32 max_length){
+    if(destination.offset_size == 0){
+        print_cells_static(destination.tape_location, max_length);
+    } else {
+        printf("\nerror: Cannot print array reference with u%d offset\n", 8*destination.offset_size);
+        return 1;
+    }
+
+    return 0;
+}
+
 u32 expression_emit(Expression expression){
     switch(expression.kind){
     case EXPRESSION_DECLARE: {
@@ -393,8 +414,39 @@ u32 expression_emit(Expression expression){
             emit_context.current_cell_index += variable_size;
         }
         return u0_type;
-    case EXPRESSION_PRINT:
+    case EXPRESSION_PRINT_LITERAL:
         emit_print_aux_cstr(expression.ops);
+        return u0_type;
+    case EXPRESSION_PRINT_ARRAY: {
+            if(is_destination(expressions[expression.ops])){
+                // Print reference
+                u32 tape_anchor = emit_context.current_cell_index;
+                Destination destination = expression_get_destination(expressions[expression.ops], tape_anchor);
+                if(destination.type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+                if(get_item_type(types[destination.type]) != u8_type){
+                    printf("\nerror on line %d: Cannot print non u8[] value\n", u24_unpack(expression.line));
+                    return TYPES_CAPACITY;
+                }
+
+                u32 max_length = dimensions[types[destination.type].dimensions][0];
+                if(print_array_reference(destination, max_length)){
+                    return TYPES_CAPACITY;
+                }
+            } else {
+                // Print value
+                u32 array_type = expression_emit(expressions[expression.ops]);
+                if(array_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+                if(get_item_type(types[array_type]) != u8_type){
+                    printf("\nerror on line %d: Cannot print non u8[] value\n", u24_unpack(expression.line));
+                    return TYPES_CAPACITY;
+                }
+
+                u32 max_length = dimensions[types[array_type].dimensions][0];
+                emit_print_array_value(max_length);
+            }
+        }
         return u0_type;
     case EXPRESSION_CALL:
         return expression_emit_call(expression);
@@ -402,7 +454,7 @@ u32 expression_emit(Expression expression){
         printf("<.>");
         return u0_type;
     case EXPRESSION_IMPLEMENT_PRINTU8:
-        emit_printu8();
+        emit_printu8(); // Print value
         return u0_type;
     case EXPRESSION_INT:
         printf("[-]%d+>", expression.ops % 256);

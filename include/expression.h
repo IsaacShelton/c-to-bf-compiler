@@ -8,7 +8,8 @@ enum {
     EXPRESSION_NONE,
     EXPRESSION_RETURN, /* { expression } */
     EXPRESSION_DECLARE, /* { type, name } */
-    EXPRESSION_PRINT, /* { string } */
+    EXPRESSION_PRINT_LITERAL, /* { string } */
+    EXPRESSION_PRINT_ARRAY, /* { expression } */
     EXPRESSION_CALL, /* { name, arity, arg1, arg2, ..., argN } */
     EXPRESSION_IMPLEMENT_PUT,
     EXPRESSION_IMPLEMENT_PRINTU8,

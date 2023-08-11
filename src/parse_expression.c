@@ -7,23 +7,33 @@
 static Expression parse_secondary_expression(u8 precedence, Expression lhs);
 
 static Expression parse_expression_print(u24 line_number){
-    Expression expression = (Expression){
-        .kind = EXPRESSION_PRINT,
-        .line = line_number,
-        .ops = 0,
-    };
+    Expression expression = (Expression){0};
 
-    if(!is_token(TOKEN_STRING)){
-        printf("error on line %d: Expected string after '(' in print statement\n", current_line());
-        instead_got();
-        stop_parsing();
-        return expression;
+    if(is_token(TOKEN_STRING)){
+        expression = (Expression){
+            .kind = EXPRESSION_PRINT_LITERAL,
+            .line = line_number,
+            .ops = eat_string(),
+        };
+    } else {
+        Expression array = parse_expression();
+        if(had_parse_error) return expression;
+
+        u32 array_value = add_expression(array);
+        if(array_value >= EXPRESSIONS_CAPACITY){
+            stop_parsing();
+            return expression;
+        }
+        
+        expression = (Expression){
+            .kind = EXPRESSION_PRINT_ARRAY,
+            .line = line_number,
+            .ops = array_value,
+        };
     }
 
-    expression.ops = eat_string();
-
     if(!eat_token(TOKEN_CLOSE)){
-        printf("error on line %d: Expected ')' after string in print statement\n", current_line());
+        printf("error on line %d: Expected ')' after expression in print statement\n", current_line());
         instead_got();
         stop_parsing();
         return expression;

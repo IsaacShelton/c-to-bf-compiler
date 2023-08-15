@@ -28,6 +28,15 @@
 - `a % b`
 - `a << b`
 - `a >> b`
+- `a == b`
+- `a != b`
+- `a < b`
+- `a > b`
+- `a <= b`
+- `a >= b`
+- `a & b`
+- `a | b`
+- `a ^ b`
 - `a && b`
 - `a || b`
 - `~a`
@@ -48,15 +57,7 @@
 - `break;`
 - `continue;`
 - `a[b]`
-- `a == b`
-- `a != b`
-- `a < b`
-- `a > b`
-- `a <= b`
-- `a >= b`
 - `(a)`
-- `a & b`
-- `a | b`
-- `a ^ b`
 - `switch(value){ case A: statements; break; case B: statements; break; default: statements; }`
+- `(Type){ .a = a, .b = b, .c = c }`
 

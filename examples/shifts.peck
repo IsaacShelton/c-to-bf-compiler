@@ -1,0 +1,30 @@
+
+u0 main(){
+    printu8_newline(1 << 0);
+    printu8_newline(1 << 1);
+    printu8_newline(1 << 2);
+    printu8_newline(1 << 3);
+    printu8_newline(1 << 4);
+    printu8_newline(1 << 5);
+    printu8_newline(1 << 6);
+    printu8_newline(1 << 7);
+    printu8_newline(1 << 8);
+    printu8_newline(1 << 9);
+
+    printu8_newline(128 >> 0);
+    printu8_newline(128 >> 1);
+    printu8_newline(128 >> 2);
+    printu8_newline(128 >> 3);
+    printu8_newline(128 >> 4);
+    printu8_newline(128 >> 5);
+    printu8_newline(128 >> 6);
+    printu8_newline(128 >> 7);
+    printu8_newline(128 >> 8);
+    printu8_newline(128 >> 9);
+}
+
+u0 printu8_newline(u8 value){
+    printu8(value);
+    print("\n");
+}
+

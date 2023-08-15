@@ -14,5 +14,6 @@ set -ex
 "$self/../peck" "$self/print_array.peck"
 "$self/../peck" "$self/put.peck"
 "$self/../peck" "$self/recursion_detection_simple.peck"
+"$self/../peck" "$self/shifts.peck"
 "$self/../peck" "$self/variable_usage_simple.peck"
 

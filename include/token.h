@@ -28,6 +28,10 @@ enum {
     TOKEN_MULTIPLY,
     TOKEN_DIVIDE,
     TOKEN_MOD,
+    TOKEN_LESS_THAN,
+    TOKEN_GREATER_THAN,
+    TOKEN_LSHIFT,
+    TOKEN_RSHIFT,
 };
 
 typedef u8 TokenKind;

@@ -3,6 +3,7 @@
 #define _PECK_AST_EXPRESSION_H
 
 #include "utypes.h"
+#include "token.h"
 
 enum {
     EXPRESSION_NONE,
@@ -22,6 +23,10 @@ enum {
     EXPRESSION_MULTIPLY, /* { a, b } */
     EXPRESSION_DIVIDE, /* { a, b } */
     EXPRESSION_MOD, /* { a, b } */
+    EXPRESSION_LESS_THAN, /* { a, b } */
+    EXPRESSION_GREATER_THAN, /* { a, b } */
+    EXPRESSION_LSHIFT, /* { a, b } */
+    EXPRESSION_RSHIFT, /* { a, b } */
     EXPRESSION_INDEX,  /* { a, b } */
 };
 typedef u8 ExpressionKind;
@@ -34,6 +39,7 @@ typedef struct {
 
 u0 expression_print_operator(ExpressionKind kind);
 u0 expression_print_operation_name(ExpressionKind kind);
+ExpressionKind expression_kind_from_token_kind(TokenKind kind);
 
 #endif // _PECK_AST_EXPRESSION_H
 

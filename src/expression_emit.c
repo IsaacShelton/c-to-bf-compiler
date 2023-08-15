@@ -293,6 +293,12 @@ static ErrorCode emit_math(ExpressionKind kind){
     case EXPRESSION_MOD:
         emit_mod_u8();
         return 0;
+    case EXPRESSION_LSHIFT:
+        emit_lshift_u8();
+        return 0;
+    case EXPRESSION_RSHIFT:
+        emit_rshift_u8();
+        return 0;
     default:
         printf("\nerror: Could not perform unknown math operation for expression kind %d\n", kind);
         return 1;
@@ -461,6 +467,8 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_MULTIPLY:
     case EXPRESSION_DIVIDE:
     case EXPRESSION_MOD:
+    case EXPRESSION_LSHIFT:
+    case EXPRESSION_RSHIFT:
         return expression_emit_math(expression);
     case EXPRESSION_INDEX:
         return expression_emit_index(expression);

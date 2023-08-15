@@ -21,9 +21,28 @@ ExpressionKind expression_get_preferred_int_kind_or_none(u32 expression_index){
             }
         }
         return EXPRESSION_NONE;
-    default:
-        return EXPRESSION_NONE;
+    case EXPRESSION_ASSIGN:
+    case EXPRESSION_ADD:
+    case EXPRESSION_SUBTRACT:
+    case EXPRESSION_MULTIPLY:
+    case EXPRESSION_DIVIDE:
+    case EXPRESSION_MOD:
+    case EXPRESSION_LESS_THAN:
+    case EXPRESSION_GREATER_THAN:
+    case EXPRESSION_LSHIFT:
+    case EXPRESSION_RSHIFT: {
+            ExpressionKind result;
+
+            result = expression_get_preferred_int_kind_or_none(operands[expression.ops]);
+            if(result != EXPRESSION_NONE) return result;
+
+            result = expression_get_preferred_int_kind_or_none(operands[expression.ops + 1]);
+            if(result != EXPRESSION_NONE) return result;
+        }
+        break;
     }
+    
+    return EXPRESSION_NONE;
 }
 
 static ExpressionKind function_argument_preferred_int_kind(u32 function_begin, u32 argument_i){
@@ -57,6 +76,14 @@ static u0 expression_infer_math(Expression expression, ExpressionKind preferred_
     u32 a = operands[expression.ops];
     u32 b = operands[expression.ops + 1];
 
+    if(preferred_int_kind == EXPRESSION_NONE){
+        preferred_int_kind = expression_get_preferred_int_kind_or_none(a);
+    }
+
+    if(preferred_int_kind == EXPRESSION_NONE){
+        preferred_int_kind = expression_get_preferred_int_kind_or_none(b);
+    }
+
     expression_infer(a, preferred_int_kind);
     expression_infer(b, preferred_int_kind);
 }
@@ -78,6 +105,10 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
     case EXPRESSION_MULTIPLY:
     case EXPRESSION_DIVIDE:
     case EXPRESSION_MOD:
+    case EXPRESSION_LESS_THAN:
+    case EXPRESSION_GREATER_THAN:
+    case EXPRESSION_LSHIFT:
+    case EXPRESSION_RSHIFT:
         expression_infer_math(expression, preferred_int_kind);
         break;
     }

@@ -172,6 +172,12 @@ static u8 parse_get_precedence(u32 token_kind){
     case TOKEN_ADD:
     case TOKEN_SUBTRACT:
         return 11;
+    case TOKEN_LSHIFT:
+    case TOKEN_RSHIFT:
+        return 10;
+    case TOKEN_LESS_THAN:
+    case TOKEN_GREATER_THAN:
+        return 9;
     case TOKEN_ASSIGN:
         return 1;
     default:
@@ -214,7 +220,7 @@ static Expression parse_rhs(u32 operator_precedence){
 
 static Expression parse_math(
     Expression lhs,
-    ExpressionKind expression_kind,
+    TokenKind operator,
     u24 line_number,
     u8 operator_precedence
 ){
@@ -235,6 +241,13 @@ static Expression parse_math(
 
     u32 ops = add_operands2(a, b);
     if(ops >= OPERANDS_CAPACITY){
+        stop_parsing();
+        return lhs;
+    }
+
+    ExpressionKind expression_kind = expression_kind_from_token_kind(operator);
+    if(expression_kind == EXPRESSION_NONE){
+        printf("\nerror on line %d: Could not get math expression kind from token kind\n", u24_unpack(line_number));
         stop_parsing();
         return lhs;
     }
@@ -301,22 +314,16 @@ static Expression parse_secondary_expression(u8 precedence, Expression lhs){
 
         switch(operator){
         case TOKEN_ADD:
-            lhs = parse_math(lhs, EXPRESSION_ADD, line_number, next_precedence);
-            break;
         case TOKEN_SUBTRACT:
-            lhs = parse_math(lhs, EXPRESSION_SUBTRACT, line_number, next_precedence);
-            break;
         case TOKEN_MULTIPLY:
-            lhs = parse_math(lhs, EXPRESSION_MULTIPLY, line_number, next_precedence);
-            break;
         case TOKEN_DIVIDE:
-            lhs = parse_math(lhs, EXPRESSION_DIVIDE, line_number, next_precedence);
-            break;
         case TOKEN_MOD:
-            lhs = parse_math(lhs, EXPRESSION_MOD, line_number, next_precedence);
-            break;
+        case TOKEN_LESS_THAN:
+        case TOKEN_GREATER_THAN:
+        case TOKEN_LSHIFT:
+        case TOKEN_RSHIFT:
         case TOKEN_ASSIGN:
-            lhs = parse_math(lhs, EXPRESSION_ASSIGN, line_number, next_precedence);
+            lhs = parse_math(lhs, operator, line_number, next_precedence);
             break;
         case TOKEN_OPEN_BRACKET:
             lhs = parse_array_index(lhs, line_number);

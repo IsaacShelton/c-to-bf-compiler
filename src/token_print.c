@@ -73,6 +73,18 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_MOD:
         printf("%%");
         break;
+    case TOKEN_LESS_THAN:
+        printf("<");
+        break;
+    case TOKEN_GREATER_THAN:
+        printf(">");
+        break;
+    case TOKEN_LSHIFT:
+        printf("<<");
+        break;
+    case TOKEN_RSHIFT:
+        printf(">>");
+        break;
     default:
         printf("<unknown>");
     }

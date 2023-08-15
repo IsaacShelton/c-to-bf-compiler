@@ -52,63 +52,21 @@ u0 expression_print(Expression expression){
         print_aux_cstr(expression.ops);
         break;
     case EXPRESSION_ASSIGN:
-        printf("(");
-        expression_print(expressions[operands[expression.ops]]);
-        printf(" = ");
-        expression_print(expressions[operands[expression.ops + 1]]);
-        printf(")");
-        break;
-    case EXPRESSION_ADD: {
+    case EXPRESSION_ADD:
+    case EXPRESSION_SUBTRACT:
+    case EXPRESSION_MULTIPLY:
+    case EXPRESSION_DIVIDE:
+    case EXPRESSION_MOD:
+    case EXPRESSION_LESS_THAN:
+    case EXPRESSION_GREATER_THAN:
+    case EXPRESSION_LSHIFT:
+    case EXPRESSION_RSHIFT: {
             u32 a = operands[expression.ops];
             u32 b = operands[expression.ops + 1];
 
             printf("(");
             expression_print(expressions[a]);
-            printf(" + ");
-            expression_print(expressions[b]);
-            printf(")");
-        }
-        break;
-    case EXPRESSION_SUBTRACT: {
-            u32 a = operands[expression.ops];
-            u32 b = operands[expression.ops + 1];
-
-            printf("(");
-            expression_print(expressions[a]);
-            printf(" - ");
-            expression_print(expressions[b]);
-            printf(")");
-        }
-        break;
-    case EXPRESSION_MULTIPLY: {
-            u32 a = operands[expression.ops];
-            u32 b = operands[expression.ops + 1];
-
-            printf("(");
-            expression_print(expressions[a]);
-            printf(" * ");
-            expression_print(expressions[b]);
-            printf(")");
-        }
-        break;
-    case EXPRESSION_DIVIDE: {
-            u32 a = operands[expression.ops];
-            u32 b = operands[expression.ops + 1];
-
-            printf("(");
-            expression_print(expressions[a]);
-            printf(" / ");
-            expression_print(expressions[b]);
-            printf(")");
-        }
-        break;
-    case EXPRESSION_MOD: {
-            u32 a = operands[expression.ops];
-            u32 b = operands[expression.ops + 1];
-
-            printf("(");
-            expression_print(expressions[a]);
-            printf(" %% ");
+            expression_print_operator(expression.kind);
             expression_print(expressions[b]);
             printf(")");
         }

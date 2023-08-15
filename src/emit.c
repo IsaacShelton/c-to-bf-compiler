@@ -598,3 +598,110 @@ u0 emit_mod_u8(){
     printf("2>[2<+2>-]<");
 }
 
+u0 emit_lshift_u8(){
+    // a b ?
+    //     ^
+
+    // Create temporary cell
+    printf("[-]");
+
+    // Go to 'b' cell
+    printf("<");
+
+    // While 'b'
+    printf("[");
+
+    // Go to 'a' cell
+    printf("<");
+
+    // Move 'a' cell to temporary cell
+    printf("[>>+<<-]");
+
+    // Go to temporary cell
+    printf(">>");
+
+    // Store 2 times the temporary cell in 'a' cell
+    printf("[<<++>>-]");
+
+    // Go to 'b' cell and decrement
+    printf("<-");
+    
+    // End while
+    printf("]");
+
+    emit_context.current_cell_index--;
+}
+
+u0 emit_rshift_u8(){
+    // a b ?
+    //     ^
+
+    // Allocate 4 temporary cells (c, x, y, and z)
+    printf("[-]>[-]>[-]>[-]");
+
+    // Go to 'b' cell
+    printf("4<");
+
+    // While 'b'
+    printf("[");
+
+    // Set 'c' cell to 2
+    printf(">++");
+
+    // Point to 'a' cell
+    printf("<<");
+
+    // While 'a'
+    printf("[");
+    
+    // Decrement 'a' cell
+    printf("-");
+
+    // Go to and decrement 'c' cell
+    printf(">>-");
+
+    // Copy 'c' cell to 'y' cell via 'z' cell
+    printf("[>>+>+3<-]3>[3<+3>-]");
+
+    // Go to 'y' cell
+    printf("<");
+
+    // If 'y' cell is 0
+    printf("-[");
+
+    // Go to and increment 'x' cell
+    printf("<+");
+
+    // Set 'c' cell to 2
+    printf("<++");
+
+    // Go to and semi-zero 'y' cell
+    printf(">>+");
+
+    // End if
+    printf("]");
+
+    // Go to 'a' cell
+    printf("4<");
+
+    // End while
+    printf("]");
+
+    // Go to 'x' cell
+    printf("3>");
+
+    // Move 'x' cell to 'a' cell
+    printf("[3<+3>-]");
+
+    // Zero 'c' cell
+    printf("<[-]");
+
+    // Go to and decrement 'b' cell
+    printf("<-");
+
+    // End while
+    printf("]");
+
+    emit_context.current_cell_index--;
+}
+

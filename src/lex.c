@@ -166,6 +166,30 @@ LexedToken lex_main(){
         }
     }
     
+    // Handle less than
+    if(lead == '<'){
+        if(code_buffer_length > 1 && code_buffer[1] == '<'){
+            result.token.kind = TOKEN_LSHIFT;
+            result.consumed = 2;
+        } else {
+            result.token.kind = TOKEN_LESS_THAN;
+            result.consumed = 1;
+        }
+        return result;
+    }
+
+    // Handle greater than
+    if(lead == '>'){
+        if(code_buffer_length > 1 && code_buffer[1] == '>'){
+            result.token.kind = TOKEN_RSHIFT;
+            result.consumed = 2;
+        } else {
+            result.token.kind = TOKEN_GREATER_THAN;
+            result.consumed = 1;
+        }
+        return result;
+    }
+
     // Handle character literal
     if(lead == '\''){
         return lex_character_literal();

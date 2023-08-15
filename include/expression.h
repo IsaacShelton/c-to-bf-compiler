@@ -32,5 +32,8 @@ typedef struct {
     u32 ops; // Start index in `operands` array (except if single operand, in which case ops itself is the value)
 } Expression;
 
+u0 expression_print_operator(ExpressionKind kind);
+u0 expression_print_operation_name(ExpressionKind kind);
+
 #endif // _PECK_AST_EXPRESSION_H
 

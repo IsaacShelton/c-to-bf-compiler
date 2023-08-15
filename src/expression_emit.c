@@ -275,71 +275,31 @@ u32 expression_emit_variable(Expression expression){
     return variable.type;
 }
 
-static u32 expression_emit_additive(Expression expression, u1 is_plus){
-    u32 a = operands[expression.ops];
-    u32 b = operands[expression.ops + 1];
 
-    u32 a_type = expression_emit(expressions[a]);
-    if(a_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
-
-    u32 b_type = expression_emit(expressions[b]);
-    if(b_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
-
-    if(a_type != b_type){
-        printf("\nerror: Cannot ");
-        printf(is_plus ? "add" : "subtract");
-        printf(" incompatible types '");
-        type_print(types[a_type]);
-        printf("' and '");
-        type_print(types[b_type]);
-        printf("'\n");
-        return TYPES_CAPACITY;
-    }
-
-    if(a_type == u8_type){
-        emit_additive_u8(is_plus);
-        return a_type;
-    }
-
-    printf("\nerror: Cannot ");
-    printf(is_plus ? "add" : "subtract");
-    printf(" values of type '");
-    type_print(types[a_type]);
-    printf("'\n");
-    return TYPES_CAPACITY;
-}
-
-static u32 expression_emit_multiply(Expression expression){
-    u32 a = operands[expression.ops];
-    u32 b = operands[expression.ops + 1];
-
-    u32 a_type = expression_emit(expressions[a]);
-    if(a_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
-
-    u32 b_type = expression_emit(expressions[b]);
-    if(b_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
-
-    if(a_type != b_type){
-        printf("\nerror: Cannot multiply incompatible types '");
-        type_print(types[a_type]);
-        printf("' and '");
-        type_print(types[b_type]);
-        printf("'\n");
-        return TYPES_CAPACITY;
-    }
-
-    if(a_type == u8_type){
+static ErrorCode emit_math(ExpressionKind kind){
+    switch(kind){
+    case EXPRESSION_ADD:
+        emit_additive_u8(true);
+        return 0;
+    case EXPRESSION_SUBTRACT:
+        emit_additive_u8(false);
+        return 0;
+    case EXPRESSION_MULTIPLY:
         emit_multiply_u8();
-        return a_type;
+        return 0;
+    case EXPRESSION_DIVIDE:
+        emit_divide_u8();
+        return 0;
+    case EXPRESSION_MOD:
+        emit_mod_u8();
+        return 0;
+    default:
+        printf("\nerror: Could not perform unknown math operation for expression kind %d\n", kind);
+        return 1;
     }
-
-    printf("\nerror: Cannot multiply values of type '");
-    type_print(types[a_type]);
-    printf("'\n");
-    return TYPES_CAPACITY;
 }
 
-static u32 expression_emit_divmod(Expression expression, u1 is_divide){
+static u32 expression_emit_math(Expression expression){
     u32 a = operands[expression.ops];
     u32 b = operands[expression.ops + 1];
 
@@ -351,7 +311,7 @@ static u32 expression_emit_divmod(Expression expression, u1 is_divide){
 
     if(a_type != b_type){
         printf("\nerror: Cannot ");
-        printf(is_divide ? "divide" : "mod");
+        expression_print_operation_name(expression.kind);
         printf(" incompatible types '");
         type_print(types[a_type]);
         printf("' and '");
@@ -361,16 +321,12 @@ static u32 expression_emit_divmod(Expression expression, u1 is_divide){
     }
 
     if(a_type == u8_type){
-        if(is_divide){
-            emit_divide_u8();
-        } else {
-            emit_mod_u8();
-        }
+        if(emit_math(expression.kind)) return TYPES_CAPACITY;
         return a_type;
     }
 
     printf("\nerror: Cannot ");
-    printf(is_divide ? "divide" : "mod");
+    expression_print_operation_name(expression.kind);
     printf(" values of type '");
     type_print(types[a_type]);
     printf("'\n");
@@ -501,15 +457,11 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_VARIABLE:
         return expression_emit_variable(expression);
     case EXPRESSION_ADD:
-        return expression_emit_additive(expression, true);
     case EXPRESSION_SUBTRACT:
-        return expression_emit_additive(expression, false);
     case EXPRESSION_MULTIPLY:
-        return expression_emit_multiply(expression);
     case EXPRESSION_DIVIDE:
-        return expression_emit_divmod(expression, true);
     case EXPRESSION_MOD:
-        return expression_emit_divmod(expression, false);
+        return expression_emit_math(expression);
     case EXPRESSION_INDEX:
         return expression_emit_index(expression);
     default:

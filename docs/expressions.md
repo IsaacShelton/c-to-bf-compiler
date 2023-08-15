@@ -40,9 +40,13 @@
 - `a ? b : c`
 - `(Type) a`
 - `if(condition){ statements; }`
+- `if(condition){ statements; } else statement;`
 - `while(condition){ statements; }`
+- `do { statements; } while(condition);`
 - `for(start; condition; next){ statements; }`
 - `return a;`
+- `break;`
+- `continue;`
 - `a[b]`
 - `a == b`
 - `a != b`

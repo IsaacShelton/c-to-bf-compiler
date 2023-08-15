@@ -309,6 +309,36 @@ static u32 expression_emit_additive(Expression expression, u1 is_plus){
     return TYPES_CAPACITY;
 }
 
+static u32 expression_emit_multiply(Expression expression){
+    u32 a = operands[expression.ops];
+    u32 b = operands[expression.ops + 1];
+
+    u32 a_type = expression_emit(expressions[a]);
+    if(a_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    u32 b_type = expression_emit(expressions[b]);
+    if(b_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    if(a_type != b_type){
+        printf("\nerror: Cannot multiply incompatible types '");
+        type_print(types[a_type]);
+        printf("' and '");
+        type_print(types[b_type]);
+        printf("'\n");
+        return TYPES_CAPACITY;
+    }
+
+    if(a_type == u8_type){
+        emit_multiply_u8();
+        return a_type;
+    }
+
+    printf("\nerror: Cannot multiply values of type '");
+    type_print(types[a_type]);
+    printf("'\n");
+    return TYPES_CAPACITY;
+}
+
 static u32 expression_emit_divmod(Expression expression, u1 is_divide){
     u32 a = operands[expression.ops];
     u32 b = operands[expression.ops + 1];
@@ -339,7 +369,9 @@ static u32 expression_emit_divmod(Expression expression, u1 is_divide){
         return a_type;
     }
 
-    printf("\nerror: Cannot divide values of type '");
+    printf("\nerror: Cannot ");
+    printf(is_divide ? "divide" : "mod");
+    printf(" values of type '");
     type_print(types[a_type]);
     printf("'\n");
     return TYPES_CAPACITY;
@@ -472,6 +504,8 @@ u32 expression_emit(Expression expression){
         return expression_emit_additive(expression, true);
     case EXPRESSION_SUBTRACT:
         return expression_emit_additive(expression, false);
+    case EXPRESSION_MULTIPLY:
+        return expression_emit_multiply(expression);
     case EXPRESSION_DIVIDE:
         return expression_emit_divmod(expression, true);
     case EXPRESSION_MOD:

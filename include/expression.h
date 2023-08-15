@@ -19,6 +19,7 @@ enum {
     EXPRESSION_ASSIGN, /* { a, b } */
     EXPRESSION_ADD, /* { a, b } */
     EXPRESSION_SUBTRACT, /* { a, b } */
+    EXPRESSION_MULTIPLY, /* { a, b } */
     EXPRESSION_DIVIDE, /* { a, b } */
     EXPRESSION_MOD, /* { a, b } */
     EXPRESSION_INDEX,  /* { a, b } */

@@ -21,6 +21,7 @@ u0 print_cells_static(u32 start_index, u32 max_length);
 u0 emit_printu8();
 u0 emit_print_array_value(u32 max_length);
 u0 emit_additive_u8(u1 is_plus);
+u0 emit_multiply_u8();
 u0 emit_divmod_u8();
 u0 emit_divide_u8();
 u0 emit_mod_u8();

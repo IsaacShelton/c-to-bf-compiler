@@ -80,6 +80,17 @@ u0 expression_print(Expression expression){
             printf(")");
         }
         break;
+    case EXPRESSION_MULTIPLY: {
+            u32 a = operands[expression.ops];
+            u32 b = operands[expression.ops + 1];
+
+            printf("(");
+            expression_print(expressions[a]);
+            printf(" * ");
+            expression_print(expressions[b]);
+            printf(")");
+        }
+        break;
     case EXPRESSION_DIVIDE: {
             u32 a = operands[expression.ops];
             u32 b = operands[expression.ops + 1];

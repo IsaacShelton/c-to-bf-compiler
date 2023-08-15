@@ -3,7 +3,7 @@
 self="$(dirname -- "$0")"
 set -ex
 
-"$self/../peck" "$self/addition.peck"
+"$self/../peck" "$self/addition_subtraction.peck"
 "$self/../peck" "$self/array_access_simple.peck"
 "$self/../peck" "$self/divmod.peck"
 "$self/../peck" "$self/empty_global.peck"

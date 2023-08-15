@@ -165,6 +165,7 @@ static u8 parse_get_precedence(u32 token_kind){
     switch(token_kind){
     case TOKEN_OPEN_BRACKET:
         return 16;
+    case TOKEN_MULTIPLY:
     case TOKEN_DIVIDE:
     case TOKEN_MOD:
         return 12;
@@ -304,6 +305,9 @@ static Expression parse_secondary_expression(u8 precedence, Expression lhs){
             break;
         case TOKEN_SUBTRACT:
             lhs = parse_math(lhs, EXPRESSION_SUBTRACT, line_number, next_precedence);
+            break;
+        case TOKEN_MULTIPLY:
+            lhs = parse_math(lhs, EXPRESSION_MULTIPLY, line_number, next_precedence);
             break;
         case TOKEN_DIVIDE:
             lhs = parse_math(lhs, EXPRESSION_DIVIDE, line_number, next_precedence);

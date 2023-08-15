@@ -53,6 +53,14 @@ static u0 expression_infer_call(Expression expression){
     }
 }
 
+static u0 expression_infer_math(Expression expression, ExpressionKind preferred_int_kind){
+    u32 a = operands[expression.ops];
+    u32 b = operands[expression.ops + 1];
+
+    expression_infer(a, preferred_int_kind);
+    expression_infer(b, preferred_int_kind);
+}
+
 u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
     Expression expression = expressions[expression_index];
 
@@ -64,6 +72,13 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
         break;
     case EXPRESSION_CALL:
         expression_infer_call(expression);
+        break;
+    case EXPRESSION_ADD:
+    case EXPRESSION_SUBTRACT:
+    case EXPRESSION_MULTIPLY:
+    case EXPRESSION_DIVIDE:
+    case EXPRESSION_MOD:
+        expression_infer_math(expression, preferred_int_kind);
         break;
     }
 }

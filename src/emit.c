@@ -516,6 +516,51 @@ u0 emit_additive_u8(u1 is_plus){
     emit_context.current_cell_index--;
 }
 
+u0 emit_multiply_u8(){
+    // a b ?
+    //     ^
+
+    // Multiply algorithm
+
+    // Allocate two temporary cells
+    printf("[-]>[-]");
+
+    // Go to 'a' cell
+    printf("3<");
+
+    // Move 'a' cell to second temporary cell
+    printf("[3>+3<-]");
+
+    // Go to second temporary cell
+    printf("3>");
+
+    // While second temporary cell
+    printf("[");
+
+    // Point to 'b' cell
+    printf("<<");
+
+    // Add 'b' cell to 'a' cell and first temporary cell
+    printf("[<+>>+<-]");
+
+    // Go to first temporary cell
+    printf(">");
+
+    // Move to first temporary cell to 'b' cell
+    printf("[<+>-]");
+
+    // Go to second temporary cell and decrement it
+    printf(">-");
+
+    // End while
+    printf("]");
+
+    // Point to next available cell
+    printf("<<");
+
+    emit_context.current_cell_index--;
+}
+
 u0 emit_divmod_u8(){
     // n d ?
     //     ^

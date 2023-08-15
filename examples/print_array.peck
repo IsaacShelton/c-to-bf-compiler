@@ -1,0 +1,27 @@
+
+u0 main(){
+    //u8 name[16] = "Isaac";
+    u8 name[16];
+    u8 dummy = 255;
+    name[0] = 'I';
+    name[1] = 's';
+    name[2] = 'a';
+    name[3] = 'a';
+    name[4] = 'c';
+    print(name);
+    printu8(dummy);
+    print(name);
+    printu8(dummy);
+    print(name);
+    printu8(dummy);
+    print("\n");
+
+    u8 string[4]; // = "This content will be cut off";
+    string[0] = 'T';
+    string[1] = 'h';
+    string[2] = 'i';
+    string[3] = 's';
+    print(string);
+    print("\n");
+}
+

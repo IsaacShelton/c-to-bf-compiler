@@ -1,0 +1,16 @@
+
+u0 main(){
+    u8 H = 8 * 9;
+    u8 e = 10*10 + 1;
+    u8 l = 2 * 54;
+    u8 o = 3 * 37;
+    u8 newline = 5 * 2;
+
+    put(H);
+    put(e);
+    put(l);
+    put(l);
+    put(o);
+    put(newline);
+}
+

@@ -1,0 +1,11 @@
+
+// This is a line comment
+
+u0 main(){
+    // This is another line comment
+
+    // Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Sapien et ligula ullamcorper malesuada proin libero. Egestas pretium aenean pharetra magna ac placerat vestibulum lectus mauris. Sit amet justo donec enim. Morbi tincidunt ornare massa eget egestas purus. Amet volutpat consequat mauris nunc congue nisi. Turpis egestas maecenas pharetra convallis posuere morbi. Ligula ullamcorper malesuada proin libero nunc consequat interdum varius. Sed viverra ipsum nunc aliquet bibendum. Est velit egestas dui id ornare. Vulputate ut pharetra sit amet aliquam id diam maecenas. Convallis tellus id interdum velit laoreet id donec ultrices. Volutpat commodo sed egestas egestas. Id aliquet risus feugiat in ante. Tortor at risus viverra adipiscing at in tellus integer feugiat.
+
+    print("Hello line comments\n");
+}
+

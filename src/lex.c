@@ -11,6 +11,7 @@
 #include "../include/lex_string.h"
 #include "../include/lex_character_literal.h"
 #include "../include/lex_line_comment.h"
+#include "../include/lex_multiline_comment.h"
 
 typedef struct {
     u8 c;
@@ -150,7 +151,11 @@ LexedToken lex_main(){
     // Handle divide or line comment
     if(lead == '/'){
         if(code_buffer_length > 1 && code_buffer[1] == '/'){
-            result.token.kind = TOKEN_COMMENT;
+            result.token.kind = TOKEN_LINE_COMMENT;
+            result.consumed = 2;
+            return result;
+        } else if(code_buffer_length > 1 && code_buffer[1] == '*'){
+            result.token.kind = TOKEN_MULTILINE_COMMENT;
             result.consumed = 2;
             return result;
         } else {
@@ -191,7 +196,7 @@ u32 lex(){
         if(token.kind != TOKEN_DONE){
             if(token.kind == TOKEN_ERROR) return 1;
 
-            if(token.kind != TOKEN_NONE && token.kind != TOKEN_COMMENT){
+            if(token.kind != TOKEN_NONE && token.kind != TOKEN_LINE_COMMENT && token.kind != TOKEN_MULTILINE_COMMENT){
                 // Append created token
                 if(num_tokens == TOKENS_CAPACITY){
                     printf("Out of memory: Too many tokens\n");
@@ -226,16 +231,19 @@ u32 lex(){
             }
             code_buffer_length -= lexed.consumed;
         }
-
-        // Special additional code for line comments
-        if(token.kind == TOKEN_COMMENT){
+        
+        if(token.kind == TOKEN_LINE_COMMENT){
+            // Special code for line comments
             LexUnboundedResult result = lex_line_comment(c);
             if(result.error) return 1;
             c = result.new_c;
-        }
-
-        // Special additional code for lexing strings, so they are not limited to code buffer capacity
-        if(token.kind == TOKEN_STRING){
+        } else if(token.kind == TOKEN_MULTILINE_COMMENT){
+            // Special code for multi-line comments
+            LexUnboundedResult result = lex_multiline_comment(c);
+            if(result.error) return 1;
+            c = result.new_c;
+        } else if(token.kind == TOKEN_STRING){
+            // Special code for lexing strings, so they are not limited to code buffer capacity
             LexUnboundedResult result = lex_string(c);
             if(result.error) return 1;
             c = result.new_c;

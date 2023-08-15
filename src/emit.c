@@ -437,7 +437,7 @@ u0 print_cells_static(u32 start_index, u32 max_length){
     // Go to trailing cell
     printf("%d>", max_length);
 
-    // Move trailing to second slot
+    // Move trailing character to second slot
     printf("[%d>+%d<-]", back_offset - max_length + 2, back_offset - max_length + 2);
 
     // Go to first slot

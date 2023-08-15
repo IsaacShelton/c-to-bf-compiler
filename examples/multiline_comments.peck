@@ -1,0 +1,35 @@
+
+/*
+    This is a multi-line
+    comment
+*/
+
+u0 main(){
+    /* This is also
+        a multi-line
+        comment */
+
+    /*
+        This
+        is
+        yet
+        another
+        multi-line
+        comment
+    */
+
+    print("Hello multi-line comments\n");
+
+    /*
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Sapien et ligula ullamcorper malesuada proin libero. Egestas pretium aenean pharetra magna ac placerat vestibulum lectus mauris. Sit amet justo donec enim. Morbi tincidunt ornare massa eget egestas purus. Amet volutpat consequat mauris nunc congue nisi. Turpis egestas maecenas pharetra convallis posuere morbi. Ligula ullamcorper malesuada proin libero nunc consequat interdum varius. Sed viverra ipsum nunc aliquet bibendum. Est velit egestas dui id ornare. Vulputate ut pharetra sit amet aliquam id diam maecenas. Convallis tellus id interdum velit laoreet id donec ultrices. Volutpat commodo sed egestas egestas. Id aliquet risus feugiat in ante. Tortor at risus viverra adipiscing at in tellus integer feugiat.
+
+Justo donec enim diam vulputate ut pharetra. Nulla pharetra diam sit amet nisl suscipit adipiscing bibendum est. Aenean pharetra magna ac placerat vestibulum lectus. Massa placerat duis ultricies lacus sed turpis tincidunt id. Adipiscing elit duis tristique sollicitudin nibh sit amet commodo nulla. Urna et pharetra pharetra massa massa ultricies. Enim praesent elementum facilisis leo. Ac turpis egestas sed tempus. Odio ut sem nulla pharetra diam sit amet. Tellus molestie nunc non blandit massa enim nec. Sollicitudin ac orci phasellus egestas tellus. Tellus orci ac auctor augue mauris augue neque gravida.
+
+Malesuada fames ac turpis egestas sed tempus. Eu non diam phasellus vestibulum lorem sed risus ultricies. Magna ac placerat vestibulum lectus mauris ultrices eros. Tortor pretium viverra suspendisse potenti. Non blandit massa enim nec dui. Velit egestas dui id ornare arcu. Habitasse platea dictumst vestibulum rhoncus est pellentesque elit. Vitae justo eget magna fermentum iaculis eu non. Id semper risus in hendrerit gravida rutrum. Porttitor lacus luctus accumsan tortor posuere ac ut consequat semper. Commodo ullamcorper a lacus vestibulum sed. Massa vitae tortor condimentum lacinia.
+
+Viverra adipiscing at in tellus integer. Enim ut tellus elementum sagittis vitae et. Enim eu turpis egestas pretium aenean pharetra. Eu non diam phasellus vestibulum lorem sed. Eu feugiat pretium nibh ipsum. Fermentum odio eu feugiat pretium nibh. Posuere urna nec tincidunt praesent. Pharetra magna ac placerat vestibulum lectus mauris. Arcu risus quis varius quam quisque id diam. Nisi quis eleifend quam adipiscing. Sed nisi lacus sed viverra tellus in. Vitae suscipit tellus mauris a diam maecenas.
+
+Semper eget duis at tellus at urna. Aliquam ultrices sagittis orci a scelerisque purus semper eget duis. Nascetur ridiculus mus mauris vitae ultricies leo integer malesuada. Gravida in fermentum et sollicitudin. Egestas fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate. Rutrum quisque non tellus orci ac auctor. Nibh venenatis cras sed felis eget. Nec ultrices dui sapien eget mi proin sed. Nunc vel risus commodo viverra maecenas accumsan lacus. In mollis nunc sed id semper. Scelerisque in dictum non consectetur a erat. Tortor pretium viverra suspendisse potenti nullam ac tortor vitae.
+    */
+}
+

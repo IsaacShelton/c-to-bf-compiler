@@ -1,0 +1,16 @@
+
+u0 main(){
+    u8 array[5];
+    array[0] = 'H';
+    array[1] = 'e';
+    array[2] = 'l';
+    array[3] = 'l';
+    array[4] = 'o';
+
+    put(array[0]);
+    put(array[1]);
+    put(array[2]);
+    put(array[3]);
+    put(array[4]);
+}
+

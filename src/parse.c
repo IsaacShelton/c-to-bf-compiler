@@ -143,11 +143,11 @@ u32 parse(){
                 .type = symbol_type,
             });
             if(global >= GLOBALS_CAPACITY) return 1;
-        }
-
-        // Function
-        if(parse_function(symbol_name, symbol_type)){
-            return 1;
+        } else {
+            // Function
+            if(parse_function(symbol_name, symbol_type)){
+                return 1;
+            }
         }
     }
 

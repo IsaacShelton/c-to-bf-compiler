@@ -1,0 +1,15 @@
+
+u0 main(){
+    hi();
+}
+
+u0 hi(){
+    hi2(65);
+    print("Hi\n");
+}
+
+u0 hi2(u8 character){
+    print("Hi2\n");
+    put(character);
+}
+

@@ -1,0 +1,34 @@
+
+u0 main(){
+    u8 my_variable;
+    print("Hello World\n");
+    print("Bye World!\n");
+    print("Hello World\n");
+    print("Bye World!\n");
+    put(72);
+    put(105);
+    put(33);
+    put(10);
+    my_variable = 65;
+    print("my_variable = ");
+    put(my_variable);
+    print("\n");
+
+    my_variable = my_variable + 1;
+    print("my_variable = ");
+    put(my_variable);
+    print("\n");
+
+    print("my_variable = ");
+    put(my_variable);
+    print("\n");
+}
+
+u0 other_function(){
+    cyclic_function();
+}
+
+u0 cyclic_function(){
+    other_function();
+}
+

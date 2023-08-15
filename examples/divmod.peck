@@ -1,0 +1,10 @@
+
+u0 main(){
+    printu8(123 % 10);
+    print("\n");
+    printu8(123 / 10 % 10);
+    print("\n");
+    printu8(123 / 10 / 10 % 10);
+    print("\n");
+}
+

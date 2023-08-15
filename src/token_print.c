@@ -64,6 +64,9 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_SUBTRACT:
         printf("-");
         break;
+    case TOKEN_MULTIPLY:
+        printf("*");
+        break;
     case TOKEN_DIVIDE:
         printf("/");
         break;

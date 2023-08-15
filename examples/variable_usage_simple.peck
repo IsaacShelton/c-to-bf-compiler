@@ -1,0 +1,22 @@
+
+u0 main(){
+    u8 my_variable;
+    my_variable = 65;
+    put(my_variable);
+    my_variable = 66;
+    put(my_variable);
+    my_variable = 67;
+    put(my_variable);
+    my_variable = 68;
+    put(my_variable);
+    my_variable = 69;
+    put(my_variable);
+    my_variable = 70;
+    put(my_variable);
+    my_variable = 80;
+    put(my_variable);
+    my_variable = 81;
+    put(my_variable);
+    print("\n");
+}
+

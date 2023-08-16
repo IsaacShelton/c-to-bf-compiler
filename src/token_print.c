@@ -52,9 +52,6 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_INT:
         printf("%d", token.data);
         break;
-    case TOKEN_EQUALS:
-        printf("==");
-        break;
     case TOKEN_ASSIGN:
         printf("=");
         break;
@@ -72,6 +69,12 @@ u0 token_print(Token token, u1 safe){
         break;
     case TOKEN_MOD:
         printf("%%");
+        break;
+    case TOKEN_EQUALS:
+        printf("==");
+        break;
+    case TOKEN_NOT_EQUALS:
+        printf("!=");
         break;
     case TOKEN_LESS_THAN:
         printf("<");

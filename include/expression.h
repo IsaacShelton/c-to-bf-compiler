@@ -23,6 +23,8 @@ enum {
     EXPRESSION_MULTIPLY, /* { a, b } */
     EXPRESSION_DIVIDE, /* { a, b } */
     EXPRESSION_MOD, /* { a, b } */
+    EXPRESSION_EQUALS, /* { a, b } */
+    EXPRESSION_NOT_EQUALS, /* { a, b } */
     EXPRESSION_LESS_THAN, /* { a, b } */
     EXPRESSION_GREATER_THAN, /* { a, b } */
     EXPRESSION_LSHIFT, /* { a, b } */

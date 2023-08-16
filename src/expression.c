@@ -22,6 +22,12 @@ u0 expression_print_operator(ExpressionKind kind){
     case EXPRESSION_MOD:
         printf("%%");
         break;
+    case EXPRESSION_EQUALS:
+        printf("==");
+        break;
+    case EXPRESSION_NOT_EQUALS:
+        printf("!=");
+        break;
     case EXPRESSION_LESS_THAN:
         printf("<");
         break;
@@ -59,6 +65,8 @@ u0 expression_print_operation_name(ExpressionKind kind){
     case EXPRESSION_MOD:
         printf("mod");
         break;
+    case EXPRESSION_EQUALS:
+    case EXPRESSION_NOT_EQUALS:
     case EXPRESSION_LESS_THAN:
     case EXPRESSION_GREATER_THAN:
         printf("compare");
@@ -82,6 +90,8 @@ ExpressionKind expression_kind_from_token_kind(TokenKind kind){
     case TOKEN_MULTIPLY: return EXPRESSION_MULTIPLY;
     case TOKEN_DIVIDE: return EXPRESSION_DIVIDE;
     case TOKEN_MOD: return EXPRESSION_MOD;
+    case TOKEN_EQUALS: return EXPRESSION_EQUALS;
+    case TOKEN_NOT_EQUALS: return EXPRESSION_NOT_EQUALS;
     case TOKEN_LESS_THAN: return EXPRESSION_LESS_THAN;
     case TOKEN_GREATER_THAN: return EXPRESSION_GREATER_THAN;
     case TOKEN_LSHIFT: return EXPRESSION_LSHIFT;

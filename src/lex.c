@@ -135,6 +135,19 @@ LexedToken lex_main(){
         return result;
     }
 
+    // Handle not
+    if(lead == '!'){
+        if(code_buffer_length > 1 && code_buffer[1] == '='){
+            result.token.kind = TOKEN_NOT_EQUALS;
+            result.consumed = 2;
+        } else {
+            result.token.kind = TOKEN_NOT;
+            result.consumed = 1;
+        }
+        return result;
+    }
+
+
     // Handle add
     if(lead == '+'){
         result.token.kind = TOKEN_ADD;

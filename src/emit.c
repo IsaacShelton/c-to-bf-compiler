@@ -830,3 +830,59 @@ u0 emit_gt_u8(){
     emit_context.current_cell_index--;
 }
 
+u0 emit_eq_u8(){
+    // a b ?
+    //     ^
+
+    // Go to 'a' cell
+    printf("<<");
+
+    // Subtract 'a' cell from 'b' cell
+    printf("[->-<]");
+
+    // Set 'a' cell to 1
+    printf("+");
+
+    // Go to 'b' cell
+    printf(">");
+
+    // If 'b' cell
+    printf("[");
+    
+    // Semi-zero 'a' cell
+    printf("<->");
+
+    // End if
+    printf("[-]]");
+
+    // Remain pointing to next available cell
+    // (nothing to do)
+    
+    emit_context.current_cell_index--;
+}
+
+u0 emit_neq_u8(){
+    // a b ?
+    //     ^
+
+    // Go to 'a' cell
+    printf("<<");
+
+    // Subtract 'a' cell from 'b' cell
+    printf("[->-<]");
+
+    // Go to 'b' cell
+    printf(">");
+
+    // If 'b' cell
+    printf("[");
+
+    // Set 'a' cell to 1
+    printf("<+>");
+
+    // End if
+    printf("[-]]");
+
+    emit_context.current_cell_index--;
+}
+

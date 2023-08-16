@@ -27,6 +27,8 @@ u0 emit_divide_u8();
 u0 emit_mod_u8();
 u0 emit_lshift_u8();
 u0 emit_rshift_u8();
+u0 emit_lt_u8();
+u0 emit_gt_u8();
 
 #endif // _PECK_EMIT_H
 

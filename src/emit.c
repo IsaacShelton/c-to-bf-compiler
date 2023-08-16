@@ -705,3 +705,128 @@ u0 emit_rshift_u8(){
     emit_context.current_cell_index--;
 }
 
+u0 emit_lt_u8(){
+    // a b ?
+    //     ^
+
+    // Allocate two temporary cells ('c' and 'd')
+    printf("[-]>[-]");
+
+    // Go to 'b' cell
+    printf("<<");
+
+    // While 'b' cell
+    printf("[");
+
+    // Set 'c' cell to zero
+    printf(">[-]");
+
+    // Go to 'a' cell
+    printf("<<");
+
+    // Copy 'a' cell to 'd' cell via 'c' cell
+    printf("[>>+>+3<-]>>[<<+>>-]");
+
+    // Set 'c' cell to 1
+    printf("+");
+
+    // Go to 'd' cell
+    printf(">");
+
+    // If 'd' cell
+    printf("[");
+
+    // Zero 'd' cell
+    printf("[-]");
+
+    // Go to and semi-zero 'c' cell
+    printf("<-");
+
+    // Go to and decrement 'a' cell
+    printf("<<-");
+
+    // Go to 'd' cell
+    printf("3>");
+
+    // End if
+    printf("]");
+
+    // Go to 'b' cell and decrement
+    printf("<<-");
+
+    // End while
+    printf("]");
+
+    // Move 'c' cell to 'a' cell
+    printf("<[-]>>[<<+>>-]");
+
+    // Go to next available cell
+    printf("<");
+
+    emit_context.current_cell_index--;
+}
+
+u0 emit_gt_u8(){
+    // a b ?
+    //     ^
+
+    // Allocate two temporary cells ('c' and 'd')
+    printf("[-]>[-]");
+    
+    // Go to 'a' cell
+    printf("3<");
+
+    // While 'a'
+    printf("[");
+
+    // Go to and zero 'c' cell
+    printf(">>[-]");
+
+    // Go to 'b'
+    printf("<");
+
+    // Copy 'b' cell to 'd' cell via 'c' cell
+    printf("[>+>+<<-]>[<+>-]");
+
+    // Set 'c' cell to 1
+    printf("+");
+
+    // Go to 'd' cell
+    printf(">");
+
+    // If 'd' cell
+    printf("[");
+
+    // Zero 'd' cell
+    printf("[-]");
+
+    // Go 'c' cell and semi-zero
+    printf("<-");
+
+    // Go to 'b' cell and decrement
+    printf("<-");
+
+    // Go to 'd' cell
+    printf(">>");
+
+    // End if
+    printf("]");
+
+    // Go to 'a' cell
+    printf("3<");
+
+    // Decrement 'a' cell
+    printf("-");
+
+    // End while
+    printf("]");
+
+    // Move 'c' cell to 'a' cell
+    printf(">>[<<+>>-]");
+    
+    // Go to next available cell
+    printf("<");
+
+    emit_context.current_cell_index--;
+}
+

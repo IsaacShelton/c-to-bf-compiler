@@ -293,6 +293,12 @@ static ErrorCode emit_math(ExpressionKind kind){
     case EXPRESSION_MOD:
         emit_mod_u8();
         return 0;
+    case EXPRESSION_LESS_THAN:
+        emit_lt_u8();
+        return 0;
+    case EXPRESSION_GREATER_THAN:
+        emit_gt_u8();
+        return 0;
     case EXPRESSION_LSHIFT:
         emit_lshift_u8();
         return 0;
@@ -467,6 +473,8 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_MULTIPLY:
     case EXPRESSION_DIVIDE:
     case EXPRESSION_MOD:
+    case EXPRESSION_LESS_THAN:
+    case EXPRESSION_GREATER_THAN:
     case EXPRESSION_LSHIFT:
     case EXPRESSION_RSHIFT:
         return expression_emit_math(expression);

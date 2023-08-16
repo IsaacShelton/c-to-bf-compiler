@@ -8,6 +8,7 @@ set -ex
 "$self/../peck" "$self/divmod.peck"
 "$self/../peck" "$self/empty_global.peck"
 "$self/../peck" "$self/function_call_simple.peck"
+"$self/../peck" "$self/less_greater.peck"
 "$self/../peck" "$self/line_comments.peck"
 "$self/../peck" "$self/multiline_comments.peck"
 "$self/../peck" "$self/multiplication.peck"

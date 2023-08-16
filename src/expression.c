@@ -34,6 +34,12 @@ u0 expression_print_operator(ExpressionKind kind){
     case EXPRESSION_GREATER_THAN:
         printf(">");
         break;
+    case EXPRESSION_LESS_THAN_OR_EQUAL:
+        printf("<=");
+        break;
+    case EXPRESSION_GREATER_THAN_OR_EQUAL:
+        printf(">=");
+        break;
     case EXPRESSION_LSHIFT:
         printf("<<");
         break;
@@ -94,6 +100,8 @@ ExpressionKind expression_kind_from_token_kind(TokenKind kind){
     case TOKEN_NOT_EQUALS: return EXPRESSION_NOT_EQUALS;
     case TOKEN_LESS_THAN: return EXPRESSION_LESS_THAN;
     case TOKEN_GREATER_THAN: return EXPRESSION_GREATER_THAN;
+    case TOKEN_LESS_THAN_OR_EQUAL: return EXPRESSION_LESS_THAN_OR_EQUAL;
+    case TOKEN_GREATER_THAN_OR_EQUAL: return EXPRESSION_GREATER_THAN_OR_EQUAL;
     case TOKEN_LSHIFT: return EXPRESSION_LSHIFT;
     case TOKEN_RSHIFT: return EXPRESSION_RSHIFT;
     default: return EXPRESSION_NONE;

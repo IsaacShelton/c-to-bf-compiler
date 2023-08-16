@@ -177,6 +177,8 @@ static u8 parse_get_precedence(u32 token_kind){
         return 10;
     case TOKEN_LESS_THAN:
     case TOKEN_GREATER_THAN:
+    case TOKEN_LESS_THAN_OR_EQUAL:
+    case TOKEN_GREATER_THAN_OR_EQUAL:
         return 9;
     case TOKEN_EQUALS:
     case TOKEN_NOT_EQUALS:
@@ -324,6 +326,8 @@ static Expression parse_secondary_expression(u8 precedence, Expression lhs){
         case TOKEN_MOD:
         case TOKEN_LESS_THAN:
         case TOKEN_GREATER_THAN:
+        case TOKEN_LESS_THAN_OR_EQUAL:
+        case TOKEN_GREATER_THAN_OR_EQUAL:
         case TOKEN_LSHIFT:
         case TOKEN_RSHIFT:
         case TOKEN_EQUALS:

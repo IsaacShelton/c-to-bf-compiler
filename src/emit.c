@@ -705,6 +705,63 @@ u0 emit_rshift_u8(){
     emit_context.current_cell_index--;
 }
 
+u0 emit_eq_u8(){
+    // a b ?
+    //     ^
+
+    // Go to 'a' cell
+    printf("<<");
+
+    // Subtract 'a' cell from 'b' cell
+    printf("[->-<]");
+
+    // Set 'a' cell to 1
+    printf("+");
+
+    // Go to 'b' cell
+    printf(">");
+
+    // If 'b' cell
+    printf("[");
+    
+    // Semi-zero 'a' cell
+    printf("<->");
+
+    // End if
+    printf("[-]]");
+
+    // Remain pointing to next available cell
+    // (nothing to do)
+    
+    emit_context.current_cell_index--;
+}
+
+u0 emit_neq_u8(){
+    // a b ?
+    //     ^
+
+    // Go to 'a' cell
+    printf("<<");
+
+    // Subtract 'a' cell from 'b' cell
+    printf("[->-<]");
+
+    // Go to 'b' cell
+    printf(">");
+
+    // If 'b' cell
+    printf("[");
+
+    // Set 'a' cell to 1
+    printf("<+>");
+
+    // End if
+    printf("[-]]");
+
+    emit_context.current_cell_index--;
+}
+
+
 u0 emit_lt_u8(){
     // a b ?
     //     ^
@@ -830,58 +887,121 @@ u0 emit_gt_u8(){
     emit_context.current_cell_index--;
 }
 
-u0 emit_eq_u8(){
+u0 emit_lte_u8(){
     // a b ?
     //     ^
 
+    // Allocate two temporary cells ('c' and 'd'), with 'c' starting at 1
+    printf("[-]+>[-]");
+
     // Go to 'a' cell
-    printf("<<");
+    printf("3<");
 
-    // Subtract 'a' cell from 'b' cell
-    printf("[->-<]");
+    // While 'a' cell
+    printf("[");
 
-    // Set 'a' cell to 1
-    printf("+");
+    // Set 'c' cell to zero
+    printf(">>[-]");
 
     // Go to 'b' cell
+    printf("<");
+
+    // Copy 'b' cell to 'd' cell via 'c' cell
+    printf("[>+>+<<-]>[<+>-]");
+
+    // Go to 'd' cell
     printf(">");
 
-    // If 'b' cell
+    // If 'd' cell
     printf("[");
-    
-    // Semi-zero 'a' cell
-    printf("<->");
+
+    // Zero 'd' cell
+    printf("[-]");
+
+    // Go to 'c' cell and set to 1
+    printf("<+");
+
+    // Go to and decrement 'b' cell
+    printf("<-");
+
+    // Go to 'd' cell
+    printf(">>");
 
     // End if
-    printf("[-]]");
+    printf("]");
 
-    // Remain pointing to next available cell
-    // (nothing to do)
-    
+    // Go to 'a' cell and decrement
+    printf("3<-");
+
+    // End while
+    printf("]");
+
+    // Move 'c' cell to 'a' cell
+    printf(">>[<<+>>-]");
+
+    // Go to next available cell
+    printf("<");
+
     emit_context.current_cell_index--;
 }
 
-u0 emit_neq_u8(){
+u0 emit_gte_u8(){
     // a b ?
     //     ^
 
-    // Go to 'a' cell
+    // Allocate two temporary cells ('c' and 'd'), with 'c' starting at 1
+    printf("[-]+>[-]");
+    
+    // Go to 'b' cell
     printf("<<");
 
-    // Subtract 'a' cell from 'b' cell
-    printf("[->-<]");
-
-    // Go to 'b' cell
-    printf(">");
-
-    // If 'b' cell
+    // While 'b'
     printf("[");
 
-    // Set 'a' cell to 1
-    printf("<+>");
+    // Go to and zero 'c' cell
+    printf(">[-]");
+
+    // Go to 'a'
+    printf("<<");
+
+    // Copy 'a' cell to 'd' cell via 'c' cell
+    printf("[>>+>+<<<-]>>[<<+>>-]");
+
+    // Go to 'd' cell
+    printf(">");
+
+    // If 'd' cell
+    printf("[");
+
+    // Zero 'd' cell
+    printf("[-]");
+
+    // Go 'c' cell and set to 1
+    printf("<+");
+
+    // Go to 'a' cell and decrement
+    printf("<<-");
+
+    // Go to 'd' cell
+    printf("3>");
 
     // End if
-    printf("[-]]");
+    printf("]");
+
+    // Go to 'b' cell
+    printf("<<");
+
+    // Decrement 'b' cell
+    printf("-");
+
+    // End while
+    printf("]");
+
+    // Move 'c' cell to 'a' cell
+    printf("<[-]>>[<<+>>-]");
+    
+    // Go to next available cell
+    printf("<");
 
     emit_context.current_cell_index--;
 }

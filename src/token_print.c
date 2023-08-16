@@ -82,6 +82,12 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_GREATER_THAN:
         printf(">");
         break;
+    case TOKEN_LESS_THAN_OR_EQUAL:
+        printf("<=");
+        break;
+    case TOKEN_GREATER_THAN_OR_EQUAL:
+        printf(">=");
+        break;
     case TOKEN_LSHIFT:
         printf("<<");
         break;

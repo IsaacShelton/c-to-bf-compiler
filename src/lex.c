@@ -184,6 +184,9 @@ LexedToken lex_main(){
         if(code_buffer_length > 1 && code_buffer[1] == '<'){
             result.token.kind = TOKEN_LSHIFT;
             result.consumed = 2;
+        } else if(code_buffer_length > 1 && code_buffer[1] == '='){
+            result.token.kind = TOKEN_LESS_THAN_OR_EQUAL;
+            result.consumed = 2;
         } else {
             result.token.kind = TOKEN_LESS_THAN;
             result.consumed = 1;
@@ -195,6 +198,9 @@ LexedToken lex_main(){
     if(lead == '>'){
         if(code_buffer_length > 1 && code_buffer[1] == '>'){
             result.token.kind = TOKEN_RSHIFT;
+            result.consumed = 2;
+        } else if(code_buffer_length > 1 && code_buffer[1] == '='){
+            result.token.kind = TOKEN_GREATER_THAN_OR_EQUAL;
             result.consumed = 2;
         } else {
             result.token.kind = TOKEN_GREATER_THAN;

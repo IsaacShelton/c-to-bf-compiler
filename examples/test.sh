@@ -10,6 +10,7 @@ set -ex
 "$self/../peck" "$self/equals_not_equals.peck"
 "$self/../peck" "$self/function_call_simple.peck"
 "$self/../peck" "$self/less_greater.peck"
+"$self/../peck" "$self/less_greater_equal.peck"
 "$self/../peck" "$self/line_comments.peck"
 "$self/../peck" "$self/multiline_comments.peck"
 "$self/../peck" "$self/multiplication.peck"

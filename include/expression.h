@@ -27,6 +27,8 @@ enum {
     EXPRESSION_NOT_EQUALS, /* { a, b } */
     EXPRESSION_LESS_THAN, /* { a, b } */
     EXPRESSION_GREATER_THAN, /* { a, b } */
+    EXPRESSION_LESS_THAN_OR_EQUAL, /* { a, b } */
+    EXPRESSION_GREATER_THAN_OR_EQUAL, /* { a, b } */
     EXPRESSION_LSHIFT, /* { a, b } */
     EXPRESSION_RSHIFT, /* { a, b } */
     EXPRESSION_INDEX,  /* { a, b } */

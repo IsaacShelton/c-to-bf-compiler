@@ -1,0 +1,25 @@
+
+u0 main(){
+    printu8(20 <= 123);
+    printu8(40 <= 123);
+    printu8(60 <= 123);
+    printu8(80 <= 123);
+    printu8(100 <= 123);
+    printu8(120 <= 123);
+    printu8(123 <= 123);
+    print(" ");
+    printu8(140 <= 123);
+    print("\n");
+
+    printu8(20 >= 123);
+    printu8(40 >= 123);
+    printu8(60 >= 123);
+    printu8(80 >= 123);
+    printu8(100 >= 123);
+    printu8(120 >= 123);
+    print(" ");
+    printu8(123 >= 123);
+    printu8(140 >= 123);
+    print("\n");
+}
+

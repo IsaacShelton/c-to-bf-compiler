@@ -280,41 +280,49 @@ static ErrorCode emit_math(ExpressionKind kind){
     switch(kind){
     case EXPRESSION_ADD:
         emit_additive_u8(true);
-        return 0;
+        break;
     case EXPRESSION_SUBTRACT:
         emit_additive_u8(false);
-        return 0;
+        break;
     case EXPRESSION_MULTIPLY:
         emit_multiply_u8();
-        return 0;
+        break;
     case EXPRESSION_DIVIDE:
         emit_divide_u8();
-        return 0;
+        break;
     case EXPRESSION_MOD:
         emit_mod_u8();
-        return 0;
+        break;
     case EXPRESSION_EQUALS:
         emit_eq_u8();
-        return 0;
+        break;
     case EXPRESSION_NOT_EQUALS:
         emit_neq_u8();
-        return 0;
+        break;
     case EXPRESSION_LESS_THAN:
         emit_lt_u8();
-        return 0;
+        break;
     case EXPRESSION_GREATER_THAN:
         emit_gt_u8();
-        return 0;
+        break;
+    case EXPRESSION_LESS_THAN_OR_EQUAL:
+        emit_lte_u8();
+        break;
+    case EXPRESSION_GREATER_THAN_OR_EQUAL:
+        emit_gte_u8();
+        break;
     case EXPRESSION_LSHIFT:
         emit_lshift_u8();
-        return 0;
+        break;
     case EXPRESSION_RSHIFT:
         emit_rshift_u8();
-        return 0;
+        break;
     default:
         printf("\nerror: Could not perform unknown math operation for expression kind %d\n", kind);
         return 1;
     }
+
+    return 0;
 }
 
 static u32 expression_emit_math(Expression expression){
@@ -483,6 +491,8 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_NOT_EQUALS:
     case EXPRESSION_LESS_THAN:
     case EXPRESSION_GREATER_THAN:
+    case EXPRESSION_LESS_THAN_OR_EQUAL:
+    case EXPRESSION_GREATER_THAN_OR_EQUAL:
     case EXPRESSION_LSHIFT:
     case EXPRESSION_RSHIFT:
         return expression_emit_math(expression);

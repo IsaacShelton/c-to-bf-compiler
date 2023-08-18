@@ -419,6 +419,7 @@ static Expression parse_secondary_expression(u8 precedence, Expression lhs){
         case TOKEN_OR:
         case TOKEN_BIT_AND:
         case TOKEN_BIT_OR:
+        case TOKEN_BIT_XOR:
             lhs = parse_math(lhs, operator, line_number, next_precedence);
             break;
         case TOKEN_OPEN_BRACKET:

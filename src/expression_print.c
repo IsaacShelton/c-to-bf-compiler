@@ -79,6 +79,7 @@ u0 expression_print(Expression expression){
     case EXPRESSION_OR:
     case EXPRESSION_BIT_AND:
     case EXPRESSION_BIT_OR:
+    case EXPRESSION_BIT_XOR:
     case EXPRESSION_LSHIFT:
     case EXPRESSION_RSHIFT: {
             u32 a = operands[expression.ops];

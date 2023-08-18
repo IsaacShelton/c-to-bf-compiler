@@ -39,7 +39,7 @@ age += 10;
 ```
 
 ### Structs
-Struct types can be declared using C-like syntax. Unlike in C, typedef is required. Examples:
+Struct types can be declared using C-like syntax. Unlike in C, typedef is required and `struct StructName` syntax is not supported. Examples:
 
 ```
 typedef struct {

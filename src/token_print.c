@@ -112,6 +112,9 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_BIT_OR:
         printf("|");
         break;
+    case TOKEN_BIT_XOR:
+        printf("^");
+        break;
     default:
         printf("<unknown>");
     }

@@ -1077,13 +1077,89 @@ u0 emit_gte_u8(){
     emit_context.current_cell_index--;
 }
 
-/*
-u0 emit_bit_and_u8(){
+static u0 emit_binary_bitwise_operator_pre(){
+    // a b ?
+    //     ^
 
+    printf("5>");
+    printf("[-]>>[-]<");
+    printf("[-]8-[8+");
+    printf("<");
+    printf("<[-]<[-]<[-]<[-]<[-]");
+    printf("++");
+    printf("<<");
+    printf("[");
+    printf("-");
+    printf(">>-");
+    printf("[>+>>+3<-]>[<+>-]");
+    printf(">>");
+    printf(">>+<<");
+    printf("-[");
+    printf("<+");
+    printf("<<++");
+    printf("5>");
+    printf("--");
+    printf("<<");
+    printf("+");
+    printf("]");
+    printf("5<");
+    printf("]");
+    printf("4>[4<+4>-]");
+    printf("<<[-]++");
+    printf("<");
+    printf("[");
+    printf("-");
+    printf(">-");
+    printf("[>+>>+3<-]>[<+>-]");
+    printf(">>");
+    printf(">+<");
+    printf("-[");
+    printf(">--<");
+    printf("<+");
+    printf("<<++");
+    printf("3>");
+    printf("+");
+    printf("]");
+    printf("4<");
+    printf("]");
+    printf("3>[3<+3>-]");
+    printf(">>");
+}
+
+static u0 emit_binary_bitwise_operator_post(){
+    printf(">[<+<+>>-]<[>+<-]");
+    printf("<");
+    printf("[");
+    printf("<");
+    printf("[<+>-]");
+    printf("<[>++<-]");
+    printf(">>-");
+    printf("]");
+    printf("<");
+    printf("[4>+4<-]");
+    printf("3>");
+    printf("7-");
+    printf("]");
+    printf(">[9<+9>-]");
+    printf("8<");
+    emit_context.current_cell_index--;
+}
+
+u0 emit_bit_and_u8(){
+    emit_binary_bitwise_operator_pre();
+    printf("[->[-<<+>>]<]>[-]");
+    emit_binary_bitwise_operator_post();
 }
 
 u0 emit_bit_or_u8(){
-
+    emit_binary_bitwise_operator_pre();
+    printf("[>+<-]>[[-]<<+>>]");
+    emit_binary_bitwise_operator_post();
 }
-*/
+
+u0 emit_bit_xor_u8(){
+    emit_binary_bitwise_operator_pre();
+    printf("[>-<-]>[[-]<<+>>]");
+    emit_binary_bitwise_operator_post();
+}
 

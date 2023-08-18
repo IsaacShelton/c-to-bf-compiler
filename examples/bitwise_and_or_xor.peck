@@ -1,0 +1,55 @@
+
+u0 main(){
+    u8 a = 12;
+    u8 b = 25;
+
+    print("   ");
+    print_bits(a);
+    print("\n");
+    print(" & ");
+    print_bits(b);
+    print("\n");
+    print(" = ");
+    print_bits(a & b);
+    print("\n");
+
+    print("\n");
+
+    print("   ");
+    print_bits(a);
+    print("\n");
+    print(" | ");
+    print_bits(b);
+    print("\n");
+    print(" = ");
+    print_bits(a | b);
+    print("\n");
+
+    print("\n");
+
+    print("   ");
+    print_bits(a);
+    print("\n");
+    print(" ^ ");
+    print_bits(b);
+    print("\n");
+    print(" = ");
+    print_bits(a ^ b);
+    print("\n");
+}
+
+u0 print_bits(u8 value){
+    printu8((value >> 7) & 1);
+    printu8((value >> 6) & 1);
+    printu8((value >> 5) & 1);
+    printu8((value >> 4) & 1);
+    printu8((value >> 3) & 1);
+    printu8((value >> 2) & 1);
+    printu8((value >> 1) & 1);
+    printu8(value & 1);
+
+    print(" (");
+    printu8(value);
+    print(")");
+}
+

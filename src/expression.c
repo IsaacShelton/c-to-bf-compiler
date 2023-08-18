@@ -58,6 +58,9 @@ u0 expression_print_operator(ExpressionKind kind){
     case EXPRESSION_BIT_OR:
         printf("|");
         break;
+    case EXPRESSION_BIT_XOR:
+        printf("^");
+        break;
     default:
         printf("<unknown math operator>");
     }
@@ -95,6 +98,21 @@ u0 expression_print_operation_name(ExpressionKind kind){
     case EXPRESSION_RSHIFT:
         printf("right shift");
         break;
+    case EXPRESSION_AND:
+        printf("AND");
+        break;
+    case EXPRESSION_OR:
+        printf("OR");
+        break;
+    case EXPRESSION_BIT_AND:
+        printf("bitwise-and");
+        break;
+    case EXPRESSION_BIT_OR:
+        printf("bitwise-or");
+        break;
+    case EXPRESSION_BIT_XOR:
+        printf("bitwise-xor");
+        break;
     default:
         printf("<unknown math operation>");
     }
@@ -120,6 +138,7 @@ ExpressionKind expression_kind_from_token_kind(TokenKind kind){
     case TOKEN_OR: return EXPRESSION_OR;
     case TOKEN_BIT_AND: return EXPRESSION_BIT_AND;
     case TOKEN_BIT_OR: return EXPRESSION_BIT_OR;
+    case TOKEN_BIT_XOR: return EXPRESSION_BIT_XOR;
     default: return EXPRESSION_NONE;
     }
 }

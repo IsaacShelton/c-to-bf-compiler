@@ -40,6 +40,7 @@ u0 emit_lte_u8();
 u0 emit_gte_u8();
 u0 emit_bit_and_u8();
 u0 emit_bit_or_u8();
+u0 emit_bit_xor_u8();
 
 #endif // _PECK_EMIT_H
 

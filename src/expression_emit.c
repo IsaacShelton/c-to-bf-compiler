@@ -392,14 +392,15 @@ static u32 emit_math(ExpressionKind kind, u32 operand_type){
     case EXPRESSION_RSHIFT:
         emit_rshift_u8();
         return operand_type;
-    /*
     case EXPRESSION_BIT_AND:
         emit_bit_and_u8();
         return operand_type;
     case EXPRESSION_BIT_OR:
         emit_bit_or_u8();
         return operand_type;
-    */
+    case EXPRESSION_BIT_XOR:
+        emit_bit_xor_u8();
+        return operand_type;
     default:
         printf("\nerror: Could not perform unknown math operation for expression kind %d\n", kind);
         return 1;
@@ -433,7 +434,16 @@ static u32 expression_emit_math(Expression expression){
         return emit_math(expression.kind, a_type);
     }
 
-    printf("\nerror: Cannot ");
+    // Allow bitwise operations on u1 types
+    if(a_type == u1_type && (
+        expression.kind == EXPRESSION_BIT_AND
+     || expression.kind == EXPRESSION_BIT_OR
+     || expression.kind == EXPRESSION_BIT_XOR
+    )){
+        return emit_math(expression.kind, a_type);
+    }
+
+    printf("\nerror on line %d: Cannot ", u24_unpack(expression.line));
     expression_print_operation_name(expression.kind);
     printf(" values of type '");
     type_print(types[a_type]);
@@ -732,6 +742,7 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_RSHIFT:
     case EXPRESSION_BIT_AND:
     case EXPRESSION_BIT_OR:
+    case EXPRESSION_BIT_XOR:
         return expression_emit_math(expression);
     case EXPRESSION_AND:
         return expression_emit_and(expression);

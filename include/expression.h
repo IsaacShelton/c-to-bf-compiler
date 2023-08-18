@@ -38,6 +38,7 @@ enum {
     EXPRESSION_OR, /* { a, b } */
     EXPRESSION_BIT_AND, /* { a, b } */
     EXPRESSION_BIT_OR, /* { a, b } */
+    EXPRESSION_BIT_XOR, /* { a, b } */
     EXPRESSION_INDEX,  /* { a, b } */
 };
 typedef u8 ExpressionKind;

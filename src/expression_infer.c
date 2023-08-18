@@ -28,6 +28,9 @@ ExpressionKind expression_get_preferred_int_kind_or_none(u32 expression_index){
             return EXPRESSION_U8;
         }
         break;
+    case EXPRESSION_AND:
+    case EXPRESSION_OR:
+        return EXPRESSION_U1;
     case EXPRESSION_ASSIGN:
     case EXPRESSION_ADD:
     case EXPRESSION_SUBTRACT:
@@ -41,7 +44,8 @@ ExpressionKind expression_get_preferred_int_kind_or_none(u32 expression_index){
     case EXPRESSION_LSHIFT:
     case EXPRESSION_RSHIFT:
     case EXPRESSION_BIT_AND:
-    case EXPRESSION_BIT_OR: {
+    case EXPRESSION_BIT_OR:
+    case EXPRESSION_BIT_XOR: {
             ExpressionKind result;
 
             result = expression_get_preferred_int_kind_or_none(operands[expression.ops]);

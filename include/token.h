@@ -42,6 +42,7 @@ enum {
     TOKEN_OR,
     TOKEN_BIT_AND,
     TOKEN_BIT_OR,
+    TOKEN_BIT_XOR,
 };
 
 typedef u8 TokenKind;

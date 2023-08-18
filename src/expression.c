@@ -70,6 +70,14 @@ u0 expression_print_operator(ExpressionKind kind){
     case EXPRESSION_BIT_COMPLEMENT:
         printf("~");
         break;
+    case EXPRESSION_PRE_INCREMENT:
+    case EXPRESSION_POST_INCREMENT:
+        printf("++");
+        break;
+    case EXPRESSION_PRE_DECREMENT:
+    case EXPRESSION_POST_DECREMENT:
+        printf("--");
+        break;
     default:
         printf("<unknown math operator>");
     }
@@ -131,6 +139,14 @@ u0 expression_print_operation_name(ExpressionKind kind){
     case EXPRESSION_BIT_COMPLEMENT:
         printf("bitwise-complement");
         break;
+    case EXPRESSION_PRE_INCREMENT:
+    case EXPRESSION_POST_INCREMENT:
+        printf("increment");
+        break;
+    case EXPRESSION_PRE_DECREMENT:
+    case EXPRESSION_POST_DECREMENT:
+        printf("decrement");
+        break;
     default:
         printf("<unknown math operation>");
     }
@@ -143,6 +159,14 @@ ExpressionKind expression_kind_unary_prefix_from_token_kind(TokenKind kind){
     case TOKEN_BIT_COMPLEMENT: return EXPRESSION_BIT_COMPLEMENT;
     case TOKEN_INCREMENT: return EXPRESSION_PRE_INCREMENT;
     case TOKEN_DECREMENT: return EXPRESSION_PRE_DECREMENT;
+    default: return EXPRESSION_NONE;
+    }
+}
+
+ExpressionKind expression_kind_unary_postfix_from_token_kind(TokenKind kind){
+    switch(kind){
+    case TOKEN_INCREMENT: return EXPRESSION_POST_INCREMENT;
+    case TOKEN_DECREMENT: return EXPRESSION_POST_DECREMENT;
     default: return EXPRESSION_NONE;
     }
 }

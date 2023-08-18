@@ -7,6 +7,7 @@
 
 static Expression parse_secondary_expression(u8 precedence, Expression lhs);
 static Expression parse_unary_prefix(TokenKind operator, u24 line_number);
+static Expression parse_unary_postfix(Expression expression);
 
 static Expression parse_expression_print(u24 line_number){
     Expression expression = (Expression){0};
@@ -384,6 +385,29 @@ static Expression parse_unary_prefix(
     };
 }
 
+static Expression parse_unary_postfix(Expression expression){
+    TokenKind operator = tokens[parse_i++].kind;
+
+    u32 value = add_expression(expression);
+    if(value >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return (Expression){0};
+    }
+
+    ExpressionKind expression_kind = expression_kind_unary_postfix_from_token_kind(operator);
+    if(expression_kind == EXPRESSION_NONE){
+        printf("\nerror on line %d: Could not get unary expression kind from token kind\n", u24_unpack(expression.line));
+        stop_parsing();
+        return (Expression){0};
+    }
+
+    return (Expression){
+        .kind = expression_kind,
+        .line = expression.line,
+        .ops = value,
+    };
+}
+
 static Expression parse_array_index(Expression array, u24 line_number){
     // Skip over '[' operator
     parse_i++;
@@ -461,6 +485,10 @@ static Expression parse_secondary_expression(u8 precedence, Expression lhs){
             break;
         case TOKEN_OPEN_BRACKET:
             lhs = parse_array_index(lhs, line_number);
+            break;
+        case TOKEN_INCREMENT:
+        case TOKEN_DECREMENT:
+            lhs = parse_unary_postfix(lhs);
             break;
         default:
             return lhs;

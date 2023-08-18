@@ -411,7 +411,7 @@ static u32 emit_math(ExpressionKind kind, u32 operand_type){
     return 0;
 }
 
-u32 expression_emit_unary_prefix(Expression expression){
+u32 expression_emit_unary(Expression expression){
     u32 type = expression_emit(expressions[expression.ops]);
     if(type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
@@ -440,6 +440,16 @@ u32 expression_emit_unary_prefix(Expression expression){
             emit_u8(1);
             emit_additive_u8(expression.kind == EXPRESSION_PRE_INCREMENT);
             dupe_cell();
+            write_destination(u8_type, expressions[expression.ops], expression.line);
+            return type;
+        }
+        break;
+    case EXPRESSION_POST_INCREMENT:
+    case EXPRESSION_POST_DECREMENT:
+        if(type == u8_type){
+            dupe_cell();
+            emit_u8(1);
+            emit_additive_u8(expression.kind == EXPRESSION_POST_INCREMENT);
             write_destination(u8_type, expressions[expression.ops], expression.line);
             return type;
         }
@@ -800,7 +810,9 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_BIT_COMPLEMENT:
     case EXPRESSION_PRE_INCREMENT:
     case EXPRESSION_PRE_DECREMENT:
-        return expression_emit_unary_prefix(expression);
+    case EXPRESSION_POST_INCREMENT:
+    case EXPRESSION_POST_DECREMENT:
+        return expression_emit_unary(expression);
     default:
         printf("\nerror: Unknown expression kind %d during expression_emit\n", expression.kind);
         return TYPES_CAPACITY;

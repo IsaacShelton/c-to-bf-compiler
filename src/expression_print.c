@@ -108,6 +108,22 @@ u0 expression_print(Expression expression){
         expression_print_operator(expression.kind);
         expression_print(expressions[expression.ops]);
         break;
+    case EXPRESSION_PRE_INCREMENT:
+        printf("++");
+        expression_print(expressions[expression.ops]);
+        break;
+    case EXPRESSION_PRE_DECREMENT:
+        printf("--");
+        expression_print(expressions[expression.ops]);
+        break;
+    case EXPRESSION_POST_INCREMENT:
+        expression_print(expressions[expression.ops]);
+        printf("++");
+        break;
+    case EXPRESSION_POST_DECREMENT:
+        expression_print(expressions[expression.ops]);
+        printf("--");
+        break;
     default:
         printf("<unknown expression>");
     }

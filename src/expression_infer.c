@@ -59,6 +59,10 @@ ExpressionKind expression_get_preferred_int_kind_or_none(u32 expression_index){
         return EXPRESSION_U1;
     case EXPRESSION_NEGATE:
     case EXPRESSION_BIT_COMPLEMENT:
+    case EXPRESSION_PRE_INCREMENT:
+    case EXPRESSION_PRE_DECREMENT:
+    case EXPRESSION_POST_INCREMENT:
+    case EXPRESSION_POST_DECREMENT:
         return expression_get_preferred_int_kind_or_none(expression.ops);
     }
     
@@ -149,6 +153,10 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
         break;
     case EXPRESSION_NEGATE:
     case EXPRESSION_BIT_COMPLEMENT:
+    case EXPRESSION_PRE_INCREMENT:
+    case EXPRESSION_PRE_DECREMENT:
+    case EXPRESSION_POST_INCREMENT:
+    case EXPRESSION_POST_DECREMENT:
         expression_infer(expression.ops, preferred_int_kind);
         break;
     }

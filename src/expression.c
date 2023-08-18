@@ -136,11 +136,13 @@ u0 expression_print_operation_name(ExpressionKind kind){
     }
 }
 
-ExpressionKind expression_kind_unary_from_token_kind(TokenKind kind){
+ExpressionKind expression_kind_unary_prefix_from_token_kind(TokenKind kind){
     switch(kind){
     case TOKEN_SUBTRACT: return EXPRESSION_NEGATE;
     case TOKEN_NOT: return EXPRESSION_NOT;
     case TOKEN_BIT_COMPLEMENT: return EXPRESSION_BIT_COMPLEMENT;
+    case TOKEN_INCREMENT: return EXPRESSION_PRE_INCREMENT;
+    case TOKEN_DECREMENT: return EXPRESSION_PRE_DECREMENT;
     default: return EXPRESSION_NONE;
     }
 }

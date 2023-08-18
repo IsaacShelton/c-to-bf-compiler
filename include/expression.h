@@ -43,6 +43,8 @@ enum {
     EXPRESSION_NOT, /* { value } */
     EXPRESSION_BIT_COMPLEMENT, /* { value } */
     EXPRESSION_INDEX,  /* { a, b } */
+    EXPRESSION_PRE_INCREMENT, /* { a } */
+    EXPRESSION_PRE_DECREMENT, /* { a } */
 };
 typedef u8 ExpressionKind;
 
@@ -54,7 +56,7 @@ typedef struct {
 
 u0 expression_print_operator(ExpressionKind kind);
 u0 expression_print_operation_name(ExpressionKind kind);
-ExpressionKind expression_kind_unary_from_token_kind(TokenKind kind);
+ExpressionKind expression_kind_unary_prefix_from_token_kind(TokenKind kind);
 ExpressionKind expression_kind_binary_from_token_kind(TokenKind kind);
 
 #endif // _PECK_AST_EXPRESSION_H

@@ -121,6 +121,12 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_BIT_COMPLEMENT:
         printf("~");
         break;
+    case TOKEN_INCREMENT:
+        printf("++");
+        break;
+    case TOKEN_DECREMENT:
+        printf("--");
+        break;
     default:
         printf("<unknown>");
     }

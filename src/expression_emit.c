@@ -257,17 +257,12 @@ static Destination expression_get_destination(Expression expression, u32 tape_an
     }
 }
 
-static u32 expression_emit_assign(Expression expression){
-    u32 new_value = operands[expression.ops + 1];
-    u32 new_value_type = expression_emit(expressions[new_value]);
-    if(new_value_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
-
-    Expression destination_expression = expressions[operands[expression.ops]];
+static u32 write_destination(u32 new_value_type, Expression destination_expression, u24 error_line_number){
     Destination destination = expression_get_destination(destination_expression, emit_context.current_cell_index);
     if(destination.type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
     if(new_value_type != destination.type){
-        printf("\nerror on line %d: Cannot assign '", u24_unpack(expression.line));
+        printf("\nerror on line %d: Cannot assign '", u24_unpack(error_line_number));
         type_print(types[new_value_type]);
         printf("' to '");
         type_print(types[destination.type]);
@@ -289,9 +284,17 @@ static u32 expression_emit_assign(Expression expression){
         move_cells_dynamic_u8(destination.tape_location, type_size);
         return u0_type;
     } else {
-        printf("\nerror on line %d: Cannot assign to destination with u%d offset\n", u24_unpack(expression.line), 8*destination.offset_size);
+        printf("\nerror on line %d: Cannot assign to destination with u%d offset\n", u24_unpack(error_line_number), 8*destination.offset_size);
         return TYPES_CAPACITY;
     }
+}
+
+static u32 expression_emit_assign(Expression expression){
+    u32 new_value = operands[expression.ops + 1];
+    u32 new_value_type = expression_emit(expressions[new_value]);
+    if(new_value_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    return write_destination(new_value_type, expressions[operands[expression.ops]], expression.line);
 }
 
 u32 expression_emit_variable(Expression expression){
@@ -428,6 +431,16 @@ u32 expression_emit_unary_prefix(Expression expression){
     case EXPRESSION_BIT_COMPLEMENT:
         if(type == u8_type || type == u1_type){
             emit_bit_complement_u8();
+            return type;
+        }
+        break;
+    case EXPRESSION_PRE_INCREMENT:
+    case EXPRESSION_PRE_DECREMENT:
+        if(type == u8_type){
+            emit_u8(1);
+            emit_additive_u8(expression.kind == EXPRESSION_PRE_INCREMENT);
+            dupe_cell();
+            write_destination(u8_type, expressions[expression.ops], expression.line);
             return type;
         }
         break;
@@ -785,6 +798,8 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_NEGATE:
     case EXPRESSION_NOT:
     case EXPRESSION_BIT_COMPLEMENT:
+    case EXPRESSION_PRE_INCREMENT:
+    case EXPRESSION_PRE_DECREMENT:
         return expression_emit_unary_prefix(expression);
     default:
         printf("\nerror: Unknown expression kind %d during expression_emit\n", expression.kind);

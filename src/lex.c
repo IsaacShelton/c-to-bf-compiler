@@ -153,15 +153,25 @@ LexedToken lex_main(){
 
     // Handle add
     if(lead == '+'){
-        result.token.kind = TOKEN_ADD;
-        result.consumed = 1;
+        if(code_buffer_length > 1 && code_buffer[1] == '+'){
+            result.token.kind = TOKEN_INCREMENT;
+            result.consumed = 2;
+        } else {
+            result.token.kind = TOKEN_ADD;
+            result.consumed = 1;
+        }
         return result;
     }
 
     // Handle subtract
     if(lead == '-'){
-        result.token.kind = TOKEN_SUBTRACT;
-        result.consumed = 1;
+        if(code_buffer_length > 1 && code_buffer[1] == '-'){
+            result.token.kind = TOKEN_DECREMENT;
+            result.consumed = 2;
+        } else {
+            result.token.kind = TOKEN_SUBTRACT;
+            result.consumed = 1;
+        }
         return result;
     }
 

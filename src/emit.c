@@ -6,17 +6,21 @@
 #include "../include/emit_context.h"
 
 u0 dupe_cell(){
-    // Zero next two cells
-    printf(">[-]>[-]<<");
+    // a ?
+    //   ^
 
-    // Dupe right
+    // Zero next two cells
+    printf("[-]>[-]<<");
+
+    // Dupe rightward
     printf("[>+>+<<-]");
 
-    // More second copy back into original
+    // Move second copy back into original
     printf(">>[<<+>>-]");
 
-    // More rightward
-    printf(">");
+    // Remaing pointing to next available cell
+    // (nothing to do)
+
     emit_context.current_cell_index++;
 }
 

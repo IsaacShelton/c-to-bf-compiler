@@ -219,7 +219,12 @@ static Expression parse_primary_expression(){
         return expression;
     }
 
-    if(eat_token(TOKEN_SUBTRACT) || eat_token(TOKEN_NOT) || eat_token(TOKEN_BIT_COMPLEMENT)){
+    if( eat_token(TOKEN_SUBTRACT)
+     || eat_token(TOKEN_NOT)
+     || eat_token(TOKEN_BIT_COMPLEMENT)
+     || eat_token(TOKEN_INCREMENT)
+     || eat_token(TOKEN_DECREMENT)
+    ){
         return parse_unary_prefix(tokens[parse_i - 1].kind, line_number);
     }
     
@@ -365,7 +370,7 @@ static Expression parse_unary_prefix(
         return (Expression){0};
     }
 
-    ExpressionKind expression_kind = expression_kind_unary_from_token_kind(operator);
+    ExpressionKind expression_kind = expression_kind_unary_prefix_from_token_kind(operator);
     if(expression_kind == EXPRESSION_NONE){
         printf("\nerror on line %d: Could not get unary expression kind from token kind\n", u24_unpack(line_number));
         stop_parsing();

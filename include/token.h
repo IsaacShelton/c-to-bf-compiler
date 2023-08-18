@@ -44,6 +44,8 @@ enum {
     TOKEN_BIT_XOR,
     TOKEN_NOT,
     TOKEN_BIT_COMPLEMENT,
+    TOKEN_INCREMENT,
+    TOKEN_DECREMENT,
 };
 
 typedef u8 TokenKind;

@@ -1,0 +1,17 @@
+
+u0 main(){
+    u8 value = 2;
+
+    printu8(++value);
+    print("\n");
+
+    printu8(--value);
+    print("\n");
+
+    printu8(++value);
+    print("\n");
+
+    printu8(--value);
+    print("\n");
+}
+

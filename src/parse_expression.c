@@ -6,6 +6,7 @@
 #include "../include/storage.h"
 
 static Expression parse_secondary_expression(u8 precedence, Expression lhs);
+static Expression parse_unary_prefix(TokenKind operator, u24 line_number);
 
 static Expression parse_expression_print(u24 line_number){
     Expression expression = (Expression){0};
@@ -203,19 +204,23 @@ static Expression parse_primary_expression(){
                 .line = line_number,
                 .ops = ops,
             };
-        } else {
-            // Expression
-            Expression expression = parse_expression();
-            if(had_parse_error) return (Expression){0};
-
-            if(!eat_token(TOKEN_CLOSE)){
-                printf("\nerror on line %d: Expected ')' to close cast\n", current_line());
-                stop_parsing();
-                return (Expression){0};
-            }
-
-            return expression;
         }
+
+        // Normal nested expression
+        Expression expression = parse_expression();
+        if(had_parse_error) return (Expression){0};
+
+        if(!eat_token(TOKEN_CLOSE)){
+            printf("\nerror on line %d: Expected ')' to close cast\n", current_line());
+            stop_parsing();
+            return (Expression){0};
+        }
+
+        return expression;
+    }
+
+    if(eat_token(TOKEN_SUBTRACT) || eat_token(TOKEN_NOT) || eat_token(TOKEN_BIT_COMPLEMENT)){
+        return parse_unary_prefix(tokens[parse_i - 1].kind, line_number);
     }
     
     printf("error on line %d: Expected expression\n", current_line());
@@ -333,7 +338,7 @@ static Expression parse_math(
         return lhs;
     }
 
-    ExpressionKind expression_kind = expression_kind_from_token_kind(operator);
+    ExpressionKind expression_kind = expression_kind_binary_from_token_kind(operator);
     if(expression_kind == EXPRESSION_NONE){
         printf("\nerror on line %d: Could not get math expression kind from token kind\n", u24_unpack(line_number));
         stop_parsing();
@@ -344,6 +349,33 @@ static Expression parse_math(
         .kind = expression_kind,
         .line = line_number,
         .ops = ops,
+    };
+}
+
+static Expression parse_unary_prefix(
+    TokenKind operator,
+    u24 line_number
+){
+    Expression expression = parse_primary_expression();
+    if(had_parse_error) return (Expression){0};
+
+    u32 value = add_expression(expression);
+    if(value >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return (Expression){0};
+    }
+
+    ExpressionKind expression_kind = expression_kind_unary_from_token_kind(operator);
+    if(expression_kind == EXPRESSION_NONE){
+        printf("\nerror on line %d: Could not get unary expression kind from token kind\n", u24_unpack(line_number));
+        stop_parsing();
+        return (Expression){0};
+    }
+
+    return (Expression){
+        .kind = expression_kind,
+        .line = line_number,
+        .ops = value,
     };
 }
 

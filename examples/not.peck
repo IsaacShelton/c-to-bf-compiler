@@ -1,0 +1,11 @@
+
+u0 main(){
+    print("!true = ");
+    printu1(!true);
+    print("\n");
+
+    print("!false = ");
+    printu1(!false);
+    print("\n");
+}
+

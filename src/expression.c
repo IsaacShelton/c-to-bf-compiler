@@ -61,6 +61,15 @@ u0 expression_print_operator(ExpressionKind kind){
     case EXPRESSION_BIT_XOR:
         printf("^");
         break;
+    case EXPRESSION_NEGATE:
+        printf("-");
+        break;
+    case EXPRESSION_NOT:
+        printf("!");
+        break;
+    case EXPRESSION_BIT_COMPLEMENT:
+        printf("~");
+        break;
     default:
         printf("<unknown math operator>");
     }
@@ -113,12 +122,30 @@ u0 expression_print_operation_name(ExpressionKind kind){
     case EXPRESSION_BIT_XOR:
         printf("bitwise-xor");
         break;
+    case EXPRESSION_NEGATE:
+        printf("negate");
+        break;
+    case EXPRESSION_NOT:
+        printf("not");
+        break;
+    case EXPRESSION_BIT_COMPLEMENT:
+        printf("bitwise-complement");
+        break;
     default:
         printf("<unknown math operation>");
     }
 }
 
-ExpressionKind expression_kind_from_token_kind(TokenKind kind){
+ExpressionKind expression_kind_unary_from_token_kind(TokenKind kind){
+    switch(kind){
+    case TOKEN_SUBTRACT: return EXPRESSION_NEGATE;
+    case TOKEN_NOT: return EXPRESSION_NOT;
+    case TOKEN_BIT_COMPLEMENT: return EXPRESSION_BIT_COMPLEMENT;
+    default: return EXPRESSION_NONE;
+    }
+}
+
+ExpressionKind expression_kind_binary_from_token_kind(TokenKind kind){
     switch(kind){
     case TOKEN_ASSIGN: return EXPRESSION_ASSIGN;
     case TOKEN_ADD: return EXPRESSION_ADD;

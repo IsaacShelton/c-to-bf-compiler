@@ -1146,20 +1146,54 @@ static u0 emit_binary_bitwise_operator_post(){
 }
 
 u0 emit_bit_and_u8(){
+    // a b ?
+    //     ^
+
     emit_binary_bitwise_operator_pre();
     printf("[->[-<<+>>]<]>[-]");
     emit_binary_bitwise_operator_post();
 }
 
 u0 emit_bit_or_u8(){
+    // a b ?
+    //     ^
+
     emit_binary_bitwise_operator_pre();
     printf("[>+<-]>[[-]<<+>>]");
     emit_binary_bitwise_operator_post();
 }
 
 u0 emit_bit_xor_u8(){
+    // a b ?
+    //     ^
+
     emit_binary_bitwise_operator_pre();
     printf("[>-<-]>[[-]<<+>>]");
     emit_binary_bitwise_operator_post();
+}
+
+u0 emit_not_u1(){
+    // a ?
+    //   ^
+
+    printf("[-]+<[");
+        printf(">-<");
+    printf("[-]]");
+
+    printf(">[<+>-]");
+}
+
+u0 emit_negate_u8(){
+    // a ?
+    //   ^
+
+    printf("<-[>+<-]>+[<->-]");
+}
+
+u0 emit_bit_complement_u8(){
+    // a ?
+    //   ^
+
+    printf("<[>+<-]>+[<->-]");
 }
 

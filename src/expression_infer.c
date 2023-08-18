@@ -55,6 +55,11 @@ ExpressionKind expression_get_preferred_int_kind_or_none(u32 expression_index){
             if(result != EXPRESSION_NONE) return result;
         }
         break;
+    case EXPRESSION_NOT:
+        return EXPRESSION_U1;
+    case EXPRESSION_NEGATE:
+    case EXPRESSION_BIT_COMPLEMENT:
+        return expression_get_preferred_int_kind_or_none(expression.ops);
     }
     
     return EXPRESSION_NONE;
@@ -138,6 +143,13 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
     case EXPRESSION_AND:
     case EXPRESSION_OR:
         expression_infer_math(expression, EXPRESSION_U1);
+        break;
+    case EXPRESSION_NOT:
+        expression_infer(expression.ops, EXPRESSION_U1);
+        break;
+    case EXPRESSION_NEGATE:
+    case EXPRESSION_BIT_COMPLEMENT:
+        expression_infer(expression.ops, preferred_int_kind);
         break;
     }
 }

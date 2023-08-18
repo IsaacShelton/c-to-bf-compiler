@@ -37,12 +37,13 @@ enum {
     TOKEN_GREATER_THAN_OR_EQUAL,
     TOKEN_LSHIFT,
     TOKEN_RSHIFT,
-    TOKEN_NOT,
     TOKEN_AND,
     TOKEN_OR,
     TOKEN_BIT_AND,
     TOKEN_BIT_OR,
     TOKEN_BIT_XOR,
+    TOKEN_NOT,
+    TOKEN_BIT_COMPLEMENT,
 };
 
 typedef u8 TokenKind;

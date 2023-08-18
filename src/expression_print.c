@@ -102,6 +102,12 @@ u0 expression_print(Expression expression){
             printf("]");
         }
         break;
+    case EXPRESSION_NEGATE:
+    case EXPRESSION_NOT:
+    case EXPRESSION_BIT_COMPLEMENT:
+        expression_print_operator(expression.kind);
+        expression_print(expressions[expression.ops]);
+        break;
     default:
         printf("<unknown expression>");
     }

@@ -350,7 +350,6 @@ u32 expression_emit_cast(Expression expression){
     return TYPES_CAPACITY;
 }
 
-
 static u32 emit_math(ExpressionKind kind, u32 operand_type){
     switch(kind){
     case EXPRESSION_ADD:
@@ -407,6 +406,39 @@ static u32 emit_math(ExpressionKind kind, u32 operand_type){
     }
 
     return 0;
+}
+
+u32 expression_emit_unary_prefix(Expression expression){
+    u32 type = expression_emit(expressions[expression.ops]);
+    if(type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    switch(expression.kind){
+    case EXPRESSION_NOT:
+        if(type == u1_type){
+            emit_not_u1();
+            return type;
+        }
+        break;
+    case EXPRESSION_NEGATE:
+        if(type == u8_type){
+            emit_negate_u8();
+            return type;
+        }
+        break;
+    case EXPRESSION_BIT_COMPLEMENT:
+        if(type == u8_type || type == u1_type){
+            emit_bit_complement_u8();
+            return type;
+        }
+        break;
+    }
+
+    printf("\nerror on line %d: Cannot ", u24_unpack(expression.line));
+    expression_print_operation_name(expression.kind);
+    printf(" value of type '");
+    type_print(types[type]);
+    printf("'\n");
+    return TYPES_CAPACITY;
 }
 
 static u32 expression_emit_math(Expression expression){
@@ -750,6 +782,10 @@ u32 expression_emit(Expression expression){
         return expression_emit_or(expression);
     case EXPRESSION_INDEX:
         return expression_emit_index(expression);
+    case EXPRESSION_NEGATE:
+    case EXPRESSION_NOT:
+    case EXPRESSION_BIT_COMPLEMENT:
+        return expression_emit_unary_prefix(expression);
     default:
         printf("\nerror: Unknown expression kind %d during expression_emit\n", expression.kind);
         return TYPES_CAPACITY;

@@ -39,6 +39,9 @@ enum {
     EXPRESSION_BIT_AND, /* { a, b } */
     EXPRESSION_BIT_OR, /* { a, b } */
     EXPRESSION_BIT_XOR, /* { a, b } */
+    EXPRESSION_NEGATE, /* { value } */
+    EXPRESSION_NOT, /* { value } */
+    EXPRESSION_BIT_COMPLEMENT, /* { value } */
     EXPRESSION_INDEX,  /* { a, b } */
 };
 typedef u8 ExpressionKind;
@@ -51,7 +54,8 @@ typedef struct {
 
 u0 expression_print_operator(ExpressionKind kind);
 u0 expression_print_operation_name(ExpressionKind kind);
-ExpressionKind expression_kind_from_token_kind(TokenKind kind);
+ExpressionKind expression_kind_unary_from_token_kind(TokenKind kind);
+ExpressionKind expression_kind_binary_from_token_kind(TokenKind kind);
 
 #endif // _PECK_AST_EXPRESSION_H
 

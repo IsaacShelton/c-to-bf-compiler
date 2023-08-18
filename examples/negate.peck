@@ -1,0 +1,17 @@
+
+u0 main(){
+    u8 x = 25;
+    print("-");
+    printu8(x);
+    print("u8 = ");
+    printu8(-x);
+    print("u8\n");
+
+    printu8(-x);
+    print("u8 + ");
+    printu8(x);
+    print("u8 = ");
+    printu8(-x + x);
+    print("\n");
+}
+

@@ -258,6 +258,14 @@ static u8 parse_get_precedence(u32 token_kind){
     case TOKEN_EQUALS:
     case TOKEN_NOT_EQUALS:
         return 8;
+    case TOKEN_BIT_AND:
+        return 7;
+    case TOKEN_BIT_OR:
+        return 5;
+    case TOKEN_AND:
+        return 4;
+    case TOKEN_OR:
+        return 3;
     case TOKEN_ASSIGN:
         return 1;
     default:
@@ -407,6 +415,10 @@ static Expression parse_secondary_expression(u8 precedence, Expression lhs){
         case TOKEN_RSHIFT:
         case TOKEN_EQUALS:
         case TOKEN_NOT_EQUALS:
+        case TOKEN_AND:
+        case TOKEN_OR:
+        case TOKEN_BIT_AND:
+        case TOKEN_BIT_OR:
             lhs = parse_math(lhs, operator, line_number, next_precedence);
             break;
         case TOKEN_OPEN_BRACKET:

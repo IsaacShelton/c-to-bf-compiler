@@ -4,6 +4,7 @@ self="$(dirname -- "$0")"
 set -ex
 
 "$self/../peck" "$self/addition_subtraction.peck"
+"$self/../peck" "$self/and_or.peck"
 "$self/../peck" "$self/array_access_simple.peck"
 "$self/../peck" "$self/casts.peck"
 "$self/../peck" "$self/divmod.peck"

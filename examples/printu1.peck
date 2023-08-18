@@ -1,0 +1,11 @@
+
+u0 main(){
+    u1 t = true;
+    u1 f = false;
+
+    printu1(t);
+    print("\n");
+    printu1(f);
+    print("\n");
+}
+

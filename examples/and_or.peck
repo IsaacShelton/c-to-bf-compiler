@@ -1,0 +1,31 @@
+
+u0 main(){
+    test_and(false, false);
+    test_and(true, false);
+    test_and(false, true);
+    test_and(true, true);
+
+    test_or(false, false);
+    test_or(true, false);
+    test_or(false, true);
+    test_or(true, true);
+}
+
+u0 test_and(u1 a, u1 b){
+    printu1(a);
+    print(" && ");
+    printu1(b);
+    print(" = ");
+    printu1(a && b);
+    print("\n");
+}
+
+u0 test_or(u1 a, u1 b){
+    printu1(a);
+    print(" || ");
+    printu1(b);
+    print(" = ");
+    printu1(a || b);
+    print("\n");
+}
+

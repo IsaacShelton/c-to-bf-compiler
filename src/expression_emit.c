@@ -392,14 +392,14 @@ static u32 emit_math(ExpressionKind kind, u32 operand_type){
     case EXPRESSION_RSHIFT:
         emit_rshift_u8();
         return operand_type;
-        /*
+    /*
     case EXPRESSION_BIT_AND:
         emit_bit_and_u8();
         return operand_type;
     case EXPRESSION_BIT_OR:
         emit_bit_or_u8();
         return operand_type;
-        */
+    */
     default:
         printf("\nerror: Could not perform unknown math operation for expression kind %d\n", kind);
         return 1;
@@ -452,7 +452,10 @@ static u32 expression_emit_and(Expression expression){
 
     // Convert to boolean
     if(a_type != u1_type){
-        printf("\nerror on line %d: First operand to '&&' must be a 'u1'\n", u24_unpack(expression.line));
+        printf("\nerror on line %d: Expected first operand of '&&' to be 'u1'", u24_unpack(expression.line));
+        printf(", got '");
+        type_print(types[a_type]);
+        printf("'\n");
         return TYPES_CAPACITY;
     }
 
@@ -471,8 +474,11 @@ static u32 expression_emit_and(Expression expression){
     if(b_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
     // Convert to boolean
-    if(a_type != u1_type){
-        printf("\nerror on line %d: Second operand to '&&' must be a 'u1'\n", u24_unpack(expression.line));
+    if(b_type != u1_type){
+        printf("\nerror on line %d: Expected second operand of '&&' to be 'u1'", u24_unpack(expression.line));
+        printf(", got '");
+        type_print(types[b_type]);
+        printf("'\n");
         return TYPES_CAPACITY;
     }
 

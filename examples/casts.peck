@@ -1,0 +1,13 @@
+
+u0 main(){
+    u8 x = 20;
+    u1 has_feet = (u1) x;
+
+    print("x = ");
+    printu8(x);
+    print("\n");
+    print("has_feet = ");
+    printu8((u8) has_feet);
+    print("\n");
+}
+

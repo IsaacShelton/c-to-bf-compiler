@@ -46,6 +46,18 @@ u0 expression_print_operator(ExpressionKind kind){
     case EXPRESSION_RSHIFT:
         printf(">>");
         break;
+    case EXPRESSION_AND:
+        printf("&&");
+        break;
+    case EXPRESSION_OR:
+        printf("||");
+        break;
+    case EXPRESSION_BIT_AND:
+        printf("&");
+        break;
+    case EXPRESSION_BIT_OR:
+        printf("|");
+        break;
     default:
         printf("<unknown math operator>");
     }
@@ -104,6 +116,10 @@ ExpressionKind expression_kind_from_token_kind(TokenKind kind){
     case TOKEN_GREATER_THAN_OR_EQUAL: return EXPRESSION_GREATER_THAN_OR_EQUAL;
     case TOKEN_LSHIFT: return EXPRESSION_LSHIFT;
     case TOKEN_RSHIFT: return EXPRESSION_RSHIFT;
+    case TOKEN_AND: return EXPRESSION_AND;
+    case TOKEN_OR: return EXPRESSION_OR;
+    case TOKEN_BIT_AND: return EXPRESSION_BIT_AND;
+    case TOKEN_BIT_OR: return EXPRESSION_BIT_OR;
     default: return EXPRESSION_NONE;
     }
 }

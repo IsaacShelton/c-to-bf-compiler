@@ -2,7 +2,7 @@
 #include "../include/builtin_types.h"
 #include "../include/storage.h"
 
-u32 u0_type, u8_type, u16_type;
+u32 u0_type, u1_type, u8_type, u16_type;
 
 static u32 make_simple_type(u8 raw_name[16]){
     // Alloc string
@@ -21,6 +21,11 @@ ErrorCode add_builtin_types(){
     u8 u0_name[16] = "u0";
     u0_type = make_simple_type(u0_name);
     if(u0_type >= TYPES_CAPACITY) return 1;
+
+    // Create u1 type
+    u8 u1_name[16] = "u1";
+    u1_type = make_simple_type(u1_name);
+    if(u1_type >= TYPES_CAPACITY) return 1;
     
     // Create u8 type
     u8 u8_name[16] = "u8";

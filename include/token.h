@@ -19,6 +19,8 @@ enum {
     TOKEN_SEMICOLON,
     TOKEN_OPEN_BRACKET,
     TOKEN_CLOSE_BRACKET,
+    TOKEN_TRUE,
+    TOKEN_FALSE,
     TOKEN_INT,
     TOKEN_NEXT,
     TOKEN_ASSIGN,
@@ -36,6 +38,10 @@ enum {
     TOKEN_LSHIFT,
     TOKEN_RSHIFT,
     TOKEN_NOT,
+    TOKEN_AND,
+    TOKEN_OR,
+    TOKEN_BIT_AND,
+    TOKEN_BIT_OR,
 };
 
 typedef u8 TokenKind;

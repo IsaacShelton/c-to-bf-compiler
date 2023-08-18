@@ -39,11 +39,17 @@ u0 expression_print(Expression expression){
     case EXPRESSION_IMPLEMENT_PUT:
         printf("<implementation of put>");
         break;
+    case EXPRESSION_IMPLEMENT_PRINTU1:
+        printf("<implementation of printu1>");
+        break;
     case EXPRESSION_IMPLEMENT_PRINTU8:
         printf("<implementation of printu8>");
         break;
     case EXPRESSION_INT:
         printf("%d", expression.ops);
+        break;
+    case EXPRESSION_U1:
+        printf(expression.ops ? "true" : "false");
         break;
     case EXPRESSION_U8:
         printf("%du8", expression.ops);
@@ -51,14 +57,28 @@ u0 expression_print(Expression expression){
     case EXPRESSION_VARIABLE:
         print_aux_cstr(expression.ops);
         break;
+    case EXPRESSION_CAST:
+        printf("(");
+        type_print(types[operands[expression.ops]]);
+        printf(") ");
+        expression_print(expressions[operands[expression.ops + 1]]);
+        break;
     case EXPRESSION_ASSIGN:
     case EXPRESSION_ADD:
     case EXPRESSION_SUBTRACT:
     case EXPRESSION_MULTIPLY:
     case EXPRESSION_DIVIDE:
     case EXPRESSION_MOD:
+    case EXPRESSION_EQUALS:
+    case EXPRESSION_NOT_EQUALS:
     case EXPRESSION_LESS_THAN:
     case EXPRESSION_GREATER_THAN:
+    case EXPRESSION_LESS_THAN_OR_EQUAL:
+    case EXPRESSION_GREATER_THAN_OR_EQUAL:
+    case EXPRESSION_AND:
+    case EXPRESSION_OR:
+    case EXPRESSION_BIT_AND:
+    case EXPRESSION_BIT_OR:
     case EXPRESSION_LSHIFT:
     case EXPRESSION_RSHIFT: {
             u32 a = operands[expression.ops];

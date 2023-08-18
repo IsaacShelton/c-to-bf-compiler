@@ -18,6 +18,11 @@ u0 move_cell_dynamic_u8(u32 destination_start_index);
 u0 move_cells_dynamic_u8(u32 destination_start_index, u32 size);
 u0 print_cells_static(u32 start_index, u32 max_length);
 
+u0 emit_u1(u1 value);
+u0 emit_u8(u8 value);
+u0 emit_u32(u32 value);
+
+u0 emit_printu1();
 u0 emit_printu8();
 u0 emit_print_array_value(u32 max_length);
 u0 emit_additive_u8(u1 is_plus);
@@ -33,6 +38,8 @@ u0 emit_lt_u8();
 u0 emit_gt_u8();
 u0 emit_lte_u8();
 u0 emit_gte_u8();
+u0 emit_bit_and_u8();
+u0 emit_bit_or_u8();
 
 #endif // _PECK_EMIT_H
 

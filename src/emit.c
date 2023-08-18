@@ -472,6 +472,77 @@ u0 emit_print_array_value(u32 max_length){
     emit_context.current_cell_index -= max_length;
 }
 
+u0 emit_u1(u1 value){
+    printf("[-]");
+
+    if(value){
+        printf("+");
+    }
+
+    printf(">");
+    emit_context.current_cell_index++;
+}
+
+u0 emit_u8(u8 value){
+    printf("[-]%d+>", value);
+    emit_context.current_cell_index++;
+}
+
+u0 emit_u32(u32 value){
+    emit_u8(value >> 24);
+    emit_u8((value >> 16) & 0xFF);
+    emit_u8((value >> 8) & 0xFF);
+    emit_u8(value & 0xFF);
+}
+
+u0 emit_printu1(){
+    // a ?
+    //   ^
+
+    // Allocate 3 temporary cells ('whether to run else', 'copied value', and 'bus')
+    // and set 'whether to run else' as true
+    printf("[-]+>[-]>[-]");
+
+    // Go to value
+    printf("3<");
+
+    // Copy value from 'a' to 'copied value' via 'bus'
+    printf("[>>+>+<<<-]");
+    printf("3>[3<+3>-]");
+
+    // Go to 'copied value' cell
+    printf("<");
+
+    // If copied value
+    printf("[");
+        // Set 'whether to run else' to false
+        printf("<->");
+
+        // Print "true"
+        printf("[-]116+.2-.3+.16-.");
+
+        // Zero copied value
+        printf("[-]");
+    // End if
+    printf("]");
+
+    // Go to 'else' cell
+    printf("<");
+    
+    // If 'else'
+    printf("[");
+        // Print "false"
+        printf("[-]102+.5-.11+.7+.14-.");
+
+        // Zero 'else'
+        printf("[-]");
+    // End if
+    printf("]");
+
+    // Remain pointing to next available cell
+    // (nothing to do)
+}
+
 u0 emit_printu8(){
     // a ?
     //   ^
@@ -1005,4 +1076,14 @@ u0 emit_gte_u8(){
 
     emit_context.current_cell_index--;
 }
+
+/*
+u0 emit_bit_and_u8(){
+
+}
+
+u0 emit_bit_or_u8(){
+
+}
+*/
 

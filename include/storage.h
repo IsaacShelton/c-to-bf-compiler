@@ -55,6 +55,7 @@ u32 aux_cstr_alloc(u8 null_terminated_name[16]);
 u1 aux_cstr_equals(u32 a, u32 b);
 u1 aux_cstr_equals_print(u32 a);
 u1 aux_cstr_equals_main(u32 a);
+u1 aux_cstr_equals_u1(u32 a);
 u1 aux_cstr_equals_u0(u32 a);
 u1 aux_cstr_equals_u8(u32 a);
 u1 aux_cstr_equals_u16(u32 a);

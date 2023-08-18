@@ -12,7 +12,7 @@ u32 type_sizeof_or_max(u32 type_index){
 
     if(aux_cstr_equals_u0(name)){
         size = 0;
-    } else if(aux_cstr_equals_u8(name)){
+    } else if(aux_cstr_equals_u8(name) || aux_cstr_equals_u1(name)){
         size = 1;
     } else if(aux_cstr_equals_u16(name)){
         size = 2;

@@ -49,6 +49,12 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_CLOSE_BRACKET:
         printf("]");
         break;
+    case TOKEN_TRUE:
+        printf("true");
+        break;
+    case TOKEN_FALSE:
+        printf("false");
+        break;
     case TOKEN_INT:
         printf("%d", token.data);
         break;
@@ -93,6 +99,18 @@ u0 token_print(Token token, u1 safe){
         break;
     case TOKEN_RSHIFT:
         printf(">>");
+        break;
+    case TOKEN_AND:
+        printf("&&");
+        break;
+    case TOKEN_OR:
+        printf("||");
+        break;
+    case TOKEN_BIT_AND:
+        printf("&");
+        break;
+    case TOKEN_BIT_OR:
+        printf("|");
         break;
     default:
         printf("<unknown>");

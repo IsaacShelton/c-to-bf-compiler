@@ -213,6 +213,13 @@ u1 aux_cstr_equals_u0(u32 a){
         && aux[a + 2] == '\0';
 }
 
+u1 aux_cstr_equals_u1(u32 a){
+    return a + 2 < AUX_CAPACITY
+        && aux[a    ] == 'u'
+        && aux[a + 1] == '1'
+        && aux[a + 2] == '\0';
+}
+
 u1 aux_cstr_equals_u8(u32 a){
     return a + 2 < AUX_CAPACITY
         && aux[a    ] == 'u'

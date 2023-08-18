@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "../include/parse_expression.h"
 #include "../include/parse_context.h"
+#include "../include/parse_type.h"
 #include "../include/storage.h"
 
 static Expression parse_secondary_expression(u8 precedence, Expression lhs);
@@ -143,6 +144,79 @@ static Expression parse_primary_expression(){
             .ops = eat_int(),
         };
     }
+
+    if(eat_token(TOKEN_TRUE)){
+        return (Expression){
+            .kind = EXPRESSION_U1,
+            .line = line_number,
+            .ops = 1,
+        };
+    }
+
+    if(eat_token(TOKEN_FALSE)){
+        return (Expression){
+            .kind = EXPRESSION_U1,
+            .line = line_number,
+            .ops = 0,
+        };
+    }
+
+    if(eat_token(TOKEN_OPEN)){
+        if(is_type_followed_by(TOKEN_CLOSE)){
+            // Cast
+
+            Type type = parse_type();
+            if(had_parse_error){
+                printf("\nerror on line %d: Expected type for cast\n", current_line());
+                return (Expression){0};
+            }
+
+            if(!eat_token(TOKEN_CLOSE)){
+                printf("\nerror on line %d: Expected ')' to close cast\n", current_line());
+                stop_parsing();
+                return (Expression){0};
+            }
+
+            Expression expression = parse_primary_expression();
+            if(had_parse_error) return (Expression){0};
+
+            u32 type_index = add_type(type);
+            if(type_index >= TYPES_CAPACITY){
+                stop_parsing();
+                return (Expression){0};
+            }
+
+            u32 expression_index = add_expression(expression);
+            if(expression_index >= EXPRESSIONS_CAPACITY){
+                stop_parsing();
+                return (Expression){0};
+            }
+
+            u32 ops = add_operands2(type_index, expression_index);
+            if(ops >= OPERANDS_CAPACITY){
+                stop_parsing();
+                return (Expression){0};
+            }
+
+            return (Expression){
+                .kind = EXPRESSION_CAST,
+                .line = line_number,
+                .ops = ops,
+            };
+        } else {
+            // Expression
+            Expression expression = parse_expression();
+            if(had_parse_error) return (Expression){0};
+
+            if(!eat_token(TOKEN_CLOSE)){
+                printf("\nerror on line %d: Expected ')' to close cast\n", current_line());
+                stop_parsing();
+                return (Expression){0};
+            }
+
+            return expression;
+        }
+    }
     
     printf("error on line %d: Expected expression\n", current_line());
     stop_parsing();
@@ -163,6 +237,7 @@ static u1 is_terminating_token(TokenKind token_kind){
 
 static u8 parse_get_precedence(u32 token_kind){
     switch(token_kind){
+    case TOKEN_OPEN:
     case TOKEN_OPEN_BRACKET:
         return 16;
     case TOKEN_MULTIPLY:

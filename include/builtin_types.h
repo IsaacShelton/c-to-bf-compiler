@@ -4,7 +4,7 @@
 
 #include "utypes.h"
 
-extern u32 u0_type, u8_type, u16_type;
+extern u32 u0_type, u1_type, u8_type, u16_type;
 
 ErrorCode add_builtin_types();
 

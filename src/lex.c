@@ -1,6 +1,7 @@
 
-#include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
 #include "../include/token.h"
 #include "../include/token_print.h"
 #include "../include/lex.h"
@@ -209,6 +210,30 @@ LexedToken lex_main(){
         return result;
     }
 
+    // Handle 'and'
+    if(lead == '&'){
+        if(code_buffer_length > 1 && code_buffer[1] == '&'){
+            result.token.kind = TOKEN_AND;
+            result.consumed = 2;
+        } else {
+            result.token.kind = TOKEN_BIT_AND;
+            result.consumed = 1;
+        }
+        return result;
+    }
+
+    // Handle 'or'
+    if(lead == '|'){
+        if(code_buffer_length > 1 && code_buffer[1] == '|'){
+            result.token.kind = TOKEN_OR;
+            result.consumed = 2;
+        } else {
+            result.token.kind = TOKEN_BIT_OR;
+            result.consumed = 1;
+        }
+        return result;
+    }
+
     // Handle character literal
     if(lead == '\''){
         return lex_character_literal();
@@ -256,17 +281,23 @@ u32 lex(){
 
             // If token is a word, remember content by injecting aux string
             if(token.kind == TOKEN_WORD){
-                tokens[num_tokens - 1].data = num_aux;
+                if(lexed.consumed == 4 && memcmp(code_buffer, "true", 4) == 0){
+                    tokens[num_tokens - 1].kind = TOKEN_TRUE;
+                } else if(lexed.consumed == 5 && memcmp(code_buffer, "false", 5) == 0){
+                    tokens[num_tokens - 1].kind = TOKEN_FALSE;
+                } else {
+                    tokens[num_tokens - 1].data = num_aux;
 
-                if(num_aux + lexed.consumed + 1 >= AUX_CAPACITY){
-                    printf("Out of memory: Auxiliary memory used up\n");
-                    return 1;
-                }
+                    if(num_aux + lexed.consumed + 1 >= AUX_CAPACITY){
+                        printf("Out of memory: Auxiliary memory used up\n");
+                        return 1;
+                    }
 
-                for(u32 i = 0; i < lexed.consumed; i++){
-                    aux[num_aux++] = code_buffer[i];
+                    for(u32 i = 0; i < lexed.consumed; i++){
+                        aux[num_aux++] = code_buffer[i];
+                    }
+                    aux[num_aux++] = '\0';
                 }
-                aux[num_aux++] = '\0';
             }
 
             // Advance code buffer

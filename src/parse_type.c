@@ -24,3 +24,24 @@ Type parse_type(){
     return type;
 }
 
+u1 is_type_followed_by(TokenKind followed_by){
+    u32 prev_parse_i = parse_i;
+    u1 ok = eat_token(TOKEN_WORD);
+
+    for(u32 i = 1; ok && is_token(TOKEN_OPEN_BRACKET); i++){
+        if(
+            !eat_token(TOKEN_OPEN_BRACKET)
+         || !eat_token(TOKEN_INT)
+         || !eat_token(TOKEN_CLOSE_BRACKET)
+         || i > 4
+        ){
+            ok = false;
+            break;
+        }
+    }
+
+    ok = ok && is_token(followed_by);
+    parse_i = prev_parse_i;
+    return ok;
+}
+

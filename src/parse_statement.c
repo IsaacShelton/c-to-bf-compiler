@@ -8,14 +8,13 @@
 #include "../include/parse_dimensions.h"
 #include "../include/expression_print.h"
 
-static u1 is_declaration();
 static u1 eat_semicolon();
 static u32 add_statement_else_print_error(Expression expression);
 static ErrorCode parse_declaration_assignment(u32 variable_name, u24 line_number);
 static ErrorCode parse_declaration();
 
 ErrorCode parse_statement(){
-    if(is_declaration()){
+    if(is_type_followed_by(TOKEN_WORD)){
         if(parse_declaration()) return 1;
     } else {
         Expression statement = parse_expression();
@@ -27,30 +26,6 @@ ErrorCode parse_statement(){
     }
 
     return 0;
-}
-
-static u1 is_declaration(){
-    // Returns whether next statement during parsing is a declaration.
-    // Trys to match current token parsing context against `TypeName[1][2][3][4] name`-like sequence.
-
-    u32 prev_parse_i = parse_i;
-    u1 ok = eat_token(TOKEN_WORD);
-
-    for(u32 i = 1; ok && is_token(TOKEN_OPEN_BRACKET); i++){
-        if(
-            !eat_token(TOKEN_OPEN_BRACKET)
-         || !eat_token(TOKEN_INT)
-         || !eat_token(TOKEN_CLOSE_BRACKET)
-         || i > 4
-        ){
-            ok = false;
-            break;
-        }
-    }
-
-    ok = ok && is_token(TOKEN_WORD);
-    parse_i = prev_parse_i;
-    return ok;
 }
 
 static u1 eat_semicolon(){
@@ -120,6 +95,7 @@ static ErrorCode parse_declaration_assignment(u32 variable_name, u24 line_number
 
     Expression statement = (Expression){
         .kind = EXPRESSION_ASSIGN,
+        .line = line_number,
         .ops = ops,
     };
 

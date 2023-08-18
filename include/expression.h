@@ -13,10 +13,13 @@ enum {
     EXPRESSION_PRINT_ARRAY, /* { expression } */
     EXPRESSION_CALL, /* { name, arity, arg1, arg2, ..., argN } */
     EXPRESSION_IMPLEMENT_PUT,
+    EXPRESSION_IMPLEMENT_PRINTU1,
     EXPRESSION_IMPLEMENT_PRINTU8,
+    EXPRESSION_U1, /* { value } */
     EXPRESSION_U8, /* { value } */
     EXPRESSION_INT, /* { value } */
     EXPRESSION_VARIABLE, /* { name } */
+    EXPRESSION_CAST, /* { type, expression } */
     EXPRESSION_ASSIGN, /* { a, b } */
     EXPRESSION_ADD, /* { a, b } */
     EXPRESSION_SUBTRACT, /* { a, b } */
@@ -31,6 +34,10 @@ enum {
     EXPRESSION_GREATER_THAN_OR_EQUAL, /* { a, b } */
     EXPRESSION_LSHIFT, /* { a, b } */
     EXPRESSION_RSHIFT, /* { a, b } */
+    EXPRESSION_AND, /* { a, b } */
+    EXPRESSION_OR, /* { a, b } */
+    EXPRESSION_BIT_AND, /* { a, b } */
+    EXPRESSION_BIT_OR, /* { a, b } */
     EXPRESSION_INDEX,  /* { a, b } */
 };
 typedef u8 ExpressionKind;

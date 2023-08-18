@@ -21,16 +21,27 @@ ExpressionKind expression_get_preferred_int_kind_or_none(u32 expression_index){
             }
         }
         return EXPRESSION_NONE;
+    case EXPRESSION_CAST:
+        if(operands[expression.ops] == u1_type){
+            return EXPRESSION_U1;
+        } else if(operands[expression.ops] == u8_type){
+            return EXPRESSION_U8;
+        }
+        break;
     case EXPRESSION_ASSIGN:
     case EXPRESSION_ADD:
     case EXPRESSION_SUBTRACT:
     case EXPRESSION_MULTIPLY:
     case EXPRESSION_DIVIDE:
     case EXPRESSION_MOD:
+    case EXPRESSION_EQUALS:
+    case EXPRESSION_NOT_EQUALS:
     case EXPRESSION_LESS_THAN:
     case EXPRESSION_GREATER_THAN:
     case EXPRESSION_LSHIFT:
-    case EXPRESSION_RSHIFT: {
+    case EXPRESSION_RSHIFT:
+    case EXPRESSION_BIT_AND:
+    case EXPRESSION_BIT_OR: {
             ExpressionKind result;
 
             result = expression_get_preferred_int_kind_or_none(operands[expression.ops]);
@@ -100,16 +111,29 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
     case EXPRESSION_CALL:
         expression_infer_call(expression);
         break;
+    case EXPRESSION_CAST:
+        expression_infer(operands[expression.ops + 1], EXPRESSION_NONE);
+        break;
     case EXPRESSION_ADD:
     case EXPRESSION_SUBTRACT:
     case EXPRESSION_MULTIPLY:
     case EXPRESSION_DIVIDE:
     case EXPRESSION_MOD:
-    case EXPRESSION_LESS_THAN:
-    case EXPRESSION_GREATER_THAN:
     case EXPRESSION_LSHIFT:
     case EXPRESSION_RSHIFT:
+    case EXPRESSION_BIT_AND:
+    case EXPRESSION_BIT_OR:
         expression_infer_math(expression, preferred_int_kind);
+        break;
+    case EXPRESSION_EQUALS:
+    case EXPRESSION_NOT_EQUALS:
+    case EXPRESSION_LESS_THAN:
+    case EXPRESSION_GREATER_THAN:
+        expression_infer_math(expression, EXPRESSION_NONE);
+        break;
+    case EXPRESSION_AND:
+    case EXPRESSION_OR:
+        expression_infer_math(expression, EXPRESSION_U1);
         break;
     }
 }

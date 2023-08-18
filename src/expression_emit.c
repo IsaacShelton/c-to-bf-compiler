@@ -13,6 +13,45 @@
 #include "../include/emit_context.h"
 #include "../include/parse_dimensions.h"
 
+static u0 print_nth_argument_label(u32 number){
+    switch(number){
+    case 0:
+        printf("Zeroth");
+        break;
+    case 1:
+        printf("First");
+        break;
+    case 2:
+        printf("Second");
+        break;
+    case 3:
+        printf("Third");
+        break;
+    case 4:
+        printf("Fourth");
+        break;
+    case 5:
+        printf("Fifth");
+        break;
+    case 6:
+        printf("Sixth");
+        break;
+    case 7:
+        printf("Seventh");
+        break;
+    case 8:
+        printf("Eighth");
+        break;
+    case 9:
+        printf("Ninth");
+        break;
+    case 10:
+        printf("Tenth");
+    default:
+        printf("%d-th", number);
+    }
+}
+
 static u32 expression_emit_call(Expression expression){
     u32 name = operands[expression.ops];
     u32 arity = operands[expression.ops + 1];
@@ -64,6 +103,17 @@ static u32 expression_emit_call(Expression expression){
         u32 expected_type = operands[expressions[statements[function.begin + i]].ops];
 
         if(type != expected_type){
+            printf("\nerror on line %d: ", u24_unpack(expression.line));
+            print_nth_argument_label(i + 1);
+            printf(" argument to function '");
+            print_aux_cstr(function.name);
+            printf("' should be '");
+            type_print(types[expected_type]);
+            printf("', but got type '");
+            type_print(types[type]);
+            printf("'\n");
+
+            /*
             printf("\nerror: Function '");
             print_aux_cstr(function.name);
             printf("' expects value of type '");
@@ -71,6 +121,7 @@ static u32 expression_emit_call(Expression expression){
             printf("' for argument #%d, but got type '", i + 1);
             type_print(types[type]);
             printf("'\n");
+            */
             return TYPES_CAPACITY;
         }
     }
@@ -216,10 +267,10 @@ static u32 expression_emit_assign(Expression expression){
     if(destination.type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
     if(new_value_type != destination.type){
-        printf("\nerror on line %d: Destination is '", u24_unpack(expression.line));
-        type_print(types[destination.type]);
-        printf("' and cannot be assigned to value of type '");
+        printf("\nerror on line %d: Cannot assign '", u24_unpack(expression.line));
         type_print(types[new_value_type]);
+        printf("' to '");
+        type_print(types[destination.type]);
         printf("'\n");
         return TYPES_CAPACITY;
     }
@@ -275,48 +326,80 @@ u32 expression_emit_variable(Expression expression){
     return variable.type;
 }
 
+u32 expression_emit_cast(Expression expression){
+    u32 from_type = expression_emit(expressions[operands[expression.ops + 1]]);
+    if(from_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
-static ErrorCode emit_math(ExpressionKind kind){
+    u32 to_type = operands[expression.ops];
+
+    if((from_type == u1_type && to_type == u8_type) || from_type == to_type){
+        return to_type;
+    }
+
+    if(from_type == u8_type && to_type == u1_type){
+        emit_u8(0);
+        emit_neq_u8();
+        return to_type;
+    }
+
+    printf("\nerror on line %d: Cannot cast '", u24_unpack(expression.line));
+    type_print(types[from_type]);
+    printf("' to '");
+    type_print(types[to_type]);
+    printf("'\n");
+    return TYPES_CAPACITY;
+}
+
+
+static u32 emit_math(ExpressionKind kind, u32 operand_type){
     switch(kind){
     case EXPRESSION_ADD:
         emit_additive_u8(true);
-        break;
+        return operand_type;
     case EXPRESSION_SUBTRACT:
         emit_additive_u8(false);
-        break;
+        return operand_type;
     case EXPRESSION_MULTIPLY:
         emit_multiply_u8();
-        break;
+        return operand_type;
     case EXPRESSION_DIVIDE:
         emit_divide_u8();
-        break;
+        return operand_type;
     case EXPRESSION_MOD:
         emit_mod_u8();
-        break;
+        return operand_type;
     case EXPRESSION_EQUALS:
         emit_eq_u8();
-        break;
+        return u1_type;
     case EXPRESSION_NOT_EQUALS:
         emit_neq_u8();
-        break;
+        return u1_type;
     case EXPRESSION_LESS_THAN:
         emit_lt_u8();
-        break;
+        return u1_type;
     case EXPRESSION_GREATER_THAN:
         emit_gt_u8();
-        break;
+        return u1_type;
     case EXPRESSION_LESS_THAN_OR_EQUAL:
         emit_lte_u8();
-        break;
+        return u1_type;
     case EXPRESSION_GREATER_THAN_OR_EQUAL:
         emit_gte_u8();
-        break;
+        return u1_type;
     case EXPRESSION_LSHIFT:
         emit_lshift_u8();
-        break;
+        return operand_type;
     case EXPRESSION_RSHIFT:
         emit_rshift_u8();
-        break;
+        return operand_type;
+        /*
+    case EXPRESSION_BIT_AND:
+        emit_bit_and_u8();
+        return operand_type;
+    case EXPRESSION_BIT_OR:
+        emit_bit_or_u8();
+        return operand_type;
+        */
     default:
         printf("\nerror: Could not perform unknown math operation for expression kind %d\n", kind);
         return 1;
@@ -347,8 +430,7 @@ static u32 expression_emit_math(Expression expression){
     }
 
     if(a_type == u8_type){
-        if(emit_math(expression.kind)) return TYPES_CAPACITY;
-        return a_type;
+        return emit_math(expression.kind, a_type);
     }
 
     printf("\nerror: Cannot ");
@@ -357,6 +439,149 @@ static u32 expression_emit_math(Expression expression){
     type_print(types[a_type]);
     printf("'\n");
     return TYPES_CAPACITY;
+}
+
+static u32 expression_emit_and(Expression expression){
+    // Allocate result cell
+    printf("[-]>");
+    emit_context.current_cell_index++;
+
+    // Evaluate left hand side
+    u32 a_type = expression_emit(expressions[operands[expression.ops]]);
+    if(a_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    // Convert to boolean
+    if(a_type != u1_type){
+        printf("\nerror on line %d: First operand to '&&' must be a 'u1'\n", u24_unpack(expression.line));
+        return TYPES_CAPACITY;
+    }
+
+    // Go to first operand
+    printf("<");
+    emit_context.current_cell_index--;
+
+    // If first operand is non-zero
+    printf("[");
+
+    // Zero first operand
+    printf("[-]");
+
+    // Evaluate right hand side
+    u32 b_type = expression_emit(expressions[operands[expression.ops + 1]]);
+    if(b_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    // Convert to boolean
+    if(a_type != u1_type){
+        printf("\nerror on line %d: Second operand to '&&' must be a 'u1'\n", u24_unpack(expression.line));
+        return TYPES_CAPACITY;
+    }
+
+    // Go to second operand
+    printf("<");
+    emit_context.current_cell_index--;
+
+    // If second operand is non-zero
+    printf("[");
+
+    // Set result to 1
+    printf("<+>");
+
+    // Zero second operand
+    printf("[-]");
+
+    // End if
+    printf("]");
+
+    // End if
+    printf("]");
+
+    // Remain pointing to the next available cell
+    // (nothing to do)
+
+    return u1_type;
+}
+
+static u32 expression_emit_or(Expression expression){
+    // Allocate result cell
+    printf("[-]>");
+    emit_context.current_cell_index++;
+
+    // Set whether to evaluate second operand to true
+    printf("[-]+");
+
+    // Point to next available cell
+    printf(">");
+    emit_context.current_cell_index++;
+
+    // Evaluate left hand side
+    u32 a_type = expression_emit(expressions[operands[expression.ops]]);
+    if(a_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    // Convert to boolean
+    if(a_type != u1_type){
+        printf("\nerror on line %d: First operand to '&&' must be a 'u1'\n", u24_unpack(expression.line));
+        return TYPES_CAPACITY;
+    }
+
+    // Go to first operand
+    printf("<");
+    emit_context.current_cell_index--;
+
+    // If first operand is non-zero
+    printf("[");
+
+    // Set result to 1
+    printf("<<+");
+
+    // Set whether to check second operand to false
+    printf(">-");
+
+    // Zero first operand
+    printf(">[-]");
+
+    // End if
+    printf("]");
+
+    // Go to 'whether to check second operand'
+    printf("<");
+    emit_context.current_cell_index--;
+
+    // If 'whether to check second operand' is non-zero
+    printf("[");
+
+    // Evaluate right hand side
+    u32 b_type = expression_emit(expressions[operands[expression.ops + 1]]);
+    if(b_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    // Convert to boolean
+    if(a_type != u1_type){
+        printf("\nerror on line %d: Second operand to '&&' must be a 'u1'\n", u24_unpack(expression.line));
+        return TYPES_CAPACITY;
+    }
+
+    // Go to second operand
+    printf("<");
+    emit_context.current_cell_index--;
+
+    // If second operand is non-zero
+    printf("[");
+
+    // Set result to 1
+    printf("<+>");
+
+    // Zero second operand
+    printf("[-]");
+
+    // End if
+    printf("]");
+
+    // End if
+    printf("]");
+
+    // Remain pointing to the next available cell
+    // (nothing to do)
+
+    return u1_type;
 }
 
 static u32 expression_emit_index(Expression expression){
@@ -467,21 +692,25 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_IMPLEMENT_PUT:
         printf("<.>");
         return u0_type;
-    case EXPRESSION_IMPLEMENT_PRINTU8:
-        emit_printu8(); // Print value
+    case EXPRESSION_IMPLEMENT_PRINTU1:
+        emit_printu1();
         return u0_type;
+    case EXPRESSION_IMPLEMENT_PRINTU8:
+        emit_printu8();
+        return u0_type;
+    case EXPRESSION_U1:
+        emit_u1(expression.ops);
+        return u1_type;
     case EXPRESSION_INT:
-        printf("[-]%d+>", expression.ops % 256);
-        emit_context.current_cell_index++;
-        return u8_type;
     case EXPRESSION_U8:
-        printf("[-]%d+>", expression.ops % 256);
-        emit_context.current_cell_index++;
+        emit_u8(expression.ops);
         return u8_type;
     case EXPRESSION_ASSIGN:
         return expression_emit_assign(expression);
     case EXPRESSION_VARIABLE:
         return expression_emit_variable(expression);
+    case EXPRESSION_CAST:
+        return expression_emit_cast(expression);
     case EXPRESSION_ADD:
     case EXPRESSION_SUBTRACT:
     case EXPRESSION_MULTIPLY:
@@ -495,7 +724,13 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_GREATER_THAN_OR_EQUAL:
     case EXPRESSION_LSHIFT:
     case EXPRESSION_RSHIFT:
+    case EXPRESSION_BIT_AND:
+    case EXPRESSION_BIT_OR:
         return expression_emit_math(expression);
+    case EXPRESSION_AND:
+        return expression_emit_and(expression);
+    case EXPRESSION_OR:
+        return expression_emit_or(expression);
     case EXPRESSION_INDEX:
         return expression_emit_index(expression);
     default:

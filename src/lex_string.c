@@ -26,7 +26,7 @@ LexUnboundedResult lex_string(u8 c){
 
             if(string_c == 'n'){
                 string_c = '\n';
-            } else if(c == '\t'){
+            } else if(string_c == 't'){
                 string_c = '\t';
             }
         } else if(string_c == '"'){
@@ -64,7 +64,7 @@ LexUnboundedResult lex_string(u8 c){
 
                 if(c == 'n'){
                     c = '\n';
-                } else if(c == '\t'){
+                } else if(c == 't'){
                     c = '\t';
                 }
             } else if(c == '"'){

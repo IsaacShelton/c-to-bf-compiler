@@ -47,6 +47,7 @@ enum {
     EXPRESSION_PRE_DECREMENT, /* { a } */
     EXPRESSION_POST_INCREMENT, /* { a } */
     EXPRESSION_POST_DECREMENT, /* { a } */
+    EXPRESSION_TERNARY, /* { condition, when_true, when_false } */
 };
 typedef u8 ExpressionKind;
 

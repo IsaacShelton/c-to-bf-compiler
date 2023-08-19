@@ -52,6 +52,17 @@ static u0 print_nth_argument_label(u32 number){
     }
 }
 
+static u32 expression_get_type_for_call(Expression expression){
+    u32 name = operands[expression.ops];
+    int function_index = find_function(name);
+
+    if(function_index >= FUNCTIONS_CAPACITY){
+        return TYPES_CAPACITY;
+    }
+
+    return functions[function_index].return_type;
+}
+
 static u32 expression_emit_call(Expression expression){
     u32 name = operands[expression.ops];
     u32 arity = operands[expression.ops + 1];
@@ -112,16 +123,6 @@ static u32 expression_emit_call(Expression expression){
             printf("', but got type '");
             type_print(types[type]);
             printf("'\n");
-
-            /*
-            printf("\nerror: Function '");
-            print_aux_cstr(function.name);
-            printf("' expects value of type '");
-            type_print(types[expected_type]);
-            printf("' for argument #%d, but got type '", i + 1);
-            type_print(types[type]);
-            printf("'\n");
-            */
             return TYPES_CAPACITY;
         }
     }
@@ -140,14 +141,16 @@ typedef struct {
     u32 type; // If >= TYPES_CAPACITY, then error occurred
 } Destination;
 
-static u32 get_item_type(Type type){
+static u32 get_item_type(Type type, u1 show_error_message){
     u32 dims[4];
     memcpy(dims, &dimensions[type.dimensions], sizeof(u32) * 4);
 
     if(dims[0] == 0){
-        printf("\nerror: Cannot index into non-array type '");
-        type_print(type);
-        printf("'\n");
+        if(show_error_message){
+            printf("\nerror: Cannot index into non-array type '");
+            type_print(type);
+            printf("'\n");
+        }
         return TYPES_CAPACITY;
     }
 
@@ -231,7 +234,7 @@ static Destination expression_get_destination(Expression expression, u32 tape_an
             return (Destination) { .type = TYPES_CAPACITY };
         }
 
-        u32 item_type = get_item_type(types[array_destination.type]);
+        u32 item_type = get_item_type(types[array_destination.type], true);
         if(item_type >= TYPES_CAPACITY) return (Destination) { .type = TYPES_CAPACITY };
 
         if(index_type == u8_type){
@@ -327,6 +330,20 @@ u32 expression_emit_variable(Expression expression){
     // Tape variable
     copy_cells_static(variable.location.location, size);
     return variable.type;
+}
+
+static u32 expression_get_type_for_variable(Expression expression){
+    u32 name = expression.ops;
+    Variable variable = variable_find(name);
+
+    if(variable.defined){
+        return variable.type;
+    }
+
+    printf("\nerror: Variable '");
+    print_aux_cstr(name);
+    printf("' is not defined\n");
+    return TYPES_CAPACITY;
 }
 
 u32 expression_emit_cast(Expression expression){
@@ -678,7 +695,7 @@ static u32 expression_emit_index(Expression expression){
         return TYPES_CAPACITY;
     }
 
-    u32 item_type = get_item_type(types[array_destination.type]);
+    u32 item_type = get_item_type(types[array_destination.type], true);
     if(item_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
     if(index_type == u8_type){
@@ -708,6 +725,165 @@ ErrorCode print_array_reference(Destination destination, u32 max_length){
     return 0;
 }
 
+static u32 expression_get_type(Expression expression){
+    switch(expression.kind){
+    case EXPRESSION_DECLARE:
+    case EXPRESSION_PRINT_LITERAL:
+    case EXPRESSION_PRINT_ARRAY:
+    case EXPRESSION_IMPLEMENT_PUT:
+    case EXPRESSION_IMPLEMENT_PRINTU1:
+    case EXPRESSION_IMPLEMENT_PRINTU8:
+        return u0_type;
+    case EXPRESSION_CALL:
+        return expression_get_type_for_call(expression);
+    case EXPRESSION_U1:
+        return u1_type;
+    case EXPRESSION_INT:
+    case EXPRESSION_U8:
+        return u8_type;
+    case EXPRESSION_ASSIGN:
+        return u0_type;
+    case EXPRESSION_VARIABLE:
+        return expression_get_type_for_variable(expression);
+    case EXPRESSION_CAST:
+        return operands[expression.ops];
+    case EXPRESSION_ADD:
+    case EXPRESSION_SUBTRACT:
+    case EXPRESSION_MULTIPLY:
+    case EXPRESSION_DIVIDE:
+    case EXPRESSION_MOD:
+    case EXPRESSION_LSHIFT:
+    case EXPRESSION_RSHIFT:
+    case EXPRESSION_BIT_AND:
+    case EXPRESSION_BIT_OR:
+    case EXPRESSION_BIT_XOR:
+        return expression_get_type(expressions[operands[expression.ops]]);
+    case EXPRESSION_EQUALS:
+    case EXPRESSION_NOT_EQUALS:
+    case EXPRESSION_LESS_THAN:
+    case EXPRESSION_GREATER_THAN:
+    case EXPRESSION_LESS_THAN_OR_EQUAL:
+    case EXPRESSION_GREATER_THAN_OR_EQUAL:
+    case EXPRESSION_AND:
+    case EXPRESSION_OR:
+        return u1_type;
+    case EXPRESSION_INDEX: {
+            u32 array_type = expression_get_type(expressions[operands[expression.ops]]);
+            if(array_type >= TYPES_CAPACITY) return array_type;
+            return get_item_type(types[array_type], false);
+        }
+    case EXPRESSION_NEGATE:
+    case EXPRESSION_NOT:
+    case EXPRESSION_BIT_COMPLEMENT:
+    case EXPRESSION_PRE_INCREMENT:
+    case EXPRESSION_PRE_DECREMENT:
+    case EXPRESSION_POST_INCREMENT:
+    case EXPRESSION_POST_DECREMENT:
+        return expression_get_type(expressions[expression.ops]);
+    case EXPRESSION_TERNARY:
+        return expression_get_type(expressions[operands[expression.ops + 1]]);
+    }
+    return TYPES_CAPACITY;
+}
+
+static u32 expression_emit_ternary(Expression expression){
+    // result should_do_else condition
+
+    u32 condition = operands[expression.ops];
+    u32 when_true = operands[expression.ops + 1];
+    u32 when_false = operands[expression.ops + 2];
+
+    u32 result_type = expression_get_type(expressions[when_true]);
+    u32 result_size;
+
+    if(result_type < TYPES_CAPACITY){
+        result_size = type_sizeof_or_max(result_type);
+        if(result_size == -1) return TYPES_CAPACITY;
+    } else {
+        printf("\nerror on line %d: Could not determine result size for ternary expression\n", u24_unpack(expression.line));
+        return TYPES_CAPACITY;
+    }
+
+    // Allocate room for result
+    printf("%d>", result_size);
+    emit_context.current_cell_index += result_size;
+
+    // Allocate 'should_do_else' cell and initialize to 1
+    printf("[-]+>");
+    emit_context.current_cell_index++;
+
+    // Evaluate condition
+    u32 condition_type = expression_emit(expressions[condition]);
+    if(condition_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+    
+    if(condition_type != u1_type){
+        printf("\nerror on line %d: Expected ternary condition to be 'u1', got '", u24_unpack(expression.line));
+        type_print(types[condition_type]);
+        printf("'\n");
+        return TYPES_CAPACITY;
+    }
+
+    // Go to 'condition' cell
+    printf("<");
+    emit_context.current_cell_index--;
+
+    // If 'condition' cell
+    printf("[");
+
+    // Evaluate true branch
+    printf("%d<", result_size + 1);
+    emit_context.current_cell_index -= result_size + 1;
+
+    u32 when_true_type = expression_emit(expressions[when_true]);
+    if(when_true_type == TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    if(when_true_type != result_type){
+        printf("\nerror on line %d: Expected true branch of ternary expression to be '", u24_unpack(expression.line));
+        type_print(types[result_type]);
+        printf("', got '");
+        type_print(types[when_true_type]);
+        printf("'\n");
+        return TYPES_CAPACITY;
+    }
+
+    // Zero 'should_do_else' cell and 'condition' cell,
+    printf("[-]>[-]");
+    emit_context.current_cell_index++;
+
+    // End if
+    printf("]");
+
+    // Go to 'should_do_else' cell
+    printf("<");
+    emit_context.current_cell_index--;
+
+    // If 'should_do_else' cell
+    printf("[");
+
+    // Evaluate false branch
+    printf("%d<", result_size);
+    emit_context.current_cell_index -= result_size;
+
+    u32 when_false_type = expression_emit(expressions[when_false]);
+    if(when_false_type == TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    if(when_false_type != result_type){
+        printf("\nerror on line %d: Expected false branch of ternary expression to be '", u24_unpack(expression.line));
+        type_print(types[result_type]);
+        printf("', got '");
+        type_print(types[when_false_type]);
+        printf("'\n");
+        return TYPES_CAPACITY;
+    }
+
+    // Zero 'should_do_else' cell,
+    // and end if
+    printf("[-]");
+    printf("]");
+
+    return result_type;
+}
+
 u32 expression_emit(Expression expression){
     switch(expression.kind){
     case EXPRESSION_DECLARE: {
@@ -734,7 +910,7 @@ u32 expression_emit(Expression expression){
                 Destination destination = expression_get_destination(expressions[expression.ops], tape_anchor);
                 if(destination.type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
-                if(get_item_type(types[destination.type]) != u8_type){
+                if(get_item_type(types[destination.type], true) != u8_type){
                     printf("\nerror on line %d: Cannot print non u8[] value\n", u24_unpack(expression.line));
                     return TYPES_CAPACITY;
                 }
@@ -748,7 +924,7 @@ u32 expression_emit(Expression expression){
                 u32 array_type = expression_emit(expressions[expression.ops]);
                 if(array_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
-                if(get_item_type(types[array_type]) != u8_type){
+                if(get_item_type(types[array_type], true) != u8_type){
                     printf("\nerror on line %d: Cannot print non u8[] value\n", u24_unpack(expression.line));
                     return TYPES_CAPACITY;
                 }
@@ -813,6 +989,8 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_POST_INCREMENT:
     case EXPRESSION_POST_DECREMENT:
         return expression_emit_unary(expression);
+    case EXPRESSION_TERNARY:
+        return expression_emit_ternary(expression);
     default:
         printf("\nerror: Unknown expression kind %d during expression_emit\n", expression.kind);
         return TYPES_CAPACITY;

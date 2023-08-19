@@ -87,7 +87,9 @@ u0 expression_print(Expression expression){
 
             printf("(");
             expression_print(expressions[a]);
+            printf(" ");
             expression_print_operator(expression.kind);
+            printf(" ");
             expression_print(expressions[b]);
             printf(")");
         }
@@ -123,6 +125,15 @@ u0 expression_print(Expression expression){
     case EXPRESSION_POST_DECREMENT:
         expression_print(expressions[expression.ops]);
         printf("--");
+        break;
+    case EXPRESSION_TERNARY:
+        printf("(");
+        expression_print(expressions[operands[expression.ops]]);
+        printf(" ? ");
+        expression_print(expressions[operands[expression.ops + 1]]);
+        printf(" : ");
+        expression_print(expressions[operands[expression.ops + 2]]);
+        printf(")");
         break;
     default:
         printf("<unknown expression>");

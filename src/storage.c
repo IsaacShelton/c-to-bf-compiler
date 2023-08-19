@@ -139,6 +139,20 @@ u32 add_operands2(u32 a, u32 b){
     }
 }
 
+u32 add_operands3(u32 a, u32 b, u32 c){
+    if(num_operands < OPERANDS_CAPACITY - 2){
+        u32 result = num_operands;
+        operands[num_operands] = a;
+        operands[num_operands + 1] = b;
+        operands[num_operands + 2] = c;
+        num_operands += 3;
+        return result;
+    } else {
+        printf("Out of memory: Exceeded maximum number of total expression operands\n");
+        return OPERANDS_CAPACITY;
+    }
+}
+
 u32 add_global(Global global){
     if(num_globals < GLOBALS_CAPACITY){
         globals[num_globals] = global;

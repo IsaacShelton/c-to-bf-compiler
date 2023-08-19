@@ -19,7 +19,7 @@ typedef struct {
     TokenKind kind;
 } SimpleToken;
 
-SimpleToken simple_tokens[12] = {
+SimpleToken simple_tokens[14] = {
     (SimpleToken){ .c = '{', .kind = TOKEN_BEGIN },
     (SimpleToken){ .c = '}', .kind = TOKEN_END },
     (SimpleToken){ .c = '(', .kind = TOKEN_OPEN },
@@ -32,6 +32,8 @@ SimpleToken simple_tokens[12] = {
     (SimpleToken){ .c = '%', .kind = TOKEN_MOD },
     (SimpleToken){ .c = '^', .kind = TOKEN_BIT_XOR },
     (SimpleToken){ .c = '~', .kind = TOKEN_BIT_COMPLEMENT },
+    (SimpleToken){ .c = '?', .kind = TOKEN_TERNARY },
+    (SimpleToken){ .c = ':', .kind = TOKEN_COLON },
 };
 
 static u1 is_ident(u8 c){

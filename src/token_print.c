@@ -127,6 +127,12 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_DECREMENT:
         printf("--");
         break;
+    case TOKEN_TERNARY:
+        printf("?");
+        break;
+    case TOKEN_COLON:
+        printf(":");
+        break;
     default:
         printf("<unknown>");
     }

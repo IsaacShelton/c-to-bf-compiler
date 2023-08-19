@@ -50,6 +50,7 @@ u32 add_statement_from_existing(u32 expression_index);
 u32 add_statement_from_new(Expression expression);
 u32 add_operand(u32 a);
 u32 add_operands2(u32 a, u32 b);
+u32 add_operands3(u32 a, u32 b, u32 c);
 u32 add_global(Global global);
 u32 aux_cstr_alloc(u8 null_terminated_name[16]);
 u1 aux_cstr_equals(u32 a, u32 b);

@@ -240,6 +240,7 @@ static u1 is_terminating_token(TokenKind token_kind){
     case TOKEN_CLOSE:
     case TOKEN_SEMICOLON:
     case TOKEN_CLOSE_BRACKET:
+    case TOKEN_COLON:
         return true;
     default:
         return false;
@@ -277,6 +278,8 @@ static u8 parse_get_precedence(u32 token_kind){
         return 4;
     case TOKEN_OR:
         return 3;
+    case TOKEN_TERNARY:
+        return 2;
     case TOKEN_ASSIGN:
         return 1;
     default:
@@ -287,6 +290,8 @@ static u8 parse_get_precedence(u32 token_kind){
 static u1 is_right_associative(TokenKind operator){
     switch(operator){
     case TOKEN_ASSIGN:
+    case TOKEN_TERNARY:
+    case TOKEN_COLON:
         return true;
     default:
         return false;
@@ -447,6 +452,52 @@ static Expression parse_array_index(Expression array, u24 line_number){
     };
 }
 
+static Expression parse_ternary(Expression condition_expression, u24 line){
+    u32 condition = add_expression(condition_expression);
+    if(condition >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return (Expression){0};
+    }
+
+    if(!eat_token(TOKEN_TERNARY)){
+        printf("\nerror on line %d: Expected '?' after condition of ternary expression\n", current_line());
+        stop_parsing();
+        return (Expression){0};
+    }
+
+    Expression when_true_expression = parse_expression();
+    if(had_parse_error) return (Expression){0};
+
+    if(!eat_token(TOKEN_COLON)){
+        printf("\nerror on line %d: Expected ':' after true branch of ternary expression\n", current_line());
+        stop_parsing();
+        return (Expression){0};
+    }
+    
+    Expression when_false_expression = parse_expression();
+    if(had_parse_error) return (Expression){0};
+
+    u32 when_true = add_expression(when_true_expression);
+    if(when_true >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return condition_expression;
+    }
+
+    u32 when_false = add_expression(when_false_expression);
+    if(when_false >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return condition_expression;
+    }
+
+    u32 ops = add_operands3(condition, when_true, when_false);
+
+    return (Expression){
+        .kind = EXPRESSION_TERNARY,
+        .line = line,
+        .ops = ops,
+    };
+}
+
 static Expression parse_secondary_expression(u8 precedence, Expression lhs){
     while(true){
         if(parse_i >= num_tokens){
@@ -489,6 +540,9 @@ static Expression parse_secondary_expression(u8 precedence, Expression lhs){
         case TOKEN_INCREMENT:
         case TOKEN_DECREMENT:
             lhs = parse_unary_postfix(lhs);
+            break;
+        case TOKEN_TERNARY:
+            lhs = parse_ternary(lhs, line_number);
             break;
         default:
             return lhs;

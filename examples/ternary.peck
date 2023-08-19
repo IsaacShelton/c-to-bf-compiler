@@ -1,0 +1,38 @@
+
+u0 main(){
+    print_score_scaled(1);
+    print_score_scaled(2);
+    print_score_scaled(3);
+    print_score_scaled(4);
+    print_score_scaled(5);
+    print_score_scaled(6);
+    print_score_scaled(7);
+    print_score_scaled(8);
+    print_score_scaled(9);
+    print_score_scaled(10);
+    print_score_scaled(11);
+    print_score_scaled(12);
+    print_score_scaled(13);
+    print_score_scaled(14);
+    print_score_scaled(15);
+    print_score_scaled(16);
+    print_score_scaled(17);
+    print_score_scaled(18);
+    print_score_scaled(19);
+    print_score_scaled(20);
+}
+
+u0 print_score_scaled(u8 score){
+    print("raw score : ");
+    printu8(score);
+    print("\t scaled score : ");
+    printu8(score >= 10 ? score * 10 : score);
+    print("\t gpa : ");
+    print_gpa(score);
+    print("\n");
+}
+
+u0 print_gpa(u8 score){
+    printu8(score <= 5 ? 1 : score <= 10 ? 2 : score <= 15 ? 3 : 4);
+}
+

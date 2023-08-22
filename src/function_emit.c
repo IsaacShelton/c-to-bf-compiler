@@ -135,13 +135,15 @@ while(stack_pointer != 0){
 }
 */
 
-u32 function_emit(Function function, u32 start_function_cell_index, u32 start_current_cell_index){
+u32 function_emit(u32 function_index, u32 start_function_cell_index, u32 start_current_cell_index){
+    Function function = functions[function_index];
+
     EmitContext old_emit_context = emit_context;
 
     emit_context = (EmitContext){
+        .function = function_index,
         .function_cell_index = start_function_cell_index,
         .current_cell_index = start_current_cell_index,
-        .function_begin_statement = function.begin,
         .current_statement = function.begin,
         .in_recursive_function = function.is_recursive,
     };

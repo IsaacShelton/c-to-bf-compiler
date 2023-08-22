@@ -5,9 +5,9 @@
 #include "utypes.h"
 
 typedef struct {
+    u32 function;
     u32 function_cell_index;
     u32 current_cell_index;
-    u32 function_begin_statement;
     u32 current_statement;
     u1 in_recursive_function;
 } EmitContext;

@@ -127,7 +127,7 @@ static u32 expression_emit_call(Expression expression){
         }
     }
 
-    if(function_emit(function, start_function_cell_index, emit_context.current_cell_index)){
+    if(function_emit(function_index, start_function_cell_index, emit_context.current_cell_index)){
         return TYPES_CAPACITY;
     }
 

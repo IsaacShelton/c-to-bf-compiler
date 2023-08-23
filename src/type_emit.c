@@ -19,10 +19,15 @@ u32 type_sizeof_or_max(u32 type_index){
     } else if(aux_cstr_equals_u32(name)){
         size = 4;
     } else {
-        printf("\nerror: Type '");
-        type_print(types[type_index]);
-        printf("' does not exist\n");
-        return -1;
+        u32 found_typedef = find_typedef(name);
+        if(found_typedef >= TYPEDEFS_CAPACITY){
+            printf("\nerror: Type '");
+            type_print(types[type_index]);
+            printf("' does not exist\n");
+            return -1;
+        }
+
+        size = typedefs[found_typedef].computed_size;
     }
 
     u32 dims[4];

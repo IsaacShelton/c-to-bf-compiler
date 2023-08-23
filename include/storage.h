@@ -9,6 +9,7 @@
 #include "function.h"
 #include "expression.h"
 #include "global.h"
+#include "typedef.h"
 #include "utypes.h"
 
 extern u8 code_buffer[CODE_BUFFER_CAPACITY];
@@ -41,6 +42,9 @@ extern u32 num_operands;
 extern Global globals[GLOBALS_CAPACITY];
 extern u32 num_globals;
 
+extern TypeDef typedefs[TYPEDEFS_CAPACITY];
+extern u32 num_typedefs;
+
 u32 add_type(Type type);
 u32 add_function(Function function);
 u32 find_function(u32 name);
@@ -52,6 +56,8 @@ u32 add_operand(u32 a);
 u32 add_operands2(u32 a, u32 b);
 u32 add_operands3(u32 a, u32 b, u32 c);
 u32 add_global(Global global);
+u32 add_typedef(TypeDef def);
+u32 find_typedef(u32 name);
 u32 aux_cstr_alloc(u8 null_terminated_name[16]);
 u1 aux_cstr_equals(u32 a, u32 b);
 u1 aux_cstr_equals_print(u32 a);

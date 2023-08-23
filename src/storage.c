@@ -40,6 +40,9 @@ u32 num_operands = 0;
 Global globals[GLOBALS_CAPACITY];
 u32 num_globals;
 
+TypeDef typedefs[TYPEDEFS_CAPACITY];
+u32 num_typedefs;
+
 u32 add_type(Type type){
     for(u32 i = 0; i < num_types; i++){
         if(type_equals(type, types[i])){
@@ -161,6 +164,25 @@ u32 add_global(Global global){
 
     printf("Out of memory: Exceeded maximum number of global variables\n");
     return GLOBALS_CAPACITY;
+}
+
+u32 add_typedef(TypeDef def){
+    if(num_typedefs < GLOBALS_CAPACITY){
+        typedefs[num_typedefs] = def;
+        return num_typedefs++;
+    }
+
+    printf("Out of memory: Exceeded maximum number of type definitions\n");
+    return TYPEDEFS_CAPACITY;
+}
+
+u32 find_typedef(u32 name){
+    for(u32 i = 0; i < num_typedefs; i++){
+        if(aux_cstr_equals(typedefs[i].name, name)){
+            return i;
+        }
+    }
+    return TYPEDEFS_CAPACITY;
 }
 
 u32 aux_cstr_alloc(u8 null_terminated_name[16]){

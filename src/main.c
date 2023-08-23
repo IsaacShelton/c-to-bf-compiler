@@ -13,8 +13,10 @@
 #include "../include/token_print.h"
 #include "../include/function_print.h"
 #include "../include/function_emit.h"
+#include "../include/typedef_print.h"
 #include "../include/infer.h"
 #include "../include/mark_recursive_functions.h"
+#include "../include/compute_typedef_sizes.h"
 
 int main(void){
     if(lex()) return 1;
@@ -30,6 +32,14 @@ int main(void){
     if(parse()) return 1;
     if(infer()) return 1;
     if(mark_recursive_functions()) return 1;
+    if(compute_typedef_sizes()) return 1;
+
+    /*
+    for(u32 i = 0; i < num_typedefs; i++){
+        typedef_print(typedefs[i]);
+        printf("\n");
+    }
+    */
 
     /*
     for(u32 i = 0; i < num_functions; i++){

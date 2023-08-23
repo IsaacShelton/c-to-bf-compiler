@@ -15,6 +15,7 @@
 #include "../include/parse_dimensions.h"
 #include "../include/parse_statement.h"
 #include "../include/parse_type.h"
+#include "../include/typedef.h"
 
 static u32 parse_function_body(Function function){
     // { ... }
@@ -113,6 +114,68 @@ ErrorCode parse_function(u32 symbol_name, u32 symbol_type){
     return 0;
 }
 
+static ErrorCode parse_typedef_struct(){
+    // typedef struct {
+    //                ^
+
+    if(!eat_token(TOKEN_BEGIN)){
+        printf("error on line %d: Expected '{' after struct keyword in type definition\n", current_line());
+        stop_parsing();
+        return 1;
+    }
+
+    u32 begin = num_statements;
+
+    while(parse_i < num_tokens && !is_token(TOKEN_END)){
+        if(parse_statement()) return 1;
+    }
+
+    if(!eat_token(TOKEN_END)){
+        printf("error on line %d: Expected '}' after function body\n", current_line());
+        instead_got();
+        stop_parsing();
+        return 1;
+    }
+
+    if(!is_token(TOKEN_WORD)){
+        printf("error on line %d: Expected typedef name after '}'\n", current_line());
+        instead_got();
+        stop_parsing();
+        return 1;
+    }
+
+    u32 name = eat_word();
+
+    if(!eat_token(TOKEN_SEMICOLON)){
+        printf("error on line %d: Expected ';' after typedef name\n", current_line());
+        instead_got();
+        stop_parsing();
+        return 1;
+    }
+
+    u32 def = add_typedef((TypeDef){
+        .kind = TYPEDEF_STRUCT,
+        .name = name,
+        .begin = begin,
+        .num_fields = num_statements - begin,
+    });
+
+    return def >= TYPEDEFS_CAPACITY;
+}
+
+static ErrorCode parse_typedef(){
+    // typedef 
+    //         ^
+
+    if(eat_token(TOKEN_STRUCT)){
+        return parse_typedef_struct();
+    }
+
+    printf("error on line %d: Alias typdefs are not supported yet\n", current_line());
+    stop_parsing();
+    return 1;
+}
+
 u32 parse(){
     parse_i = 0;
     had_parse_error = false;
@@ -121,6 +184,11 @@ u32 parse(){
     if(add_builtin_functions()) return 1;
 
     while(parse_i < num_tokens){
+        if(eat_token(TOKEN_TYPEDEF)){
+            if(parse_typedef()) return 1;
+            continue;
+        }
+
         // Parse type
         Type type = parse_type();
         if(had_parse_error) return 1;

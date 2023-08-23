@@ -52,6 +52,9 @@ enum {
     TOKEN_ELSE,
     TOKEN_WHILE,
     TOKEN_DO,
+    TOKEN_TYPEDEF,
+    TOKEN_STRUCT,
+    TOKEN_MEMBER,
 };
 
 typedef u8 TokenKind;

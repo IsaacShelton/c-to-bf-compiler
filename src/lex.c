@@ -19,7 +19,7 @@ typedef struct {
     TokenKind kind;
 } SimpleToken;
 
-SimpleToken simple_tokens[14] = {
+SimpleToken simple_tokens[15] = {
     (SimpleToken){ .c = '{', .kind = TOKEN_BEGIN },
     (SimpleToken){ .c = '}', .kind = TOKEN_END },
     (SimpleToken){ .c = '(', .kind = TOKEN_OPEN },
@@ -34,6 +34,7 @@ SimpleToken simple_tokens[14] = {
     (SimpleToken){ .c = '~', .kind = TOKEN_BIT_COMPLEMENT },
     (SimpleToken){ .c = '?', .kind = TOKEN_TERNARY },
     (SimpleToken){ .c = ':', .kind = TOKEN_COLON },
+    (SimpleToken){ .c = '.', .kind = TOKEN_MEMBER },
 };
 
 static u1 is_ident(u8 c){
@@ -307,6 +308,10 @@ u32 lex(){
                     tokens[num_tokens - 1].kind = TOKEN_WHILE;
                 } else if(lexed.consumed == 2 && memcmp(code_buffer, "do", 2) == 0){
                     tokens[num_tokens - 1].kind = TOKEN_DO;
+                } else if(lexed.consumed == 7 && memcmp(code_buffer, "typedef", 7) == 0){
+                    tokens[num_tokens - 1].kind = TOKEN_TYPEDEF;
+                } else if(lexed.consumed == 6 && memcmp(code_buffer, "struct", 6) == 0){
+                    tokens[num_tokens - 1].kind = TOKEN_STRUCT;
                 } else {
                     tokens[num_tokens - 1].data = num_aux;
 

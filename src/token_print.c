@@ -145,6 +145,12 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_DO:
         printf("do");
         break;
+    case TOKEN_TYPEDEF:
+        printf("typedef");
+        break;
+    case TOKEN_STRUCT:
+        printf("struct");
+        break;
     default:
         printf("<unknown>");
     }

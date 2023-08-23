@@ -137,6 +137,7 @@ while(stack_pointer != 0){
 
 static ErrorCode emit_if_like(Expression expression);
 static ErrorCode emit_while(Expression expression);
+static ErrorCode emit_do_while(Expression expression);
 
 static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i){
     for(u32 i = start_statement_i; i < stop_statement_i; i++){
@@ -155,6 +156,10 @@ static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i){
             break;
         case EXPRESSION_WHILE:
             if(emit_while(expression)) return 1;
+            i += operands[expression.ops + 1];
+            break;
+        case EXPRESSION_DO_WHILE:
+            if(emit_do_while(expression)) return 1;
             i += operands[expression.ops + 1];
             break;
         default: {
@@ -283,6 +288,47 @@ static ErrorCode emit_while(Expression expression){
 
     // Re-evaluate condition (should never fail)
     expression_emit(expressions[operands[expression.ops]]);
+
+    // Go to 'condition' cell
+    printf("<");
+    emit_context.current_cell_index--;
+
+    // End while
+    printf("]");
+
+    return 0;
+}
+
+static ErrorCode emit_do_while(Expression expression){
+    // Emits code for if/if-else statements
+
+    u32 starting_cell_index = emit_context.current_cell_index;
+
+    // Set 'condition' cell to true
+    printf("[-]+");
+
+    // While 'condition' cell
+    printf("[");
+
+    // Emit 'do-while' body
+    emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1);
+
+    // Deallocate variables
+    if(emit_context.current_cell_index > starting_cell_index){
+        printf("%d<", emit_context.current_cell_index - starting_cell_index);
+        emit_context.current_cell_index = starting_cell_index;
+    }
+
+    // Evaluate condition
+    u32 condition_type = expression_emit(expressions[operands[expression.ops]]);
+    if(condition_type >= TYPES_CAPACITY) return 1;
+
+    if(condition_type != u1_type){
+        printf("\nerror on line %d: Expected 'do-while' condition to be 'u1', got '", u24_unpack(expression.line));
+        type_print(types[condition_type]);
+        printf("'\n");
+        return 1;
+    }
 
     // Go to 'condition' cell
     printf("<");

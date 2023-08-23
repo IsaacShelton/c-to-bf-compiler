@@ -60,4 +60,5 @@
 - `(a)`
 - `switch(value){ case A: statements; break; case B: statements; break; default: statements; }`
 - `(Type){ .a = a, .b = b, .c = c }`
+- `a.b`
 

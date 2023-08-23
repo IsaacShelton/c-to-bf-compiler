@@ -303,6 +303,10 @@ u32 lex(){
                     tokens[num_tokens - 1].kind = TOKEN_IF;
                 } else if(lexed.consumed == 4 && memcmp(code_buffer, "else", 4) == 0){
                     tokens[num_tokens - 1].kind = TOKEN_ELSE;
+                } else if(lexed.consumed == 5 && memcmp(code_buffer, "while", 5) == 0){
+                    tokens[num_tokens - 1].kind = TOKEN_WHILE;
+                } else if(lexed.consumed == 2 && memcmp(code_buffer, "do", 2) == 0){
+                    tokens[num_tokens - 1].kind = TOKEN_DO;
                 } else {
                     tokens[num_tokens - 1].data = num_aux;
 

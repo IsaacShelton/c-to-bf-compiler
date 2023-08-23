@@ -50,6 +50,8 @@ enum {
     TOKEN_COLON,
     TOKEN_IF,
     TOKEN_ELSE,
+    TOKEN_WHILE,
+    TOKEN_DO,
 };
 
 typedef u8 TokenKind;

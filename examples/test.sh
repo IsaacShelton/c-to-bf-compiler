@@ -33,4 +33,5 @@ set -ex
 "$self/../peck" "$self/shifts.peck"
 "$self/../peck" "$self/ternary.peck"
 "$self/../peck" "$self/variable_usage_simple.peck"
+"$self/../peck" "$self/while.peck"
 

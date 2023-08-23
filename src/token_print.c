@@ -139,6 +139,12 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_ELSE:
         printf("else");
         break;
+    case TOKEN_WHILE:
+        printf("while");
+        break;
+    case TOKEN_DO:
+        printf("do");
+        break;
     default:
         printf("<unknown>");
     }

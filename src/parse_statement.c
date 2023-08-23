@@ -13,12 +13,15 @@ static u32 add_statement_else_print_error(Expression expression);
 static ErrorCode parse_declaration_assignment(u32 variable_name, u24 line_number);
 static ErrorCode parse_declaration();
 static ErrorCode parse_if();
+static ErrorCode parse_while();
 
 ErrorCode parse_statement(){
     if(is_type_followed_by(TOKEN_WORD)){
         if(parse_declaration()) return 1;
     } else if(eat_token(TOKEN_IF)){
         if(parse_if()) return 1;
+    } else if(eat_token(TOKEN_WHILE)){
+        if(parse_while()) return 1;
     } else {
         Expression statement = parse_expression();
         if(had_parse_error) return 1;
@@ -147,6 +150,73 @@ static ErrorCode parse_declaration(){
     } else {
         return !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
     }
+}
+
+static ErrorCode parse_while(){
+    // while
+    //       ^
+
+    u24 line = tokens[parse_i - 1].line;
+
+    if(!eat_token(TOKEN_OPEN)){
+        printf("\nerror on line %d: Expected '(' after 'while' keyword\n", current_line());
+        stop_parsing();
+        return 1;
+    }
+
+    Expression condition_expression = parse_expression();
+    if(had_parse_error) return 1;
+
+    if(!eat_token(TOKEN_CLOSE)){
+        printf("\nerror on line %d: Expected ')' after 'while' condition\n", current_line());
+        stop_parsing();
+        return 1;
+    }
+
+    u32 condition = add_expression(condition_expression);
+    if(condition >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return 1;
+    }
+
+    u32 ops = add_operands2(condition, 0);
+    if(ops >= OPERANDS_CAPACITY){
+        stop_parsing();
+        return 1;
+    }
+
+    Expression statement = (Expression){
+        .kind = EXPRESSION_WHILE,
+        .line = line,
+        .ops = ops,
+    };
+
+    u32 begin = add_statement_else_print_error(statement);
+
+    if(begin >= STATEMENTS_CAPACITY){
+        return 1;
+    }
+
+    if(!eat_token(TOKEN_BEGIN)){
+        printf("\nerror on line %d: Expected '{' after 'while' condition\n", current_line());
+        stop_parsing();
+        return 1;
+    }
+
+    while(parse_i < num_tokens && !is_token(TOKEN_END)){
+        if(parse_statement()) return 1;
+    }
+
+    // Set number of statements
+    operands[ops + 1] = num_statements - 1 - begin;
+
+    if(!eat_token(TOKEN_END)){
+        printf("\nerror on line %d: Expected '}' after 'while' body\n", current_line());
+        stop_parsing();
+        return 1;
+    }
+
+    return 0;
 }
 
 static ErrorCode parse_if(){

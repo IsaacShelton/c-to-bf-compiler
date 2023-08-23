@@ -1,0 +1,17 @@
+
+u0 main(){
+    u8 i = 1;
+
+    while(i < 10){
+        printu8(i);
+        print("\n");
+        i = i + 1;
+    }
+
+    while(i != 0){
+        printu8(i);
+        print("\n");
+        i = i - 1;
+    }
+}
+

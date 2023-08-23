@@ -299,6 +299,10 @@ u32 lex(){
                     tokens[num_tokens - 1].kind = TOKEN_TRUE;
                 } else if(lexed.consumed == 5 && memcmp(code_buffer, "false", 5) == 0){
                     tokens[num_tokens - 1].kind = TOKEN_FALSE;
+                } else if(lexed.consumed == 2 && memcmp(code_buffer, "if", 2) == 0){
+                    tokens[num_tokens - 1].kind = TOKEN_IF;
+                } else if(lexed.consumed == 4 && memcmp(code_buffer, "else", 4) == 0){
+                    tokens[num_tokens - 1].kind = TOKEN_ELSE;
                 } else {
                     tokens[num_tokens - 1].data = num_aux;
 

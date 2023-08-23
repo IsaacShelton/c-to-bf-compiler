@@ -133,6 +133,12 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_COLON:
         printf(":");
         break;
+    case TOKEN_IF:
+        printf("if");
+        break;
+    case TOKEN_ELSE:
+        printf("else");
+        break;
     default:
         printf("<unknown>");
     }

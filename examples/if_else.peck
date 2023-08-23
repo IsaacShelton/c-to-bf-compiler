@@ -1,0 +1,26 @@
+
+u0 main(){
+    u8 x = 10;
+    u8 y = 11;
+
+    print("x = ");
+    printu8(x);
+    print("\n");
+
+    print("y = ");
+    printu8(y);
+    print("\n");
+
+    if(x < y){
+        print("x < y\n");
+    } else {
+        print("not (x < y)\n");
+    }
+
+    if(x > y){
+        print("x > y\n");
+    } else {
+        print("not (x > y)\n");
+    }
+}
+

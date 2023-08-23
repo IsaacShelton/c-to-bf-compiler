@@ -48,6 +48,8 @@ enum {
     TOKEN_DECREMENT,
     TOKEN_TERNARY,
     TOKEN_COLON,
+    TOKEN_IF,
+    TOKEN_ELSE,
 };
 
 typedef u8 TokenKind;

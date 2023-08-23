@@ -1,0 +1,44 @@
+
+u0 main(){
+    one();
+    two();
+}
+
+u0 one(){
+    u8 variable = 10;
+
+    if(true){
+        variable = 1;
+    }
+
+    if(false){
+        u8 variable = 3;
+    }
+
+    print("one() variable = ");
+    printu8(variable);
+    print("\n");
+}
+
+u0 two(){
+    u8 variable = 7;
+
+    if(true){
+        u8 variable = 31;
+    }
+
+    if(true){
+        if(true){
+            if(true){
+                variable = 2;
+            }
+        }
+    }
+
+    if(true){
+        print("two() variable = ");
+        printu8(variable);
+        print("\n");
+    }
+}
+

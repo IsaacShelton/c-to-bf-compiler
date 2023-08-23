@@ -135,7 +135,116 @@ while(stack_pointer != 0){
 }
 */
 
-u32 function_emit(u32 function_index, u32 start_function_cell_index, u32 start_current_cell_index){
+static ErrorCode emit_if_like(Expression expression);
+
+static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i){
+    for(u32 i = start_statement_i; i < stop_statement_i; i++){
+        Expression expression = expressions[statements[i]];
+        emit_context.current_statement = i;
+
+        // Skip over contained statements
+        switch(expression.kind){
+        case EXPRESSION_IF:
+            if(emit_if_like(expression)) return 1;
+            i += operands[expression.ops + 1];
+            break;
+        case EXPRESSION_IF_ELSE:
+            if(emit_if_like(expression)) return 1;
+            i += operands[expression.ops + 1] + operands[expression.ops + 2];
+            break;
+        default: {
+                u32 result_type = expression_emit(expression);
+                if(result_type >= TYPES_CAPACITY) return 1;
+
+                if(result_type != u0_type){
+                    printf("\error on line %d: Statement result ignored\n", u24_unpack(expression.line));
+                    return 1;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+static ErrorCode emit_if_like(Expression expression){
+    // Emits code for if/if-else statements
+
+    u32 starting_cell_index = emit_context.current_cell_index;
+    
+    // Evaluate condition
+    u32 condition_type = expression_emit(expressions[operands[expression.ops]]);
+    if(condition_type >= TYPES_CAPACITY) return 1;
+
+    if(condition_type != u1_type){
+        printf("\nerror on line %d: Expected 'if' condition to be 'u1', got '", u24_unpack(expression.line));
+        type_print(types[condition_type]);
+        printf("'\n");
+        return 1;
+    }
+
+    u1 has_else = expression.kind == EXPRESSION_IF_ELSE;
+
+    if(has_else){
+        // Allocate 'should_run_else' cell
+        printf("[-]+");
+    }
+
+    // Go to condition cell
+    printf("<");
+    emit_context.current_cell_index--;
+
+    // If condition
+    printf("[");
+
+    // Emit 'if' body
+    emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1);
+
+    // Deallocate variables
+    if(emit_context.current_cell_index > starting_cell_index){
+        printf("%d<", emit_context.current_cell_index - starting_cell_index);
+        emit_context.current_cell_index = starting_cell_index;
+    }
+
+    // Go to 'condition' cell
+    if(has_else){
+        // Zero 'should_run_else' cell on the way
+        printf(">[-]<");
+    }
+
+    // End if
+    printf("[-]]");
+
+    // Handle else
+    if(has_else){
+        // Go to 'should_run_else' cell
+        printf(">");
+        emit_context.current_cell_index++;
+
+        // If 'should_run_else' cell
+        printf("[");
+
+        // Emit 'else' body
+        emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 2] + 1);
+
+        // Deallocate variables
+        if(emit_context.current_cell_index > starting_cell_index){
+            printf("%d<", emit_context.current_cell_index - starting_cell_index);
+            emit_context.current_cell_index = starting_cell_index;
+        }
+
+        // End if
+        printf("[-]]");
+
+        // Go to next available cell
+        printf("<");
+        emit_context.current_cell_index--;
+    }
+
+    return 0;
+}
+
+ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 start_current_cell_index){
     Function function = functions[function_index];
 
     EmitContext old_emit_context = emit_context;
@@ -148,19 +257,8 @@ u32 function_emit(u32 function_index, u32 start_function_cell_index, u32 start_c
         .in_recursive_function = function.is_recursive,
     };
 
-    for(u32 i = function.arity; i < function.num_stmts; i++){
-        Expression expression = expressions[statements[function.begin + i]];
-        emit_context.current_statement = function.begin + i;
-        u32 result_type = expression_emit(expression);
-
-        if(result_type >= TYPES_CAPACITY){
-            return 1;
-        }
-
-        if(result_type != u0_type){
-            printf("\nError: Statement result ignored\n");
-            return 1;
-        }
+    if(emit_body(function.begin + function.arity, function.begin + function.num_stmts)){
+        return 1;
     }
 
     if(emit_context.current_cell_index > start_function_cell_index){

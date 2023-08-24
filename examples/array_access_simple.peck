@@ -12,5 +12,13 @@ u0 main(){
     put(array[2]);
     put(array[3]);
     put(array[4]);
+    print("\n");
+
+    put(array[0]);
+    put(array[1]);
+    put(array[2]);
+    put(array[3]);
+    put(array[4]);
+    print("\n");
 }
 

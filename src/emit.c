@@ -128,13 +128,17 @@ u0 copy_cell_dynamic_u8(u32 start_index){
         return;
     }
 
-    u32 back_offset = emit_context.current_cell_index - start_index;
-
     // index
-    //   ^
+    //        ^
 
     // value
-    //   ^
+    //        ^
+
+    // Go to 'index' cell
+    printf("<");
+    emit_context.current_cell_index--;
+
+    u32 back_offset = emit_context.current_cell_index - start_index;
 
     /* Example:
         ++++++++++ +>
@@ -225,6 +229,8 @@ u0 copy_cell_dynamic_u8(u32 start_index){
       printf("[<+>-]"); // Copy left
       printf("<");
     printf("]");
+
+    emit_context.current_cell_index++;
 }
 
 u0 move_cell_static(u32 destination_index){

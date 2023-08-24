@@ -263,6 +263,11 @@ static Destination expression_get_destination(Expression expression, u32 tape_an
         Destination destination = expression_get_destination(subject_expression, tape_anchor);
         if(destination.type >= TYPES_CAPACITY) return (Destination) { .type = TYPES_CAPACITY };
 
+        if(destination.offset_size > 0){
+            printf("\nerror on line %d: Cannot member into destination that already has an offset yet (not supported)\n", u24_unpack(expression.line));
+            return (Destination) { .type = TYPES_CAPACITY };
+        }
+
         Type type = types[destination.type];
         u1 is_struct_type = true;
         TypeDef def;
@@ -831,6 +836,36 @@ static u32 expression_get_type(Expression expression){
             u32 array_type = expression_get_type(expressions[operands[expression.ops]]);
             if(array_type >= TYPES_CAPACITY) return array_type;
             return get_item_type(types[array_type], false);
+        }
+    case EXPRESSION_MEMBER: {
+            u32 subject_type_index = expression_get_type(expressions[operands[expression.ops]]);
+            if(subject_type_index >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+            Type subject_type = types[subject_type_index];
+
+            if(subject_type.dimensions != 0) return TYPES_CAPACITY;
+
+            u32 def_index = find_typedef(subject_type.name);
+            if(def_index >= TYPEDEFS_CAPACITY) return TYPES_CAPACITY;
+
+            TypeDef def = typedefs[def_index];
+            if(def.kind != TYPEDEF_STRUCT) return TYPES_CAPACITY;
+
+            u32 target_field_name = operands[expression.ops + 1];
+
+            for(u32 i = 0; i < def.num_fields; i++){
+                Expression field = expressions[statements[def.begin + i]];
+                if(field.kind != EXPRESSION_DECLARE) continue;
+
+                u32 field_name = operands[field.ops + 1];
+
+                if(aux_cstr_equals(field_name, target_field_name)){
+                    u32 field_type = operands[field.ops];
+                    return field_type;
+                }
+            }
+
+            return TYPES_CAPACITY;
         }
     case EXPRESSION_NEGATE:
     case EXPRESSION_NOT:

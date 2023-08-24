@@ -14,15 +14,11 @@ u0 main(){
     john.age = 34;
     john.children = 10;
 
-    print_person(john);
-}
-
-u0 print_person(Person person){
-    print(person.name);
+    print(john.name);
     print(" is ");
-    printu8(person.age);
+    printu8(john.age);
     print(" years old, and has ");
-    printu8(person.children);
+    printu8(john.children);
     print(" children.\n");
 }
 

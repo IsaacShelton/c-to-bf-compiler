@@ -46,7 +46,7 @@ ErrorCode compute_typedef_sizes(){
                 }
 
                 if(num_dependencies == TYPE_DEPENDENCIES_CAPACITY){
-                    printf("\nOut of memory: Exceed maximum number of typedef dependencies\n");
+                    printf("\nOut of memory: Exceeded maximum number of typedef dependencies\n");
                     return 1;
                 }
 

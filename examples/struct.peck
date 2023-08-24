@@ -1,0 +1,28 @@
+
+typedef struct {
+    u8 name[8];
+    u8 age;
+    u8 children;
+} Person;
+
+u0 main(){
+    Person john;
+    john.name[0] = 'J';
+    john.name[1] = 'o';
+    john.name[2] = 'h';
+    john.name[3] = 'n';
+    john.age = 34;
+    john.children = 10;
+
+    print_person(john);
+}
+
+u0 print_person(Person person){
+    print(person.name);
+    print(" is ");
+    printu8(person.age);
+    print(" years old, and has ");
+    printu8(person.children);
+    print(" children.\n");
+}
+

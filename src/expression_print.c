@@ -135,6 +135,11 @@ u0 expression_print(Expression expression){
         expression_print(expressions[operands[expression.ops + 2]]);
         printf(")");
         break;
+    case EXPRESSION_MEMBER:
+        expression_print(expressions[operands[expression.ops]]);
+        printf(".");
+        print_aux_cstr(operands[expression.ops + 1]);
+        break;
     default:
         printf("<unknown expression>");
     }

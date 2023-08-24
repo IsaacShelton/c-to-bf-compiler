@@ -52,6 +52,7 @@ enum {
     EXPRESSION_IF_ELSE, /* { condition, num_statements, num_else_statements } */
     EXPRESSION_WHILE, /* { condition, num_statements } */
     EXPRESSION_DO_WHILE, /* { condition, num_statements } */
+    EXPRESSION_MEMBER, /* { subject, member_name } */
 };
 typedef u8 ExpressionKind;
 

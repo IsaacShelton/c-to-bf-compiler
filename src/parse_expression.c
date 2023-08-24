@@ -251,6 +251,7 @@ static u8 parse_get_precedence(u32 token_kind){
     switch(token_kind){
     case TOKEN_OPEN:
     case TOKEN_OPEN_BRACKET:
+    case TOKEN_MEMBER:
         return 16;
     case TOKEN_MULTIPLY:
     case TOKEN_DIVIDE:
@@ -452,6 +453,37 @@ static Expression parse_array_index(Expression array, u24 line_number){
     };
 }
 
+static Expression parse_member_expression(Expression subject_expression, u24 line_number){
+    // Skip over '.' operator
+    parse_i++;
+
+    u32 subject = add_expression(subject_expression);
+    if(subject >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return subject_expression;
+    }
+
+    if(!is_token(TOKEN_WORD)){
+        printf("\nerror on line %d: Expected member name after '.'\n", u24_unpack(line_number));
+        stop_parsing();
+        return subject_expression;
+    }
+
+    u32 member_name = eat_word();
+
+    u32 ops = add_operands2(subject, member_name);
+    if(ops >= OPERANDS_CAPACITY){
+        stop_parsing();
+        return subject_expression;
+    }
+
+    return (Expression){
+        .kind = EXPRESSION_MEMBER,
+        .line = line_number,
+        .ops = ops,
+    };
+}
+
 static Expression parse_ternary(Expression condition_expression, u24 line){
     u32 condition = add_expression(condition_expression);
     if(condition >= EXPRESSIONS_CAPACITY){
@@ -536,6 +568,9 @@ static Expression parse_secondary_expression(u8 precedence, Expression lhs){
             break;
         case TOKEN_OPEN_BRACKET:
             lhs = parse_array_index(lhs, line_number);
+            break;
+        case TOKEN_MEMBER:
+            lhs = parse_member_expression(lhs, line_number);
             break;
         case TOKEN_INCREMENT:
         case TOKEN_DECREMENT:

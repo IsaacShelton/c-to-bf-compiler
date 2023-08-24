@@ -799,6 +799,8 @@ static u32 expression_get_type(Expression expression){
     case EXPRESSION_IMPLEMENT_PRINTU1:
     case EXPRESSION_IMPLEMENT_PRINTU8:
         return u0_type;
+    case EXPRESSION_IMPLEMENT_GET:
+        return u8_type;
     case EXPRESSION_CALL:
         return expression_get_type_for_call(expression);
     case EXPRESSION_U1:
@@ -1039,6 +1041,9 @@ u32 expression_emit(Expression expression){
         return u0_type;
     case EXPRESSION_IMPLEMENT_PRINTU8:
         emit_printu8();
+        return u0_type;
+    case EXPRESSION_IMPLEMENT_GET:
+        printf("<,>");
         return u0_type;
     case EXPRESSION_U1:
         emit_u1(expression.ops);

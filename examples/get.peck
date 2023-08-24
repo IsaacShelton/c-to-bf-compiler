@@ -1,0 +1,10 @@
+
+u0 main(){
+    print("Enter a letter: ");
+    u8 letter = get();
+
+    print("You entered: '");
+    put(letter);
+    print("'\n");
+}
+

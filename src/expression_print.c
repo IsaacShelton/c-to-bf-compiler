@@ -140,6 +140,11 @@ u0 expression_print(Expression expression){
         printf(".");
         print_aux_cstr(operands[expression.ops + 1]);
         break;
+    case EXPRESSION_STRING:
+        printf("\"");
+        print_aux_cstr_escaped(expression.ops);
+        printf("\"");
+        break;
     default:
         printf("<unknown expression>");
     }

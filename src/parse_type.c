@@ -13,7 +13,7 @@ Type parse_type(){
 
     // Parse type name
     if(!is_token(TOKEN_WORD)){
-        printf("error on line %d: Expected type\n", current_line());
+        printf("\nerror on line %d: Expected type\n", current_line());
         instead_got();
         stop_parsing();
         return type;

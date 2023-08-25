@@ -16,7 +16,7 @@ u32 add_dimensions(u32 type_dimensions[4]){
 
     // Insert if not found
     if(num_dimensions + 1 >= UNIQUE_DIMENSIONS_CAPACITY){
-        printf("error on line %d: Maximum number of unique dimension pairs exceeded. Use fewer or reconfigure your compiler.\n", current_line());
+        printf("\nerror on line %d: Maximum number of unique dimension pairs exceeded. Use fewer or reconfigure your compiler.\n", current_line());
         stop_parsing();
         return UNIQUE_DIMENSIONS_CAPACITY;
     }
@@ -44,13 +44,13 @@ u32 parse_dimensions(u32 start_type_dimensions[4]){
 
     while(eat_token(TOKEN_OPEN_BRACKET)){
         if(next_dim == 4){
-            printf("error on line %d: Cannot nest array dimensions more than 4 deep\n", current_line());
+            printf("\nerror on line %d: Cannot nest array dimensions more than 4 deep\n", current_line());
             stop_parsing();
             return UNIQUE_DIMENSIONS_CAPACITY;
         }
 
         if(!is_token(TOKEN_INT)){
-            printf("error on line %d: Expected number for dimension of type\n", current_line());
+            printf("\nerror on line %d: Expected number for dimension of type\n", current_line());
             instead_got();
             stop_parsing();
             return UNIQUE_DIMENSIONS_CAPACITY;
@@ -59,7 +59,7 @@ u32 parse_dimensions(u32 start_type_dimensions[4]){
         u32 dim = eat_int();
 
         if(dim == 0){
-            printf("error on line %d: Cannot have array dimension of 0\n", current_line());
+            printf("\nerror on line %d: Cannot have array dimension of 0\n", current_line());
             stop_parsing();
             return UNIQUE_DIMENSIONS_CAPACITY;
         }
@@ -67,7 +67,7 @@ u32 parse_dimensions(u32 start_type_dimensions[4]){
         type_dimensions[next_dim++] = dim;
 
         if(!eat_token(TOKEN_CLOSE_BRACKET)){
-            printf("error on line %d: Expected ']' after dimension in type\n", current_line());
+            printf("\nerror on line %d: Expected ']' after dimension in type\n", current_line());
             instead_got();
             stop_parsing();
             return UNIQUE_DIMENSIONS_CAPACITY;
@@ -77,7 +77,6 @@ u32 parse_dimensions(u32 start_type_dimensions[4]){
     if(next_dim == 0){
         return 0;
     }
-
 
     return add_dimensions(type_dimensions);
 }

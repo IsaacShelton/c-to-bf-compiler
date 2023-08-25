@@ -1,0 +1,64 @@
+
+u0 main(){
+    u8[4] first;
+    first[0] = 1;
+    first[1] = 2;
+    first[2] = 3;
+    first[3] = 4;
+
+    u8[4] second;
+    second[0] = 10;
+    second[1] = 11;
+    second[2] = 12;
+    second[3] = 13;
+
+    print("first = second\n");
+    first = second;
+
+    printu8(first[0]);
+    print(" ");
+    printu8(first[1]);
+    print(" ");
+    printu8(first[2]);
+    print(" ");
+    printu8(first[3]);
+    print("\n");
+
+    printu8(second[0]);
+    print(" ");
+    printu8(second[1]);
+    print(" ");
+    printu8(second[2]);
+    print(" ");
+    printu8(second[3]);
+    print("\n");
+
+    print("--------------------------\n");
+    print("second = first\n");
+
+    first[0] = 20;
+    first[1] = 21;
+    first[2] = 22;
+    first[3] = 23;
+
+    second = first;
+
+    printu8(first[0]);
+    print(" ");
+    printu8(first[1]);
+    print(" ");
+    printu8(first[2]);
+    print(" ");
+    printu8(first[3]);
+    print("\n");
+
+    printu8(second[0]);
+    print(" ");
+    printu8(second[1]);
+    print(" ");
+    printu8(second[2]);
+    print(" ");
+    printu8(second[3]);
+    print("\n");
+}
+

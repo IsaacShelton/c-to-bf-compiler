@@ -267,12 +267,13 @@ u0 move_cells_static(u32 destination_index, u32 size, u1 destructive){
     for(u32 i = 0; i < size; i++){
         // Copy cell to destination
         move_cell_static(destination_index + size - i - 1);
+
+        printf("<");
+        emit_context.current_cell_index--;
     }
 
-    if(destructive && size > 1){
-        printf("%d<", size - 1);
-        emit_context.current_cell_index -= size - 1;
-    }
+    printf(">");
+    emit_context.current_cell_index++;
 }
 
 u0 move_cell_dynamic_u8(u32 destination_start_index){

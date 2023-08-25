@@ -36,7 +36,7 @@ static Expression parse_expression_print(u24 line_number){
     }
 
     if(!eat_token(TOKEN_CLOSE)){
-        printf("error on line %d: Expected ')' after expression in print statement\n", current_line());
+        printf("\nerror on line %d: Expected ')' after expression in print statement\n", current_line());
         instead_got();
         stop_parsing();
         return expression;
@@ -66,7 +66,7 @@ static Expression parse_expression_call(u32 name, u24 line_number){
         }
 
         if(arity >= ARITY_CAPACITY){
-            printf("error on line %d: Exceeded maximum number of arguments to function call (limit is %d)\n", current_line(), ARITY_CAPACITY);
+            printf("\nerror on line %d: Exceeded maximum number of arguments to function call (limit is %d)\n", current_line(), ARITY_CAPACITY);
             stop_parsing();
             return expression;
         }
@@ -75,7 +75,7 @@ static Expression parse_expression_call(u32 name, u24 line_number){
 
         if(!eat_token(TOKEN_NEXT)){
             if(!is_token(TOKEN_CLOSE)){
-                printf("error on line %d: Expected ',' or ')' after argument in call\n", current_line());
+                printf("\nerror on line %d: Expected ',' or ')' after argument in call\n", current_line());
                 instead_got();
                 stop_parsing();
                 return expression;
@@ -84,7 +84,7 @@ static Expression parse_expression_call(u32 name, u24 line_number){
     }
 
     if(!eat_token(TOKEN_CLOSE)){
-        printf("error on line %d: Expected ')' after argument in call\n", current_line());
+        printf("\nerror on line %d: Expected ')' after argument in call\n", current_line());
         instead_got();
         stop_parsing();
         return expression;
@@ -163,6 +163,14 @@ static Expression parse_primary_expression(){
         };
     }
 
+    if(is_token(TOKEN_STRING)){
+        return (Expression){
+            .kind = EXPRESSION_STRING,
+            .line = line_number,
+            .ops = eat_string(),
+        };
+    }
+
     if(eat_token(TOKEN_OPEN)){
         if(is_type_followed_by(TOKEN_CLOSE)){
             // Cast
@@ -175,6 +183,7 @@ static Expression parse_primary_expression(){
 
             if(!eat_token(TOKEN_CLOSE)){
                 printf("\nerror on line %d: Expected ')' to close cast\n", current_line());
+                instead_got();
                 stop_parsing();
                 return (Expression){0};
             }
@@ -213,6 +222,7 @@ static Expression parse_primary_expression(){
 
         if(!eat_token(TOKEN_CLOSE)){
             printf("\nerror on line %d: Expected ')' to close cast\n", current_line());
+            instead_got();
             stop_parsing();
             return (Expression){0};
         }
@@ -229,7 +239,8 @@ static Expression parse_primary_expression(){
         return parse_unary_prefix(tokens[parse_i - 1].kind, line_number);
     }
     
-    printf("error on line %d: Expected expression\n", current_line());
+    printf("\nerror on line %d: Expected expression\n", current_line());
+    instead_got();
     stop_parsing();
     return (Expression){0};
 }
@@ -304,7 +315,8 @@ static Expression parse_rhs(u32 operator_precedence){
 
     // Skip over operator token
     if(++parse_i >= num_tokens){
-        printf("\nerror: Expected right hand side of expression\n");
+        printf("\nerror on line %d: Expected right hand side of expression\n", current_line());
+        instead_got();
         stop_parsing();
         return (Expression){0};
     }
@@ -379,7 +391,7 @@ static Expression parse_unary_prefix(
 
     ExpressionKind expression_kind = expression_kind_unary_prefix_from_token_kind(operator);
     if(expression_kind == EXPRESSION_NONE){
-        printf("\nerror on line %d: Could not get unary expression kind from token kind\n", u24_unpack(line_number));
+        printf("\nerror on line %d: Could not get unary prefix expression kind from token kind\n", u24_unpack(line_number));
         stop_parsing();
         return (Expression){0};
     }
@@ -402,7 +414,7 @@ static Expression parse_unary_postfix(Expression expression){
 
     ExpressionKind expression_kind = expression_kind_unary_postfix_from_token_kind(operator);
     if(expression_kind == EXPRESSION_NONE){
-        printf("\nerror on line %d: Could not get unary expression kind from token kind\n", u24_unpack(expression.line));
+        printf("\nerror on line %d: Could not get unary postfix expression kind from token kind\n", u24_unpack(expression.line));
         stop_parsing();
         return (Expression){0};
     }
@@ -422,7 +434,7 @@ static Expression parse_array_index(Expression array, u24 line_number){
     if(had_parse_error) return array;
 
     if(!eat_token(TOKEN_CLOSE_BRACKET)){
-        printf("error: Expected ']' after index expression\n");
+        printf("\nerror on line %d: Expected ']' after index expression\n", current_line());
         instead_got();
         stop_parsing();
         return array;
@@ -465,6 +477,7 @@ static Expression parse_member_expression(Expression subject_expression, u24 lin
 
     if(!is_token(TOKEN_WORD)){
         printf("\nerror on line %d: Expected member name after '.'\n", u24_unpack(line_number));
+        instead_got();
         stop_parsing();
         return subject_expression;
     }
@@ -493,6 +506,7 @@ static Expression parse_ternary(Expression condition_expression, u24 line){
 
     if(!eat_token(TOKEN_TERNARY)){
         printf("\nerror on line %d: Expected '?' after condition of ternary expression\n", current_line());
+        instead_got();
         stop_parsing();
         return (Expression){0};
     }
@@ -502,6 +516,7 @@ static Expression parse_ternary(Expression condition_expression, u24 line){
 
     if(!eat_token(TOKEN_COLON)){
         printf("\nerror on line %d: Expected ':' after true branch of ternary expression\n", current_line());
+        instead_got();
         stop_parsing();
         return (Expression){0};
     }

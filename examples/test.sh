@@ -6,6 +6,7 @@ set -ex
 "$self/../peck" "$self/addition_subtraction.peck"
 "$self/../peck" "$self/and_or.peck"
 "$self/../peck" "$self/array_access_simple.peck"
+"$self/../peck" "$self/array_assignment.peck"
 "$self/../peck" "$self/bitwise_and_or_xor.peck"
 "$self/../peck" "$self/bitwise_complement.peck"
 "$self/../peck" "$self/casts.peck"

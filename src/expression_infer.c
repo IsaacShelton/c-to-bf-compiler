@@ -159,6 +159,22 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
     case EXPRESSION_POST_DECREMENT:
         expression_infer(expression.ops, preferred_int_kind);
         break;
+    case EXPRESSION_TERNARY: {
+            expression_infer(operands[expression.ops], EXPRESSION_U1);
+            u32 result_preferred_kind = expression_get_preferred_int_kind_or_none(operands[expression.ops + 1]);
+            expression_infer(operands[expression.ops + 1], result_preferred_kind);
+            expression_infer(operands[expression.ops + 2], result_preferred_kind);
+        }
+        break;
+    case EXPRESSION_IF:
+    case EXPRESSION_IF_ELSE:
+    case EXPRESSION_WHILE:
+    case EXPRESSION_DO_WHILE:
+        expression_infer(operands[expression.ops], EXPRESSION_U1);
+        break;
+    case EXPRESSION_MEMBER:
+        expression_infer(operands[expression.ops], EXPRESSION_NONE);
+        break;
     }
 }
 

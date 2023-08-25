@@ -24,6 +24,7 @@ set -ex
 "$self/../peck" "$self/multiplication.peck"
 "$self/../peck" "$self/negate.peck"
 "$self/../peck" "$self/nested_expressions.peck"
+"$self/../peck" "$self/nested_while.peck"
 "$self/../peck" "$self/not.peck"
 "$self/../peck" "$self/post_increment_decrement.peck"
 "$self/../peck" "$self/pre_increment_decrement.peck"

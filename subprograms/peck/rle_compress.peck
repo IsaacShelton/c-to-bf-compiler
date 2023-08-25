@@ -1,0 +1,31 @@
+
+u0 main(){
+    u8 count = 1;
+    u8 prev = '\0';
+    u8 c = get();
+
+    while(c != '\0' && c != 255){
+        if(c == prev){
+            count = count + 1;
+        } else {
+            if(prev != '\0'){
+                if(count > 1){
+                    printu8(count);
+                }
+                put(prev);
+                count = 1;
+            }
+        }
+
+        prev = c;
+        c = get();
+    }
+
+    if(prev != '\0'){
+        if(count > 1){
+            printu8(count);
+        }
+        put(prev);
+    }
+}
+

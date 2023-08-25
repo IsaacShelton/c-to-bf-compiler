@@ -227,6 +227,9 @@ static ErrorCode emit_if_like(Expression expression){
 
     // Handle else
     if(has_else){
+        // Change starting cell index to 'should_run_else' cell
+        starting_cell_index++;
+
         // Go to 'should_run_else' cell
         printf(">");
         emit_context.current_cell_index++;

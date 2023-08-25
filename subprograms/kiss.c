@@ -39,6 +39,7 @@ static void check_valid(char tag, char c){
         exit(-1);
     }
 }
+
 static void write_behind(char c){
     check_valid('b', c);
     behind[behind_i] = c;
@@ -132,20 +133,6 @@ static Match find_match(){
     return (Match){ .offset = best_offset, .length = best_length };
 }
 
-static Match find_match_old(){
-    for(int size = ahead_length; size > 8; size--){
-        for(int trial = 0; trial <= sizeof behind - size; trial++){
-            Match potential = (Match){ .offset = sizeof behind - trial, .length = size };
-
-            if(does_match_fit(0, potential)){
-                return potential;
-            }
-        }
-    }
-
-    return (Match){ .offset = 0, .length = 0 };
-}
-
 static void write_repetition_encoding(Match match, int count){
     if(match.offset == 1 && match.length == 1 && count < 19*19){
         write_quick_repetition(count);
@@ -183,19 +170,12 @@ static int get_match_score(Match match){
 static void encode_match(Match match){
     int count = 0;
 
-    fprintf(stderr, "content: ");
-    for(int i = 0; i < match.length; i++){
-        fprintf(stderr, "%c", ahead[(ahead_i - ahead_length + i) & LOWER_12_BITS]);
-    }
-
     while(count < MAX_U24 - 1 && does_match_fit(0, match)){
         count++;
         ahead_length -= match.length;
         refill();
     }
 
-    fprintf(stderr, "\n");
-    fprintf(stderr, "offset: %d, length: %d, count: %d\n", match.offset, match.length, count);
     write_repetition_encoding(match, count);
 }
 
@@ -213,19 +193,14 @@ int main(int argc, const char **argv){
         int repeat_score = 12 + get_match_score((Match){ .offset = 1, .length = 1, });
 
         if(match_score > repeat_score && match_score > 0){
-            fprintf(stderr, "match ");
             encode_match(match);
         } else if(repeat_score > 0){
-            fprintf(stderr, "repeat ");
             char next = ahead[(ahead_i - ahead_length) & LOWER_12_BITS];
-            char last = to_normal_bf(behind[(behind_i - 1) & LOWER_12_BITS]);
-
             write_instruction(next);
             ahead_length--;
 
             encode_match((Match){ .offset = 1, .length = 1 });
         } else {
-            fprintf(stderr, "regular '%c'\n", ahead[(ahead_i - ahead_length) & LOWER_12_BITS]);
             write_instruction(ahead[(ahead_i - ahead_length--) & LOWER_12_BITS]);
         }
 
@@ -234,3 +209,4 @@ int main(int argc, const char **argv){
 
     return 0;
 }
+

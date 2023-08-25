@@ -1,0 +1,20 @@
+
+u0 main(){
+    test_if_else_if(true, true, true);
+    test_if_else_if(false, true, true);
+    test_if_else_if(false, false, true);
+    test_if_else_if(false, false, false);
+}
+
+u0 test_if_else_if(u1 a, u1 b, u1 c){
+    if(a){
+        print("1\n");
+    } else if(b){
+        print("2\n");
+    } else if(c){
+        print("3\n");
+    } else print("4\n");
+
+    print("-----------\n");
+}
+

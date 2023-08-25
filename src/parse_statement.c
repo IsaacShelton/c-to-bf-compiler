@@ -155,6 +155,30 @@ static ErrorCode parse_declaration(){
     }
 }
 
+static u32 parse_block(){
+    // Returns number of statements in block, otherwise STATEMENTS_CAPACITY if error
+
+    u32 start = num_statements;
+    
+    // Traditional block
+    if(eat_token(TOKEN_BEGIN)){
+        while(parse_i < num_tokens && !is_token(TOKEN_END)){
+            if(parse_statement()) return 1;
+        }
+
+        if(!eat_token(TOKEN_END)){
+            printf("\nerror on line %d: Expected '}' to end block\n", current_line());
+            stop_parsing();
+            return STATEMENTS_CAPACITY;
+        }
+    } else {
+        // Single statement block
+        if(parse_statement()) return STATEMENTS_CAPACITY;
+    }
+
+    return num_statements - start;
+}
+
 static ErrorCode parse_if(){
     // if
     //    ^
@@ -182,8 +206,6 @@ static ErrorCode parse_if(){
         return 1;
     }
 
-    u32 parts[3] = { condition, 0, 0 };
-
     Expression statement = (Expression){
         .kind = EXPRESSION_IF,
         .line = line,
@@ -191,61 +213,28 @@ static ErrorCode parse_if(){
     };
 
     u32 begin = add_statement_else_print_error(statement);
+    if(begin >= STATEMENTS_CAPACITY) return 1;
 
-    if(begin >= STATEMENTS_CAPACITY){
-        return 1;
-    }
+    u32 num_then = parse_block();
+    if(num_then >= STATEMENTS_CAPACITY) return 1;
 
-    if(!eat_token(TOKEN_BEGIN)){
-        printf("\nerror on line %d: Expected '{' after 'if' condition\n", current_line());
-        stop_parsing();
-        return 1;
-    }
-
-    while(parse_i < num_tokens && !is_token(TOKEN_END)){
-        if(parse_statement()) return 1;
-    }
-
-    // Set number of statements for 'if'
-    parts[1] = num_statements - 1 - begin;
-
-    if(!eat_token(TOKEN_END)){
-        printf("\nerror on line %d: Expected '}' after 'if' body\n", current_line());
-        stop_parsing();
-        return 1;
-    }
+    u32 num_else = 0;
 
     // Handle else
     if(eat_token(TOKEN_ELSE)){
-        if(!eat_token(TOKEN_BEGIN)){
-            printf("\nerror on line %d: Expected '{' after 'else'\n", current_line());
-            stop_parsing();
-            return 1;
-        }
-
-        while(parse_i < num_tokens && !is_token(TOKEN_END)){
-            if(parse_statement()) return 1;
-        }
-
-        // Set number of statements for 'else'
-        parts[2] = num_statements - 1 - (begin + parts[1]);
-
-        if(!eat_token(TOKEN_END)){
-            printf("\nerror on line %d: Expected '}' after 'else' body\n", current_line());
-            stop_parsing();
-            return 1;
-        }
+        num_else = parse_block();
+        if(num_else >= STATEMENTS_CAPACITY) return 1;
     }
 
     u32 ops;
 
-    if(parts[2] == 0){
+    if(num_else == 0){
         // If statement
-        ops = add_operands2(parts[0], parts[1]);
+        ops = add_operands2(condition, num_then);
     } else {
         // If statement with else
         expressions[statements[begin]].kind = EXPRESSION_IF_ELSE;
-        ops = add_operands3(parts[0], parts[1], parts[2]);
+        ops = add_operands3(condition, num_then, num_else);
     }
 
     if(ops >= OPERANDS_CAPACITY){
@@ -297,30 +286,13 @@ static ErrorCode parse_while(){
     };
 
     u32 begin = add_statement_else_print_error(statement);
+    if(begin >= STATEMENTS_CAPACITY) return 1;
 
-    if(begin >= STATEMENTS_CAPACITY){
-        return 1;
-    }
-
-    if(!eat_token(TOKEN_BEGIN)){
-        printf("\nerror on line %d: Expected '{' after 'while' condition\n", current_line());
-        stop_parsing();
-        return 1;
-    }
-
-    while(parse_i < num_tokens && !is_token(TOKEN_END)){
-        if(parse_statement()) return 1;
-    }
+    u32 num_inside = parse_block();
+    if(num_inside >= STATEMENTS_CAPACITY) return 1;
 
     // Set number of statements
-    operands[ops + 1] = num_statements - 1 - begin;
-
-    if(!eat_token(TOKEN_END)){
-        printf("\nerror on line %d: Expected '}' after 'while' body\n", current_line());
-        stop_parsing();
-        return 1;
-    }
-
+    operands[ops + 1] = num_inside;
     return 0;
 }
 
@@ -337,31 +309,13 @@ static ErrorCode parse_do_while(){
     };
 
     u32 begin = add_statement_else_print_error(statement);
+    if(begin >= STATEMENTS_CAPACITY) return 1;
 
-    if(begin >= STATEMENTS_CAPACITY){
-        return 1;
-    }
-
-    if(!eat_token(TOKEN_BEGIN)){
-        printf("\nerror on line %d: Expected '{' after 'do' keyword\n", current_line());
-        stop_parsing();
-        return 1;
-    }
-
-    while(parse_i < num_tokens && !is_token(TOKEN_END)){
-        if(parse_statement()) return 1;
-    }
-
-    u32 body_length = num_statements - 1 - begin;
-
-    if(!eat_token(TOKEN_END)){
-        printf("\nerror on line %d: Expected '}' after 'do-while' body\n", current_line());
-        stop_parsing();
-        return 1;
-    }
+    u32 num_inside = parse_block();
+    if(num_inside >= STATEMENTS_CAPACITY) return 1;
 
     if(!eat_token(TOKEN_WHILE)){
-        printf("\nerror on line %d: Expected 'while' after '}' of 'do-while' body\n", current_line());
+        printf("\nerror on line %d: Expected 'while' after 'do-while' body\n", current_line());
         stop_parsing();
         return 1;
     }
@@ -391,7 +345,7 @@ static ErrorCode parse_do_while(){
         return 1;
     }
 
-    u32 ops = add_operands2(condition, body_length);
+    u32 ops = add_operands2(condition, num_inside);
     if(ops >= OPERANDS_CAPACITY){
         stop_parsing();
         return 1;

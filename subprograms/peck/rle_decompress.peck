@@ -8,16 +8,14 @@ u0 main(){
         if(c >= '0' && c <= '9'){
             count = 10 * count + (c - '0');
             has_count = true;
-        } else {
-            if(has_count){
-                while(count > 0){
-                    put(c);
-                    count = count - 1;
-                }
-                has_count = false;
-            } else {
+        } else if(has_count){
+            while(count > 0){
                 put(c);
+                count = count - 1;
             }
+            has_count = false;
+        } else {
+            put(c);
         }
 
         c = get();

@@ -16,6 +16,7 @@ set -ex
 "$self/../peck" "$self/function_call_simple.peck"
 "$self/../peck" "$self/get.peck"
 "$self/../peck" "$self/if_else.peck"
+"$self/../peck" "$self/if_else_if.peck"
 "$self/../peck" "$self/if_variable_lookup.peck"
 "$self/../peck" "$self/less_greater.peck"
 "$self/../peck" "$self/less_greater_equal.peck"

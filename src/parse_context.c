@@ -27,6 +27,8 @@ u1 is_token(TokenKind kind){
 u32 current_line(){
     if(parse_i < num_tokens){
         return u24_unpack(tokens[parse_i].line);
+    } else if(parse_i == num_tokens && num_tokens > 0){
+        return u24_unpack(tokens[parse_i - 1].line);
     } else {
         return 0;
     }
@@ -35,6 +37,8 @@ u32 current_line(){
 u24 current_line_packed(){
     if(parse_i < num_tokens){
         return tokens[parse_i].line;
+    } else if(parse_i == num_tokens && num_tokens > 0){
+        return tokens[parse_i - 1].line;
     } else {
         return u24_pack(0);
     }

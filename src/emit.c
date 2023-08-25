@@ -18,7 +18,7 @@ u0 dupe_cell(){
     // Move second copy back into original
     printf(">>[<<+>>-]");
 
-    // Remaing pointing to next available cell
+    // Remain pointing to next available cell
     // (nothing to do)
 
     emit_context.current_cell_index++;

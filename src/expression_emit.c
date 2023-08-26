@@ -1074,6 +1074,41 @@ static u32 expression_emit_string(Expression expression){
     return expression_get_type_for_string(expression);
 }
 
+static u32 expression_emit_return(Expression expression){
+    u32 header_size = function_get_header_size_or_max(emit_context.function);
+    if(header_size == -1) return TYPES_CAPACITY;
+
+    u32 return_type = functions[emit_context.function].return_type;
+    u32 value_type = expression_emit(expressions[expression.ops]);
+
+    if(value_type != return_type){
+        if(grow_type(value_type, return_type)){
+            printf("\nerror on line %d: ", u24_unpack(expression.line));
+            printf("Expected '");
+            type_print(types[return_type]);
+            printf("' return value, but got type '");
+            type_print(types[value_type]);
+            printf("'\n");
+            return TYPES_CAPACITY;
+        }
+
+        value_type = return_type;
+    }
+
+    u32 return_value_location = emit_context.function_cell_index - header_size;
+
+    u32 return_type_size = type_sizeof_or_max(return_type);
+    if(return_type_size == -1) return TYPES_CAPACITY;
+
+    // Point to last cell of data value
+    printf("<");
+    emit_context.current_cell_index--;
+
+    // Move data value into return value location
+    move_cells_static(return_value_location, return_type_size, true);
+    return u0_type;
+}
+
 u32 expression_emit(Expression expression){
     switch(expression.kind){
     case EXPRESSION_DECLARE: {
@@ -1187,6 +1222,8 @@ u32 expression_emit(Expression expression){
         return expression_emit_ternary(expression);
     case EXPRESSION_STRING:
         return expression_emit_string(expression);
+    case EXPRESSION_RETURN:
+        return expression_emit_return(expression);
     default:
         printf("\nerror: Unknown expression kind %d during expression_emit\n", expression.kind);
         return TYPES_CAPACITY;

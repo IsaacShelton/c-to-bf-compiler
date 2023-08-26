@@ -65,6 +65,7 @@ enum {
     TOKEN_BIT_AND_ASSIGN,
     TOKEN_BIT_OR_ASSIGN,
     TOKEN_BIT_XOR_ASSIGN,
+    TOKEN_RETURN,
 };
 
 typedef u8 TokenKind;

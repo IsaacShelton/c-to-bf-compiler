@@ -1,0 +1,9 @@
+
+u0 main(){
+    print(get_name());
+}
+
+u8[8] get_name(){
+    return "John";
+}
+

@@ -87,8 +87,27 @@ ErrorCode mark_recursive_functions(){
                     }
                 }
                 break;
+            case EXPRESSION_ASSIGN:
             case EXPRESSION_ADD:
             case EXPRESSION_SUBTRACT:
+            case EXPRESSION_MULTIPLY:
+            case EXPRESSION_DIVIDE:
+            case EXPRESSION_MOD:
+            case EXPRESSION_EQUALS:
+            case EXPRESSION_NOT_EQUALS:
+            case EXPRESSION_LESS_THAN:
+            case EXPRESSION_GREATER_THAN:
+            case EXPRESSION_LESS_THAN_OR_EQUAL:
+            case EXPRESSION_GREATER_THAN_OR_EQUAL:
+            case EXPRESSION_LSHIFT:
+            case EXPRESSION_RSHIFT:
+            case EXPRESSION_AND:
+            case EXPRESSION_OR:
+            case EXPRESSION_BIT_AND:
+            case EXPRESSION_BIT_OR:
+            case EXPRESSION_BIT_XOR:
+            case EXPRESSION_NEGATE:
+            case EXPRESSION_INDEX:
                 if(num_expressions_to_process + 2 >= EXPRESSIONS_TO_PROCESS_CAPACITY){
                     printf("\nout of memory: Exceeded maximum number of expressions being processed during determination of recursive functions\n");
                     return 1;
@@ -97,21 +116,43 @@ ErrorCode mark_recursive_functions(){
                 expressions_to_process[num_expressions_to_process++] = operands[expression.ops];
                 expressions_to_process[num_expressions_to_process++] = operands[expression.ops + 1];
                 break;
-            case EXPRESSION_ASSIGN:
-                if(num_expressions_to_process + 1 >= EXPRESSIONS_TO_PROCESS_CAPACITY){
-                    printf("\nout of memory: Exceeded maximum number of expressions being processed during determination of recursive functions\n");
-                    return 1;
-                }
-
-                expressions_to_process[num_expressions_to_process++] = operands[expression.ops + 1];
-                break;
+            case EXPRESSION_NOT:
+            case EXPRESSION_BIT_COMPLEMENT:
+            case EXPRESSION_PRINT_ARRAY:
             case EXPRESSION_RETURN:
+            case EXPRESSION_PRE_INCREMENT:
+            case EXPRESSION_PRE_DECREMENT:
+            case EXPRESSION_POST_INCREMENT:
+            case EXPRESSION_POST_DECREMENT:
                 if(num_expressions_to_process + 1 >= EXPRESSIONS_TO_PROCESS_CAPACITY){
                     printf("\nout of memory: Exceeded maximum number of expressions being processed during determination of recursive functions\n");
                     return 1;
                 }
 
                 expressions_to_process[num_expressions_to_process++] = expression.ops;
+                break;
+            case EXPRESSION_TERNARY:
+                if(num_expressions_to_process + 3 >= EXPRESSIONS_TO_PROCESS_CAPACITY){
+                    printf("\nout of memory: Exceeded maximum number of expressions being processed during determination of recursive functions\n");
+                    return 1;
+                }
+
+                expressions_to_process[num_expressions_to_process++] = operands[expression.ops];
+                expressions_to_process[num_expressions_to_process++] = operands[expression.ops + 1];
+                expressions_to_process[num_expressions_to_process++] = operands[expression.ops + 2];
+                break;
+            case EXPRESSION_CAST:
+            case EXPRESSION_IF:
+            case EXPRESSION_IF_ELSE:
+            case EXPRESSION_WHILE:
+            case EXPRESSION_DO_WHILE:
+            case EXPRESSION_MEMBER:
+                if(num_expressions_to_process + 1 >= EXPRESSIONS_TO_PROCESS_CAPACITY){
+                    printf("\nout of memory: Exceeded maximum number of expressions being processed during determination of recursive functions\n");
+                    return 1;
+                }
+
+                expressions_to_process[num_expressions_to_process++] = operands[expression.ops];
                 break;
             default:
                 /* ignore */

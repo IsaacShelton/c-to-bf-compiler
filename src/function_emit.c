@@ -369,3 +369,25 @@ ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 s
     return 0;
 }
 
+u32 function_get_header_size_or_max(u32 function_index){
+    Function function = functions[function_index];
+    u32 total_size = 0;
+    u32 size;
+
+    size = type_sizeof_or_max(function.return_type);
+    if(size == -1) return -1;
+
+    total_size += size;
+
+    for(u32 i = 0; i < function.arity; i++){
+        Expression argument = expressions[statements[function.begin + i]];
+
+        size = type_sizeof_or_max(operands[argument.ops]);
+        if(size == -1) return -1;
+
+        total_size += size;
+    }
+
+    return total_size;
+}
+

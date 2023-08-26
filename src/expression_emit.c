@@ -52,6 +52,55 @@ static u0 print_nth_argument_label(u32 number){
     }
 }
 
+static ErrorCode grow_type(u32 from_type_index, u32 to_type_index){
+    Type from_type = types[from_type_index];
+    Type to_type = types[to_type_index];
+
+    if(!aux_cstr_equals(from_type.name, to_type.name)){
+        return 1;
+    }
+
+    if(from_type.dimensions == 0 || to_type.dimensions == 0){
+        return 1;
+    }
+
+    u32 f[4];
+    u32 t[4];
+
+    memcpy(f, &dimensions[from_type.dimensions], sizeof f);
+    memcpy(t, &dimensions[to_type.dimensions], sizeof t);
+
+    u8 num_f_dims = 1;
+    u8 num_t_dims = 1;
+
+    while(num_f_dims < 4 && f[num_f_dims] != 0){
+        num_f_dims++;
+    }
+    while(num_t_dims < 4 && t[num_t_dims] != 0){
+        num_t_dims++;
+    }
+
+    if(num_f_dims != num_t_dims){
+        return 1;
+    }
+
+    u32 t_len = t[num_t_dims - 1];
+    u32 f_len = f[num_f_dims - 1];
+
+    if(t_len > f_len){
+        // Zero extend array
+        while(f_len < t_len){
+            printf("[-]>");
+            emit_context.current_cell_index++;
+            f_len++;
+        }
+
+        return 0;
+    }
+
+    return 1;
+}
+
 static u32 expression_get_type_for_call(Expression expression){
     u32 name = operands[expression.ops];
     int function_index = find_function(name);
@@ -131,16 +180,20 @@ static u32 expression_emit_call(Expression expression){
         u32 expected_type = operands[expressions[statements[function.begin + i]].ops];
 
         if(type != expected_type){
-            printf("\nerror on line %d: ", u24_unpack(expression.line));
-            print_nth_argument_label(i + 1);
-            printf(" argument to function '");
-            print_aux_cstr(function.name);
-            printf("' should be '");
-            type_print(types[expected_type]);
-            printf("', but got type '");
-            type_print(types[type]);
-            printf("'\n");
-            return TYPES_CAPACITY;
+            if(grow_type(type, expected_type)){
+                printf("\nerror on line %d: ", u24_unpack(expression.line));
+                print_nth_argument_label(i + 1);
+                printf(" argument to function '");
+                print_aux_cstr(function.name);
+                printf("' should be '");
+                type_print(types[expected_type]);
+                printf("', but got type '");
+                type_print(types[type]);
+                printf("'\n");
+                return TYPES_CAPACITY;
+            }
+
+            type = expected_type;
         }
     }
 
@@ -360,12 +413,16 @@ static u32 write_destination(u32 new_value_type, Expression destination_expressi
     if(destination.type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
     if(new_value_type != destination.type){
-        printf("\nerror on line %d: Cannot assign '", u24_unpack(error_line_number));
-        type_print(types[new_value_type]);
-        printf("' to '");
-        type_print(types[destination.type]);
-        printf("'\n");
-        return TYPES_CAPACITY;
+        if(grow_type(new_value_type, destination.type)){
+            printf("\nerror on line %d: Cannot assign '", u24_unpack(error_line_number));
+            type_print(types[new_value_type]);
+            printf("' to '");
+            type_print(types[destination.type]);
+            printf("'\n");
+            return TYPES_CAPACITY;
+        }
+
+        new_value_type = destination.type;
     }
 
     u32 type_size = type_sizeof_or_max(new_value_type);

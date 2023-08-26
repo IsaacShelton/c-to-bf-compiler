@@ -1,0 +1,14 @@
+
+u0 main(){
+    greet("Hello", "Jake");
+    greet("Bye", "Joe");
+    greet("Greetings", "Jim");
+}
+
+u0 greet(u8 greeting[16], u8 name[8]){
+    print(greeting);
+    print(" ");
+    print(name);
+    print("\n");
+}
+

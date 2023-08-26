@@ -1,0 +1,9 @@
+
+u0 main(){
+    u8 name[16] = "Luke";
+
+    print("Name is: ");
+    print(name);
+    print("\n");
+}
+

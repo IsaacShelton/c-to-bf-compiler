@@ -1075,9 +1075,6 @@ static u32 expression_emit_string(Expression expression){
 }
 
 static u32 expression_emit_return(Expression expression){
-    u32 header_size = function_get_header_size_or_max(emit_context.function);
-    if(header_size == -1) return TYPES_CAPACITY;
-
     u32 return_type = functions[emit_context.function].return_type;
     u32 value_type = expression_emit(expressions[expression.ops]);
 
@@ -1095,10 +1092,10 @@ static u32 expression_emit_return(Expression expression){
         value_type = return_type;
     }
 
-    u32 return_value_location = emit_context.function_cell_index - header_size;
-
     u32 return_type_size = type_sizeof_or_max(return_type);
     if(return_type_size == -1) return TYPES_CAPACITY;
+
+    u32 return_value_location = emit_context.function_cell_index - return_type_size;
 
     // Point to last cell of data value
     printf("<");

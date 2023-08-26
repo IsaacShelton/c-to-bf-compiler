@@ -1,0 +1,14 @@
+
+u0 main(){
+    u8 name[10] = "John Smith";
+    u8 desc[21] = "He works in the mine.";
+
+    print("Name is: ");
+    print(name);
+    print("\n");
+
+    print("Description: ");
+    print(desc);
+    print("\n");
+}
+

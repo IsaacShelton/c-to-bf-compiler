@@ -63,6 +63,23 @@ static u32 expression_get_type_for_call(Expression expression){
     return functions[function_index].return_type;
 }
 
+static u32 expression_get_type_for_string(Expression expression){
+    u32 str = expression.ops;
+    u32 len = aux_cstr_len(str);
+
+    u32 dims[4];
+    memset(dims, 0, sizeof dims);
+    dims[0] = len;
+
+    u32 type_dimensions = add_dimensions(dims);
+    if(type_dimensions >= UNIQUE_DIMENSIONS_CAPACITY) return TYPES_CAPACITY;
+
+    return add_type((Type){
+        .name = types[u8_type].name,
+        .dimensions = type_dimensions,
+    });
+}
+
 static u32 expression_emit_call(Expression expression){
     u32 name = operands[expression.ops];
     u32 arity = operands[expression.ops + 1];
@@ -160,9 +177,12 @@ static u32 get_item_type(Type type, u1 show_error_message){
     }
     dims[3] = 0;
 
+    u32 type_dimensions = add_dimensions(dims);
+    if(type_dimensions >= UNIQUE_DIMENSIONS_CAPACITY) return TYPES_CAPACITY;
+
     Type item_type = (Type){
         .name = type.name,
-        .dimensions = add_dimensions(dims),
+        .dimensions = type_dimensions,
     };
 
     return add_type(item_type);
@@ -879,6 +899,8 @@ static u32 expression_get_type(Expression expression){
         return expression_get_type(expressions[expression.ops]);
     case EXPRESSION_TERNARY:
         return expression_get_type(expressions[operands[expression.ops + 1]]);
+    case EXPRESSION_STRING:
+        return expression_get_type_for_string(expression);
     }
     return TYPES_CAPACITY;
 }
@@ -979,6 +1001,20 @@ static u32 expression_emit_ternary(Expression expression){
     printf("]");
 
     return result_type;
+}
+
+static u32 expression_emit_string(Expression expression){
+    u32 str = expression.ops;
+    u32 len = aux_cstr_len(str);
+
+    for(u32 i = 0; i < len; i++){
+        printf("[-]%d+", aux[str + i]);
+        printf(">");
+    }
+
+    emit_context.current_cell_index += len;
+
+    return expression_get_type_for_string(expression);
 }
 
 u32 expression_emit(Expression expression){
@@ -1092,6 +1128,8 @@ u32 expression_emit(Expression expression){
         return expression_emit_unary(expression);
     case EXPRESSION_TERNARY:
         return expression_emit_ternary(expression);
+    case EXPRESSION_STRING:
+        return expression_emit_string(expression);
     default:
         printf("\nerror: Unknown expression kind %d during expression_emit\n", expression.kind);
         return TYPES_CAPACITY;

@@ -46,6 +46,7 @@ extern TypeDef typedefs[TYPEDEFS_CAPACITY];
 extern u32 num_typedefs;
 
 u32 add_type(Type type);
+u32 add_dimensions(u32 type_dimensions[4]);
 u32 add_function(Function function);
 u32 find_function(u32 name);
 u32 find_function_return_type(u32 name);
@@ -67,6 +68,7 @@ u1 aux_cstr_equals_u0(u32 a);
 u1 aux_cstr_equals_u8(u32 a);
 u1 aux_cstr_equals_u16(u32 a);
 u1 aux_cstr_equals_u32(u32 a);
+u32 aux_cstr_len(u32 str);
 u0 print_aux_cstr(u32 index);
 u0 print_aux_cstr_escaped(u32 index);
 

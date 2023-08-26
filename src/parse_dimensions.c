@@ -4,28 +4,16 @@
 #include "../include/parse_context.h"
 #include "../include/storage.h"
 
-u32 add_dimensions(u32 type_dimensions[4]){
-    // Try to find existing slot with same value
-    for(u32 i = 0; i < UNIQUE_DIMENSIONS_CAPACITY; i++){
-        u1 match = memcmp(dimensions[i], type_dimensions, sizeof(u32[4])) == 0;
+u32 parse_add_dimensions(u32 type_dimensions[4]){
+    u32 dims = add_dimensions(type_dimensions);
 
-        if(match){
-            return i;
-        }
-    }
-
-    // Insert if not found
-    if(num_dimensions + 1 >= UNIQUE_DIMENSIONS_CAPACITY){
+    if(dims >= UNIQUE_DIMENSIONS_CAPACITY){
         printf("\nerror on line %d: Maximum number of unique dimension pairs exceeded. Use fewer or reconfigure your compiler.\n", current_line());
         stop_parsing();
         return UNIQUE_DIMENSIONS_CAPACITY;
     }
-
-    for(u32 i = 0; i < 4; i++){
-        dimensions[num_dimensions][i] = type_dimensions[i];
-    }
-
-    return num_dimensions++;
+    
+    return dims;
 }
 
 u32 parse_dimensions(u32 start_type_dimensions[4]){
@@ -78,6 +66,6 @@ u32 parse_dimensions(u32 start_type_dimensions[4]){
         return 0;
     }
 
-    return add_dimensions(type_dimensions);
+    return parse_add_dimensions(type_dimensions);
 }
 

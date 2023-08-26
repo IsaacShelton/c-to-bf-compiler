@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <string.h>
 #include <stdbool.h>
 #include "../include/config.h"
 #include "../include/storage.h"
@@ -58,6 +59,29 @@ u32 add_type(Type type){
     printf("Out of memory: Exceeded maximum number of types\n");
     return TYPES_CAPACITY;
 }
+
+u32 add_dimensions(u32 type_dimensions[4]){
+    // Try to find existing slot with same value
+    for(u32 i = 0; i < UNIQUE_DIMENSIONS_CAPACITY; i++){
+        u1 match = memcmp(dimensions[i], type_dimensions, sizeof(u32[4])) == 0;
+
+        if(match){
+            return i;
+        }
+    }
+
+    // Insert if not found
+    if(num_dimensions + 1 >= UNIQUE_DIMENSIONS_CAPACITY){
+        return UNIQUE_DIMENSIONS_CAPACITY;
+    }
+
+    for(u32 i = 0; i < 4; i++){
+        dimensions[num_dimensions][i] = type_dimensions[i];
+    }
+
+    return num_dimensions++;
+}
+
 
 u32 add_function(Function function){
     if(num_functions >= FUNCTIONS_CAPACITY){
@@ -269,6 +293,16 @@ u1 aux_cstr_equals_u16(u32 a){
         && aux[a + 1] == '1'
         && aux[a + 2] == '6'
         && aux[a + 3] == '\0';
+}
+
+u32 aux_cstr_len(u32 str){
+    u32 len = 0;
+
+    while(aux[str + len]){
+        len++;
+    }
+
+    return len;
 }
 
 u1 aux_cstr_equals_u32(u32 a){

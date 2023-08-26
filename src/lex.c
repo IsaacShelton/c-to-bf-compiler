@@ -28,9 +28,6 @@ SimpleToken simple_tokens[15] = {
     (SimpleToken){ .c = '[', .kind = TOKEN_OPEN_BRACKET },
     (SimpleToken){ .c = ']', .kind = TOKEN_CLOSE_BRACKET },
     (SimpleToken){ .c = ',', .kind = TOKEN_NEXT },
-    (SimpleToken){ .c = '*', .kind = TOKEN_MULTIPLY },
-    (SimpleToken){ .c = '%', .kind = TOKEN_MOD },
-    (SimpleToken){ .c = '^', .kind = TOKEN_BIT_XOR },
     (SimpleToken){ .c = '~', .kind = TOKEN_BIT_COMPLEMENT },
     (SimpleToken){ .c = '?', .kind = TOKEN_TERNARY },
     (SimpleToken){ .c = ':', .kind = TOKEN_COLON },
@@ -159,6 +156,9 @@ LexedToken lex_main(){
         if(code_buffer_length > 1 && code_buffer[1] == '+'){
             result.token.kind = TOKEN_INCREMENT;
             result.consumed = 2;
+        } else if(code_buffer_length > 1 && code_buffer[1] == '='){
+            result.token.kind = TOKEN_ADD_ASSIGN;
+            result.consumed = 2;
         } else {
             result.token.kind = TOKEN_ADD;
             result.consumed = 1;
@@ -171,8 +171,23 @@ LexedToken lex_main(){
         if(code_buffer_length > 1 && code_buffer[1] == '-'){
             result.token.kind = TOKEN_DECREMENT;
             result.consumed = 2;
+        } else if(code_buffer_length > 1 && code_buffer[1] == '='){
+            result.token.kind = TOKEN_SUBTRACT_ASSIGN;
+            result.consumed = 2;
         } else {
             result.token.kind = TOKEN_SUBTRACT;
+            result.consumed = 1;
+        }
+        return result;
+    }
+
+    // Handle multiply
+    if(lead == '*'){
+        if(code_buffer_length > 1 && code_buffer[1] == '='){
+            result.token.kind = TOKEN_MULTIPLY_ASSIGN;
+            result.consumed = 2;
+        } else {
+            result.token.kind = TOKEN_MULTIPLY;
             result.consumed = 1;
         }
         return result;
@@ -188,18 +203,39 @@ LexedToken lex_main(){
             result.token.kind = TOKEN_MULTILINE_COMMENT;
             result.consumed = 2;
             return result;
+        } else if(code_buffer_length > 1 && code_buffer[1] == '='){
+            result.token.kind = TOKEN_DIVIDE_ASSIGN;
+            result.consumed = 2;
+            return result;
         } else {
             result.token.kind = TOKEN_DIVIDE;
             result.consumed = 1;
             return result;
         }
     }
+
+    // Handle mod
+    if(lead == '%'){
+        if(code_buffer_length > 1 && code_buffer[1] == '='){
+            result.token.kind = TOKEN_MOD_ASSIGN;
+            result.consumed = 2;
+        } else {
+            result.token.kind = TOKEN_MOD;
+            result.consumed = 1;
+        }
+        return result;
+    }
     
     // Handle less than
     if(lead == '<'){
         if(code_buffer_length > 1 && code_buffer[1] == '<'){
-            result.token.kind = TOKEN_LSHIFT;
-            result.consumed = 2;
+            if(code_buffer_length > 2 && code_buffer[2] == '='){
+                result.token.kind = TOKEN_LSHIFT_ASSIGN;
+                result.consumed = 3;
+            } else {
+                result.token.kind = TOKEN_LSHIFT;
+                result.consumed = 2;
+            }
         } else if(code_buffer_length > 1 && code_buffer[1] == '='){
             result.token.kind = TOKEN_LESS_THAN_OR_EQUAL;
             result.consumed = 2;
@@ -213,8 +249,13 @@ LexedToken lex_main(){
     // Handle greater than
     if(lead == '>'){
         if(code_buffer_length > 1 && code_buffer[1] == '>'){
-            result.token.kind = TOKEN_RSHIFT;
-            result.consumed = 2;
+            if(code_buffer_length > 2 && code_buffer[2] == '='){
+                result.token.kind = TOKEN_RSHIFT_ASSIGN;
+                result.consumed = 3;
+            } else {
+                result.token.kind = TOKEN_RSHIFT;
+                result.consumed = 2;
+            }
         } else if(code_buffer_length > 1 && code_buffer[1] == '='){
             result.token.kind = TOKEN_GREATER_THAN_OR_EQUAL;
             result.consumed = 2;
@@ -230,6 +271,9 @@ LexedToken lex_main(){
         if(code_buffer_length > 1 && code_buffer[1] == '&'){
             result.token.kind = TOKEN_AND;
             result.consumed = 2;
+        } else if(code_buffer_length > 1 && code_buffer[1] == '='){
+            result.token.kind = TOKEN_BIT_AND_ASSIGN;
+            result.consumed = 2;
         } else {
             result.token.kind = TOKEN_BIT_AND;
             result.consumed = 1;
@@ -242,8 +286,23 @@ LexedToken lex_main(){
         if(code_buffer_length > 1 && code_buffer[1] == '|'){
             result.token.kind = TOKEN_OR;
             result.consumed = 2;
+        } else if(code_buffer_length > 1 && code_buffer[1] == '='){
+            result.token.kind = TOKEN_BIT_OR_ASSIGN;
+            result.consumed = 2;
         } else {
             result.token.kind = TOKEN_BIT_OR;
+            result.consumed = 1;
+        }
+        return result;
+    }
+
+    // Handle xor
+    if(lead == '^'){
+        if(code_buffer_length > 1 && code_buffer[1] == '='){
+            result.token.kind = TOKEN_BIT_XOR_ASSIGN;
+            result.consumed = 2;
+        } else {
+            result.token.kind = TOKEN_BIT_XOR;
             result.consumed = 1;
         }
         return result;

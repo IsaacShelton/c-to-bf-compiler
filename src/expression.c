@@ -154,45 +154,101 @@ u0 expression_print_operation_name(ExpressionKind kind){
 
 ExpressionKind expression_kind_unary_prefix_from_token_kind(TokenKind kind){
     switch(kind){
-    case TOKEN_SUBTRACT: return EXPRESSION_NEGATE;
-    case TOKEN_NOT: return EXPRESSION_NOT;
-    case TOKEN_BIT_COMPLEMENT: return EXPRESSION_BIT_COMPLEMENT;
-    case TOKEN_INCREMENT: return EXPRESSION_PRE_INCREMENT;
-    case TOKEN_DECREMENT: return EXPRESSION_PRE_DECREMENT;
-    default: return EXPRESSION_NONE;
+    case TOKEN_SUBTRACT:
+        return EXPRESSION_NEGATE;
+    case TOKEN_NOT:
+        return EXPRESSION_NOT;
+    case TOKEN_BIT_COMPLEMENT:
+        return EXPRESSION_BIT_COMPLEMENT;
+    case TOKEN_INCREMENT:
+        return EXPRESSION_PRE_INCREMENT;
+    case TOKEN_DECREMENT:
+        return EXPRESSION_PRE_DECREMENT;
+    default:
+        return EXPRESSION_NONE;
     }
 }
 
 ExpressionKind expression_kind_unary_postfix_from_token_kind(TokenKind kind){
     switch(kind){
-    case TOKEN_INCREMENT: return EXPRESSION_POST_INCREMENT;
-    case TOKEN_DECREMENT: return EXPRESSION_POST_DECREMENT;
-    default: return EXPRESSION_NONE;
+    case TOKEN_INCREMENT:
+        return EXPRESSION_POST_INCREMENT;
+    case TOKEN_DECREMENT:
+        return EXPRESSION_POST_DECREMENT;
+    default:
+        return EXPRESSION_NONE;
     }
 }
 
 ExpressionKind expression_kind_binary_from_token_kind(TokenKind kind){
     switch(kind){
-    case TOKEN_ASSIGN: return EXPRESSION_ASSIGN;
-    case TOKEN_ADD: return EXPRESSION_ADD;
-    case TOKEN_SUBTRACT: return EXPRESSION_SUBTRACT;
-    case TOKEN_MULTIPLY: return EXPRESSION_MULTIPLY;
-    case TOKEN_DIVIDE: return EXPRESSION_DIVIDE;
-    case TOKEN_MOD: return EXPRESSION_MOD;
-    case TOKEN_EQUALS: return EXPRESSION_EQUALS;
-    case TOKEN_NOT_EQUALS: return EXPRESSION_NOT_EQUALS;
-    case TOKEN_LESS_THAN: return EXPRESSION_LESS_THAN;
-    case TOKEN_GREATER_THAN: return EXPRESSION_GREATER_THAN;
-    case TOKEN_LESS_THAN_OR_EQUAL: return EXPRESSION_LESS_THAN_OR_EQUAL;
-    case TOKEN_GREATER_THAN_OR_EQUAL: return EXPRESSION_GREATER_THAN_OR_EQUAL;
-    case TOKEN_LSHIFT: return EXPRESSION_LSHIFT;
-    case TOKEN_RSHIFT: return EXPRESSION_RSHIFT;
-    case TOKEN_AND: return EXPRESSION_AND;
-    case TOKEN_OR: return EXPRESSION_OR;
-    case TOKEN_BIT_AND: return EXPRESSION_BIT_AND;
-    case TOKEN_BIT_OR: return EXPRESSION_BIT_OR;
-    case TOKEN_BIT_XOR: return EXPRESSION_BIT_XOR;
-    default: return EXPRESSION_NONE;
+    case TOKEN_ASSIGN:
+        return EXPRESSION_ASSIGN;
+    case TOKEN_ADD:
+        return EXPRESSION_ADD;
+    case TOKEN_SUBTRACT:
+        return EXPRESSION_SUBTRACT;
+    case TOKEN_MULTIPLY:
+        return EXPRESSION_MULTIPLY;
+    case TOKEN_DIVIDE:
+        return EXPRESSION_DIVIDE;
+    case TOKEN_MOD:
+        return EXPRESSION_MOD;
+    case TOKEN_EQUALS:
+        return EXPRESSION_EQUALS;
+    case TOKEN_NOT_EQUALS:
+        return EXPRESSION_NOT_EQUALS;
+    case TOKEN_LESS_THAN:
+        return EXPRESSION_LESS_THAN;
+    case TOKEN_GREATER_THAN:
+        return EXPRESSION_GREATER_THAN;
+    case TOKEN_LESS_THAN_OR_EQUAL:
+        return EXPRESSION_LESS_THAN_OR_EQUAL;
+    case TOKEN_GREATER_THAN_OR_EQUAL:
+        return EXPRESSION_GREATER_THAN_OR_EQUAL;
+    case TOKEN_LSHIFT:
+        return EXPRESSION_LSHIFT;
+    case TOKEN_RSHIFT:
+        return EXPRESSION_RSHIFT;
+    case TOKEN_AND:
+        return EXPRESSION_AND;
+    case TOKEN_OR:
+        return EXPRESSION_OR;
+    case TOKEN_BIT_AND:
+        return EXPRESSION_BIT_AND;
+    case TOKEN_BIT_OR:
+        return EXPRESSION_BIT_OR;
+    case TOKEN_BIT_XOR:
+        return EXPRESSION_BIT_XOR;
+    default:
+        return EXPRESSION_NONE;
+    }
+}
+
+ExpressionKind expression_kind_binary_from_assignment_token_kind(TokenKind kind){
+    switch(kind){
+    case TOKEN_ADD_ASSIGN:
+        return EXPRESSION_ADD;
+    case TOKEN_SUBTRACT_ASSIGN:
+        return EXPRESSION_SUBTRACT;
+    case TOKEN_MULTIPLY_ASSIGN:
+        return EXPRESSION_MULTIPLY;
+    case TOKEN_DIVIDE_ASSIGN:
+        return EXPRESSION_DIVIDE;
+    case TOKEN_MOD_ASSIGN:
+        return EXPRESSION_MOD;
+    case TOKEN_LSHIFT_ASSIGN:
+        return EXPRESSION_LSHIFT;
+    case TOKEN_RSHIFT_ASSIGN:
+        return EXPRESSION_RSHIFT;
+    case TOKEN_BIT_AND_ASSIGN:
+        return EXPRESSION_BIT_AND;
+    case TOKEN_BIT_OR_ASSIGN:
+        return EXPRESSION_BIT_OR;
+    case TOKEN_BIT_XOR_ASSIGN:
+        return EXPRESSION_BIT_XOR;
+    default:
+        return EXPRESSION_NONE;
     }
 }
 

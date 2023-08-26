@@ -293,6 +293,16 @@ static u8 parse_get_precedence(u32 token_kind){
     case TOKEN_TERNARY:
         return 2;
     case TOKEN_ASSIGN:
+    case TOKEN_ADD_ASSIGN:
+    case TOKEN_SUBTRACT_ASSIGN:
+    case TOKEN_MULTIPLY_ASSIGN:
+    case TOKEN_DIVIDE_ASSIGN:
+    case TOKEN_MOD_ASSIGN:
+    case TOKEN_LSHIFT_ASSIGN:
+    case TOKEN_RSHIFT_ASSIGN:
+    case TOKEN_BIT_AND_ASSIGN:
+    case TOKEN_BIT_OR_ASSIGN:
+    case TOKEN_BIT_XOR_ASSIGN:
         return 1;
     default:
         return 0;
@@ -545,6 +555,60 @@ static Expression parse_ternary(Expression condition_expression, u24 line){
     };
 }
 
+static Expression parse_operator_assign(Expression lhs, TokenKind operator, u24 line_number, u8 operator_precedence){
+    Expression rhs = parse_rhs(operator_precedence);
+    if(had_parse_error) return lhs;
+
+    u32 a = add_expression(lhs);
+    if(a >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return lhs;
+    }
+
+    u32 b = add_expression(rhs);
+    if(b >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return lhs;
+    }
+
+    u32 math_ops = add_operands2(a, b);
+    if(math_ops >= OPERANDS_CAPACITY){
+        stop_parsing();
+        return lhs;
+    }
+
+    ExpressionKind expression_kind = expression_kind_binary_from_assignment_token_kind(operator);
+    if(expression_kind == EXPRESSION_NONE){
+        printf("\nerror on line %d: Could not get math expression kind from token kind\n", u24_unpack(line_number));
+        stop_parsing();
+        return lhs;
+    }
+
+    Expression math_expression = (Expression){
+        .kind = expression_kind,
+        .line = line_number,
+        .ops = math_ops,
+    };
+
+    u32 math = add_expression(math_expression);
+    if(math >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return math_expression;
+    }
+
+    u32 ops = add_operands2(a, math);
+    if(ops >= OPERANDS_CAPACITY){
+        stop_parsing();
+        return lhs;
+    }
+
+    return (Expression){
+        .kind = EXPRESSION_ASSIGN,
+        .ops = ops,
+        .line = line_number,
+    };
+}
+
 static Expression parse_secondary_expression(u8 precedence, Expression lhs){
     while(true){
         if(parse_i >= num_tokens){
@@ -593,6 +657,18 @@ static Expression parse_secondary_expression(u8 precedence, Expression lhs){
             break;
         case TOKEN_TERNARY:
             lhs = parse_ternary(lhs, line_number);
+            break;
+        case TOKEN_ADD_ASSIGN:
+        case TOKEN_SUBTRACT_ASSIGN:
+        case TOKEN_MULTIPLY_ASSIGN:
+        case TOKEN_DIVIDE_ASSIGN:
+        case TOKEN_MOD_ASSIGN:
+        case TOKEN_LSHIFT_ASSIGN:
+        case TOKEN_RSHIFT_ASSIGN:
+        case TOKEN_BIT_AND_ASSIGN:
+        case TOKEN_BIT_OR_ASSIGN:
+        case TOKEN_BIT_XOR_ASSIGN:
+            lhs = parse_operator_assign(lhs, operator, line_number, next_precedence);
             break;
         default:
             return lhs;

@@ -151,6 +151,36 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_STRUCT:
         printf("struct");
         break;
+    case TOKEN_ADD_ASSIGN:
+        printf("+=");
+        break;
+    case TOKEN_SUBTRACT_ASSIGN:
+        printf("-=");
+        break;
+    case TOKEN_MULTIPLY_ASSIGN:
+        printf("*=");
+        break;
+    case TOKEN_DIVIDE_ASSIGN:
+        printf("/=");
+        break;
+    case TOKEN_MOD_ASSIGN:
+        printf("%%=");
+        break;
+    case TOKEN_LSHIFT_ASSIGN:
+        printf("<<=");
+        break;
+    case TOKEN_RSHIFT_ASSIGN:
+        printf(">>=");
+        break;
+    case TOKEN_BIT_AND_ASSIGN:
+        printf("&=");
+        break;
+    case TOKEN_BIT_OR_ASSIGN:
+        printf("|=");
+        break;
+    case TOKEN_BIT_XOR_ASSIGN:
+        printf("^=");
+        break;
     default:
         printf("<unknown>");
     }

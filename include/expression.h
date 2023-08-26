@@ -69,6 +69,7 @@ u0 expression_print_operation_name(ExpressionKind kind);
 ExpressionKind expression_kind_unary_prefix_from_token_kind(TokenKind kind);
 ExpressionKind expression_kind_unary_postfix_from_token_kind(TokenKind kind);
 ExpressionKind expression_kind_binary_from_token_kind(TokenKind kind);
+ExpressionKind expression_kind_binary_from_assignment_token_kind(TokenKind kind);
 
 #endif // _PECK_AST_EXPRESSION_H
 

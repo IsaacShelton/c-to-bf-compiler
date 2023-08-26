@@ -1,0 +1,80 @@
+
+/*
+    Results should be:
+
+    a=32 b=7
+    a=18 b=7
+    a=175 b=7
+    a=3 b=7
+    a=4 b=7
+    a=100 b=7
+    a=6 b=7
+    a=1 b=7
+    a=31 b=7
+    a=30 b=7
+*/
+
+u0 main(){
+    u8 a;
+    u8 b;
+    u8 c = 2;
+
+    a = 25;
+    b = 7;
+    a += b;
+    print_info(a, b);
+
+    a = 25;
+    b = 7;
+    a -= b;
+    print_info(a, b);
+
+    a = 25;
+    b = 7;
+    a *= b;
+    print_info(a, b);
+
+    a = 25;
+    b = 7;
+    a /= b;
+    print_info(a, b);
+
+    a = 25;
+    b = 7;
+    a %= b;
+    print_info(a, b);
+
+    a = 25;
+    b = 7;
+    a <<= c;
+    print_info(a, b);
+
+    a = 25;
+    b = 7;
+    a >>= c;
+    print_info(a, b);
+
+    a = 25;
+    b = 7;
+    a &= b;
+    print_info(a, b);
+
+    a = 25;
+    b = 7;
+    a |= b;
+    print_info(a, b);
+
+    a = 25;
+    b = 7;
+    a ^= b;
+    print_info(a, b);
+}
+
+u0 print_info(u8 a, u8 b){
+    print("a=");
+    printu8(a);
+    print(" b=");
+    printu8(b);
+    print("\n");
+}
+

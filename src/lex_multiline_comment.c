@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include "../include/io.h"
+#include "../include/lex_context.h"
 #include "../include/lex_line_comment.h"
 #include "../include/storage.h"
 
@@ -13,6 +14,10 @@ LexUnboundedResult lex_multiline_comment(u8 c){
 
         if(comment_c == 0){
             break;
+        }
+
+        if(comment_c == '\n'){
+            lex_line_number++;
         }
 
         if(prev == '*' && comment_c == '/'){
@@ -28,6 +33,10 @@ LexUnboundedResult lex_multiline_comment(u8 c){
         c = code_buffer[code_buffer_length - 1];
 
         do {
+            if(c == '\n'){
+                lex_line_number++;
+            }
+
             prev = c;
             c = get();
         } while(!(c == 0 || (prev == '*' && c == '/')));

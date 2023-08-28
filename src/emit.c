@@ -439,6 +439,9 @@ u0 print_cells_static(u32 start_index, u32 max_length){
     // and ourselves so that there can be a cell
     // that we will temporarily zero
 
+    // Allocate two cells
+    printf("[-]>[-]<");
+
     // Go to first character
     printf("%d<", back_offset);
 

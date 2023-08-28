@@ -1,0 +1,22 @@
+
+u0 main(){
+    print("Enter a letter: ");
+    print(get_classification(get()));
+    print("\n");
+}
+
+u8[16] get_classification(u8 c){
+    if(c == 'A'){
+        print("Determined to be A\n");
+        return "Letter A";
+    }
+
+    if(c == 'B'){
+        print("Determined to be B\n");
+        return "Letter B";
+    }
+
+    print("Determined to be unknown\n");
+    return "Letter unknown";
+}
+

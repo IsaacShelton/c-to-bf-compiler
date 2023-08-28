@@ -10,6 +10,9 @@ typedef struct {
     u32 current_cell_index;
     u32 current_statement;
     u1 in_recursive_function;
+    u1 can_function_early_return;
+    u16 num_early_return_closes_needed;
+    u32 incomplete_cell;
 } EmitContext;
 
 EmitContext emit_context;

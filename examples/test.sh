@@ -14,6 +14,7 @@ set -ex
 "$self/../peck" "$self/casts.peck"
 "$self/../peck" "$self/divmod.peck"
 "$self/../peck" "$self/do_while.peck"
+"$self/../peck" "$self/early_return.peck"
 "$self/../peck" "$self/empty_global.peck"
 "$self/../peck" "$self/equals_not_equals.peck"
 "$self/../peck" "$self/function_call_simple.peck"

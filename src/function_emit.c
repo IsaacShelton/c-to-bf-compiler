@@ -139,6 +139,18 @@ static ErrorCode emit_if_like(Expression expression);
 static ErrorCode emit_while(Expression expression);
 static ErrorCode emit_do_while(Expression expression);
 
+static u0 emit_early_return_check(){
+    if(emit_context.can_function_early_return){
+        u32 offset = emit_context.current_cell_index - emit_context.incomplete_cell;
+
+        // Ensure 'incomplete' cell is still true
+        printf("%d<[%d>", offset, offset);
+
+        // Remember to close at end of function
+        emit_context.num_early_return_closes_needed++;
+    }
+}
+
 static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i){
     for(u32 i = start_statement_i; i < stop_statement_i; i++){
         Expression expression = expressions[statements[i]];
@@ -149,18 +161,22 @@ static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i){
         case EXPRESSION_IF:
             if(emit_if_like(expression)) return 1;
             i += operands[expression.ops + 1];
+            emit_early_return_check();
             break;
         case EXPRESSION_IF_ELSE:
             if(emit_if_like(expression)) return 1;
             i += operands[expression.ops + 1] + operands[expression.ops + 2];
+            emit_early_return_check();
             break;
         case EXPRESSION_WHILE:
             if(emit_while(expression)) return 1;
             i += operands[expression.ops + 1];
+            emit_early_return_check();
             break;
         case EXPRESSION_DO_WHILE:
             if(emit_do_while(expression)) return 1;
             i += operands[expression.ops + 1];
+            emit_early_return_check();
             break;
         default: {
                 u32 result_type = expression_emit(expression);
@@ -347,8 +363,46 @@ static ErrorCode emit_do_while(Expression expression){
     return 0;
 }
 
+u1 has_return_in_region(u32 start_statement_i, u32 stop_statement_i){
+    for(u32 i = start_statement_i; i < stop_statement_i; i++){
+        if(expressions[statements[i]].kind == EXPRESSION_RETURN){
+            return true;
+        }
+    }
+
+    return false;
+}
+
+u1 can_function_early_return(u32 function_index){
+    Function function = functions[function_index];
+
+    for(u32 i = function.begin; i < function.begin + function.num_stmts; i++){
+        Expression expression = expressions[statements[i]];
+
+        switch(expression.kind){
+        case EXPRESSION_IF:
+        case EXPRESSION_WHILE:
+        case EXPRESSION_DO_WHILE:
+            if(has_return_in_region(i + 1, i + operands[expression.ops + 1] + 1)) return true;
+            i += operands[expression.ops + 1];
+            break;
+        case EXPRESSION_IF_ELSE:
+            if(has_return_in_region(i + 1, i + operands[expression.ops + 1] + 1)) return true;
+            i += operands[expression.ops + 1];
+            if(has_return_in_region(i + 1, i + operands[expression.ops + 2] + 1)) return true;
+            i += operands[expression.ops + 2];
+            break;
+        case EXPRESSION_RETURN:
+            return false;
+        }
+    }
+
+    return false;
+}
+
 ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 start_current_cell_index){
     Function function = functions[function_index];
+    u1 can_early_return = can_function_early_return(function_index);
 
     EmitContext old_emit_context = emit_context;
 
@@ -358,10 +412,31 @@ ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 s
         .current_cell_index = start_current_cell_index,
         .current_statement = function.begin,
         .in_recursive_function = function.is_recursive,
+        .can_function_early_return = can_early_return,
+        .num_early_return_closes_needed = 0,
+        .incomplete_cell = -1,
     };
+    
+    // Allocate 'incomplete' cell if function can return early
+    if(can_early_return){
+        printf("[-]+>");
+        emit_context.incomplete_cell = emit_context.current_cell_index++;
+    }
 
     if(emit_body(function.begin + function.arity, function.begin + function.num_stmts)){
         return 1;
+    }
+
+    if(emit_context.num_early_return_closes_needed > 0){
+        // Go to 'incomplete' cell
+        printf("%d<", emit_context.current_cell_index - emit_context.incomplete_cell);
+        emit_context.current_cell_index = emit_context.incomplete_cell;
+
+        // Zero 'incomplete' cell
+        printf("[-]");
+
+        // Close early return checks
+        printf("%d]", emit_context.num_early_return_closes_needed);
     }
 
     if(emit_context.current_cell_index > start_function_cell_index){

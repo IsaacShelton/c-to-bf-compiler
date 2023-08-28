@@ -1105,6 +1105,13 @@ static u32 expression_emit_return(Expression expression){
 
     // Move data value into return value location
     move_cells_static(return_value_location, return_type_size, true);
+
+    // Unmark 'incomplete' cell if function can early return
+    if(emit_context.can_function_early_return){
+        u32 offset = emit_context.current_cell_index - emit_context.incomplete_cell;
+        printf("%d<[-]%d>", offset, offset);
+    }
+
     return u0_type;
 }
 

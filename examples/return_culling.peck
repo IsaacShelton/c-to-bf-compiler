@@ -1,0 +1,14 @@
+
+u0 main(){
+    print(get_message());
+    print("\n");
+}
+
+u8[16] get_message(){
+    return "Hello World";
+
+    // Lines after a `return` will not be type checked or emitted.
+    print(100 + "Hello World");
+    return a + b + c;
+}
+

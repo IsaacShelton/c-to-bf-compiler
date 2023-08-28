@@ -170,6 +170,10 @@ static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i){
                     printf("\nerror on line %d: Statement result ignored\n", u24_unpack(expression.line));
                     return 1;
                 }
+
+                if(expression.kind == EXPRESSION_RETURN){
+                    return 0;
+                }
             }
         }
     }

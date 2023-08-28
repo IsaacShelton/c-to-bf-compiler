@@ -39,6 +39,7 @@ set -ex
 "$self/../peck" "$self/put.peck"
 "$self/../peck" "$self/recursion_detection_simple.peck"
 "$self/../peck" "$self/return.peck"
+"$self/../peck" "$self/return_culling.peck"
 "$self/../peck" "$self/shifts.peck"
 "$self/../peck" "$self/string.peck"
 "$self/../peck" "$self/struct.peck"

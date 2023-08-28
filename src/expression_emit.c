@@ -458,7 +458,7 @@ u32 expression_emit_variable(Expression expression){
     Variable variable = variable_find(name);
 
     if(!variable.defined){
-        printf("\nerror: Variable '");
+        printf("\nerror on line %d: Variable '", u24_unpack(expression.line));
         print_aux_cstr(name);
         printf("' is not defined\n");
         return TYPES_CAPACITY;
@@ -492,7 +492,7 @@ static u32 expression_get_type_for_variable(Expression expression){
         return variable.type;
     }
 
-    printf("\nerror: Variable '");
+    printf("\nerror on line %d: Variable '", u24_unpack(expression.line));
     print_aux_cstr(name);
     printf("' is not defined\n");
     return TYPES_CAPACITY;
@@ -1076,7 +1076,9 @@ static u32 expression_emit_string(Expression expression){
 
 static u32 expression_emit_return(Expression expression){
     u32 return_type = functions[emit_context.function].return_type;
+
     u32 value_type = expression_emit(expressions[expression.ops]);
+    if(value_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
     if(value_type != return_type){
         if(grow_type(value_type, return_type)){

@@ -9,6 +9,7 @@
 #include "../include/type_emit.h"
 #include "../include/variable_find.h"
 #include "../include/emit_context.h"
+#include "../include/emit.h"
 
 // ============= Inlined function calls =============
 // Have layout like: `global1 global2 unknown1 unknown2 return_value1 return_value2 return_value3 param1 param2 param3 param4 local1 local2`
@@ -151,6 +152,60 @@ static u0 emit_early_return_check(){
     }
 }
 
+static u0 emit_pre_loop_condition_early_return_check(){
+    if(emit_context.can_function_early_return){
+        // Allocate 1 cell for default condition value of false or eventual evaluated condition
+        printf("[-]>");
+        emit_context.current_cell_index++;
+
+        // Copy 'incomplete' cell
+        copy_cell_static(emit_context.incomplete_cell);
+
+        // Go to copied cell
+        printf("<");
+        emit_context.current_cell_index--;
+
+        // If function is still incomplete
+        printf("[<");
+        emit_context.current_cell_index--;
+    }
+}
+
+static u0 emit_post_loop_condition_early_return_check(){
+    if(emit_context.can_function_early_return){
+        // Remain pointing at next available cell
+
+        // Close if
+        printf("[-]]");
+    }
+}
+
+u0 emit_early_return_closes_until(u16 num_early_return_closes_to_leave){
+    if(emit_context.num_early_return_closes_needed > num_early_return_closes_to_leave){
+        u32 amount = emit_context.num_early_return_closes_needed - num_early_return_closes_to_leave;
+        u32 offset = emit_context.current_cell_index - emit_context.incomplete_cell;
+
+        // Zero temporary 'restoration_copy' cell
+        printf("[-]");
+
+        // Go to 'incomplete' cell
+        printf("%d<", offset);
+
+        // Move 'incomplete' cell to 'restoration_copy' cell
+        printf("[%d>+%d<-]", offset, offset);
+
+        // Close early return checks
+        printf("%d]", amount);
+
+        // Restore 'incomplete' cell from copy and go back to cell where came from
+        printf("%d>[%d<+%d>-]", offset, offset, offset);
+
+        // (emit_context.current_cell_index remains unchanged)
+
+        emit_context.num_early_return_closes_needed = num_early_return_closes_to_leave;
+    }
+}
+
 static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i){
     for(u32 i = start_statement_i; i < stop_statement_i; i++){
         Expression expression = expressions[statements[i]];
@@ -161,22 +216,18 @@ static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i){
         case EXPRESSION_IF:
             if(emit_if_like(expression)) return 1;
             i += operands[expression.ops + 1];
-            emit_early_return_check();
             break;
         case EXPRESSION_IF_ELSE:
             if(emit_if_like(expression)) return 1;
             i += operands[expression.ops + 1] + operands[expression.ops + 2];
-            emit_early_return_check();
             break;
         case EXPRESSION_WHILE:
             if(emit_while(expression)) return 1;
             i += operands[expression.ops + 1];
-            emit_early_return_check();
             break;
         case EXPRESSION_DO_WHILE:
             if(emit_do_while(expression)) return 1;
             i += operands[expression.ops + 1];
-            emit_early_return_check();
             break;
         default: {
                 u32 result_type = expression_emit(expression);
@@ -274,6 +325,7 @@ static ErrorCode emit_if_like(Expression expression){
         emit_context.current_cell_index--;
     }
 
+    emit_early_return_check();
     return 0;
 }
 
@@ -283,8 +335,10 @@ static ErrorCode emit_while(Expression expression){
     u32 starting_cell_index = emit_context.current_cell_index;
     
     // Evaluate condition
+    emit_pre_loop_condition_early_return_check();
     u32 condition_type = expression_emit(expressions[operands[expression.ops]]);
     if(condition_type >= TYPES_CAPACITY) return 1;
+    emit_post_loop_condition_early_return_check();
 
     if(condition_type != u1_type){
         printf("\nerror on line %d: Expected 'while' condition to be 'u1', got '", u24_unpack(expression.line));
@@ -301,7 +355,9 @@ static ErrorCode emit_while(Expression expression){
     printf("[");
 
     // Emit 'while' body
+    u16 early_return_watermark = emit_context.num_early_return_closes_needed;
     emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1);
+    emit_early_return_closes_until(early_return_watermark);
 
     // Deallocate variables
     if(emit_context.current_cell_index > starting_cell_index){
@@ -310,7 +366,9 @@ static ErrorCode emit_while(Expression expression){
     }
 
     // Re-evaluate condition (should never fail)
+    emit_pre_loop_condition_early_return_check();
     expression_emit(expressions[operands[expression.ops]]);
+    emit_post_loop_condition_early_return_check();
 
     // Go to 'condition' cell
     printf("<");
@@ -319,6 +377,7 @@ static ErrorCode emit_while(Expression expression){
     // End while
     printf("]");
 
+    emit_early_return_check();
     return 0;
 }
 
@@ -332,9 +391,11 @@ static ErrorCode emit_do_while(Expression expression){
 
     // While 'condition' cell
     printf("[");
-
+    
     // Emit 'do-while' body
+    u16 early_return_watermark = emit_context.num_early_return_closes_needed;
     emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1);
+    emit_early_return_closes_until(early_return_watermark);
 
     // Deallocate variables
     if(emit_context.current_cell_index > starting_cell_index){
@@ -343,8 +404,10 @@ static ErrorCode emit_do_while(Expression expression){
     }
 
     // Evaluate condition
+    emit_pre_loop_condition_early_return_check();
     u32 condition_type = expression_emit(expressions[operands[expression.ops]]);
     if(condition_type >= TYPES_CAPACITY) return 1;
+    emit_post_loop_condition_early_return_check();
 
     if(condition_type != u1_type){
         printf("\nerror on line %d: Expected 'do-while' condition to be 'u1', got '", u24_unpack(expression.line));
@@ -360,6 +423,7 @@ static ErrorCode emit_do_while(Expression expression){
     // End while
     printf("]");
 
+    emit_early_return_check();
     return 0;
 }
 
@@ -427,17 +491,7 @@ ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 s
         return 1;
     }
 
-    if(emit_context.num_early_return_closes_needed > 0){
-        // Go to 'incomplete' cell
-        printf("%d<", emit_context.current_cell_index - emit_context.incomplete_cell);
-        emit_context.current_cell_index = emit_context.incomplete_cell;
-
-        // Zero 'incomplete' cell
-        printf("[-]");
-
-        // Close early return checks
-        printf("%d]", emit_context.num_early_return_closes_needed);
-    }
+    emit_early_return_closes_until(0);
 
     if(emit_context.current_cell_index > start_function_cell_index){
         printf("%d<", emit_context.current_cell_index - start_function_cell_index);

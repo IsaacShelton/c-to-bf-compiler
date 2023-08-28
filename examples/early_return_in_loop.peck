@@ -1,0 +1,53 @@
+
+u0 main(){
+    print("Enter a letter: ");
+    u8 c = get();
+
+    print("First classification: ");
+    print(get_classification_1(c));
+    print("\n");
+    print("Second classification: ");
+    print(get_classification_2(c));
+    print("\n");
+}
+
+u8[32] get_classification_1(u8 c){
+    while(c > 0){
+        if(c == 'A'){
+            return "Letter is 'A'-like";
+        }
+
+        if(c == 'P'){
+            return "Letter is 'P'-like";
+        }
+
+        if(c == 'S'){
+            return "Letter is 'S'-like";
+        }
+
+        c -= 1;
+    }
+
+    return "Letter is unknown-like";
+}
+
+u8[32] get_classification_2(u8 c){
+    do {
+        if(c == 'A'){
+            return "Letter is 'A'-like";
+        }
+
+        if(c == 'P'){
+            return "Letter is 'P'-like";
+        }
+
+        if(c == 'S'){
+            return "Letter is 'S'-like";
+        }
+
+        c -= 1;
+    } while(c > 0);
+
+    return "Letter is unknown-like";
+}
+

@@ -373,6 +373,8 @@ u32 lex(){
                     tokens[num_tokens - 1].kind = TOKEN_STRUCT;
                 } else if(lexed.consumed == 6 && memcmp(code_buffer, "return", 6) == 0){
                     tokens[num_tokens - 1].kind = TOKEN_RETURN;
+                } else if(lexed.consumed == 5 && memcmp(code_buffer, "break", 5) == 0){
+                    tokens[num_tokens - 1].kind = TOKEN_BREAK;
                 } else {
                     tokens[num_tokens - 1].data = num_aux;
 

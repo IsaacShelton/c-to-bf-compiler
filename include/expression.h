@@ -55,6 +55,7 @@ enum {
     EXPRESSION_DO_WHILE, /* { condition, num_statements } */
     EXPRESSION_MEMBER, /* { subject, member_name } */
     EXPRESSION_STRING, /* { null_terminated_string } */
+    EXPRESSION_BREAK,
 };
 typedef u8 ExpressionKind;
 

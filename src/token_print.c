@@ -184,6 +184,9 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_RETURN:
         printf("return");
         break;
+    case TOKEN_BREAK:
+        printf("break");
+        break;
     default:
         printf("<unknown>");
     }

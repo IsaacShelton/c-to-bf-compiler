@@ -13,6 +13,9 @@ typedef struct {
     u1 can_function_early_return;
     u16 num_early_return_closes_needed;
     u32 incomplete_cell;
+    u1 can_break;
+    u32 didnt_break_cell;
+    u16 num_break_check_closes_needed;
 } EmitContext;
 
 EmitContext emit_context;

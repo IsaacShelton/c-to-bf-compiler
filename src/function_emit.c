@@ -140,6 +140,10 @@ static ErrorCode emit_if_like(Expression expression);
 static ErrorCode emit_while(Expression expression);
 static ErrorCode emit_do_while(Expression expression);
 
+static u1 can_statement_break_current_level(u32 statement_index);
+static u1 can_statements_break_current_level(u32 start_statement_i, u32 stop_statement_i);
+static u1 can_loop_break(u32 statement_index);
+
 static u0 emit_early_return_check(){
     if(emit_context.can_function_early_return){
         u32 offset = emit_context.current_cell_index - emit_context.incomplete_cell;
@@ -149,6 +153,18 @@ static u0 emit_early_return_check(){
 
         // Remember to close at end of function
         emit_context.num_early_return_closes_needed++;
+    }
+}
+
+static u0 emit_break_check(){
+    if(emit_context.can_break){
+        u32 offset = emit_context.current_cell_index - emit_context.didnt_break_cell;
+
+        // Ensure 'didnt_break_cell' cell is still true
+        printf("%d<[%d>", offset, offset);
+
+        // Remember to close at end of function
+        emit_context.num_break_check_closes_needed++;
     }
 }
 
@@ -180,6 +196,34 @@ static u0 emit_post_loop_condition_early_return_check(){
     }
 }
 
+static u0 emit_pre_loop_condition_break_check(){
+    if(emit_context.can_break){
+        // Allocate 1 cell for default condition value of false or eventual evaluated condition
+        printf("[-]>");
+        emit_context.current_cell_index++;
+
+        // Copy 'didnt_break_cell' cell
+        copy_cell_static(emit_context.didnt_break_cell);
+
+        // Go to copied cell
+        printf("<");
+        emit_context.current_cell_index--;
+
+        // If loop hasn't been broken yet
+        printf("[<");
+        emit_context.current_cell_index--;
+    }
+}
+
+static u0 emit_post_loop_condition_break_check(){
+    if(emit_context.can_break){
+        // Remain pointing at next available cell
+
+        // Close if
+        printf("[-]]");
+    }
+}
+
 u0 emit_early_return_closes_until(u16 num_early_return_closes_to_leave){
     if(emit_context.num_early_return_closes_needed > num_early_return_closes_to_leave){
         u32 amount = emit_context.num_early_return_closes_needed - num_early_return_closes_to_leave;
@@ -203,6 +247,31 @@ u0 emit_early_return_closes_until(u16 num_early_return_closes_to_leave){
         // (emit_context.current_cell_index remains unchanged)
 
         emit_context.num_early_return_closes_needed = num_early_return_closes_to_leave;
+    }
+}
+
+u0 emit_break_check_closes(){
+    if(emit_context.num_break_check_closes_needed > 0){
+        u32 offset = emit_context.current_cell_index - emit_context.didnt_break_cell;
+
+        // Zero temporary 'restoration_copy' cell
+        printf("[-]");
+
+        // Go to 'didnt_break_cell' cell
+        printf("%d<", offset);
+
+        // Move 'didnt_break_cell' cell to 'restoration_copy' cell
+        printf("[%d>+%d<-]", offset, offset);
+
+        // Close early return checks
+        printf("%d]", emit_context.num_break_check_closes_needed);
+
+        // Restore 'didnt_break_cell' cell from copy and go back to cell where came from
+        printf("%d>[%d<+%d>-]", offset, offset, offset);
+
+        // (emit_context.current_cell_index remains unchanged)
+
+        emit_context.num_break_check_closes_needed = 0;
     }
 }
 
@@ -237,8 +306,8 @@ static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i){
                     printf("\nerror on line %d: Statement result ignored\n", u24_unpack(expression.line));
                     return 1;
                 }
-
-                if(expression.kind == EXPRESSION_RETURN){
+                
+                if(expression.kind == EXPRESSION_RETURN || expression.kind == EXPRESSION_BREAK){
                     return 0;
                 }
             }
@@ -325,12 +394,23 @@ static ErrorCode emit_if_like(Expression expression){
         emit_context.current_cell_index--;
     }
 
+    emit_break_check();
     emit_early_return_check();
     return 0;
 }
 
 static ErrorCode emit_while(Expression expression){
     // Emits code for if/if-else statements
+
+    u1 was_breakable = emit_context.can_break;
+    u32 old_didnt_break_cell = emit_context.didnt_break_cell;
+    emit_context.can_break = can_loop_break(emit_context.current_statement);
+
+    if(emit_context.can_break){
+        // Allocate 'didnt_break_cell'
+        printf("[-]+>");
+        emit_context.didnt_break_cell = emit_context.current_cell_index++;
+    }
 
     u32 starting_cell_index = emit_context.current_cell_index;
     
@@ -357,6 +437,7 @@ static ErrorCode emit_while(Expression expression){
     // Emit 'while' body
     u16 early_return_watermark = emit_context.num_early_return_closes_needed;
     emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1);
+    emit_break_check_closes();
     emit_early_return_closes_until(early_return_watermark);
 
     // Deallocate variables
@@ -367,7 +448,9 @@ static ErrorCode emit_while(Expression expression){
 
     // Re-evaluate condition (should never fail)
     emit_pre_loop_condition_early_return_check();
+    emit_pre_loop_condition_break_check();
     expression_emit(expressions[operands[expression.ops]]);
+    emit_post_loop_condition_break_check();
     emit_post_loop_condition_early_return_check();
 
     // Go to 'condition' cell
@@ -377,12 +460,32 @@ static ErrorCode emit_while(Expression expression){
     // End while
     printf("]");
 
+    // Deallocate 'didnt_break_cell' if used
+    if(emit_context.can_break){
+        printf("<");
+        emit_context.current_cell_index--;
+    }
+
+    emit_context.can_break = was_breakable;
+    emit_context.didnt_break_cell = old_didnt_break_cell;
+
+    emit_break_check();
     emit_early_return_check();
     return 0;
 }
 
 static ErrorCode emit_do_while(Expression expression){
     // Emits code for if/if-else statements
+
+    u1 was_breakable = emit_context.can_break;
+    u32 old_didnt_break_cell = emit_context.didnt_break_cell;
+    emit_context.can_break = can_loop_break(emit_context.current_statement);
+
+    if(emit_context.can_break){
+        // Allocate 'didnt_break_cell'
+        printf("[-]+>");
+        emit_context.didnt_break_cell = emit_context.current_cell_index++;
+    }
 
     u32 starting_cell_index = emit_context.current_cell_index;
 
@@ -395,6 +498,7 @@ static ErrorCode emit_do_while(Expression expression){
     // Emit 'do-while' body
     u16 early_return_watermark = emit_context.num_early_return_closes_needed;
     emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1);
+    emit_break_check_closes();
     emit_early_return_closes_until(early_return_watermark);
 
     // Deallocate variables
@@ -405,8 +509,10 @@ static ErrorCode emit_do_while(Expression expression){
 
     // Evaluate condition
     emit_pre_loop_condition_early_return_check();
+    emit_pre_loop_condition_break_check();
     u32 condition_type = expression_emit(expressions[operands[expression.ops]]);
     if(condition_type >= TYPES_CAPACITY) return 1;
+    emit_post_loop_condition_break_check();
     emit_post_loop_condition_early_return_check();
 
     if(condition_type != u1_type){
@@ -422,7 +528,17 @@ static ErrorCode emit_do_while(Expression expression){
 
     // End while
     printf("]");
+    
+    // Deallocate 'didnt_break_cell' if used
+    if(emit_context.can_break){
+        printf("<");
+        emit_context.current_cell_index--;
+    }
 
+    emit_context.can_break = was_breakable;
+    emit_context.didnt_break_cell = old_didnt_break_cell;
+
+    emit_break_check();
     emit_early_return_check();
     return 0;
 }
@@ -464,6 +580,62 @@ u1 can_function_early_return(u32 function_index){
     return false;
 }
 
+static u1 can_statements_break_current_level(u32 start_statement_i, u32 stop_statement_i){
+    for(u32 i = start_statement_i; i < stop_statement_i; i++){
+        Expression expression = expressions[statements[i]];
+
+        switch(expression.kind){
+        case EXPRESSION_WHILE:
+        case EXPRESSION_DO_WHILE:
+            i += operands[expression.ops + 1];
+            break;
+        default:
+            if(can_statement_break_current_level(i)){
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+static u1 can_statement_break_current_level(u32 statement_index){
+    Expression expression = expressions[statements[statement_index]];
+
+    switch(expression.kind){
+    case EXPRESSION_IF: {
+            u32 num_then = operands[expression.ops + 1];
+            return can_statements_break_current_level(statement_index + 1, statement_index + 1 + num_then);
+        }
+        break;
+    case EXPRESSION_IF_ELSE: {
+            u32 num_then = operands[expression.ops + 1];
+            u32 num_else = operands[expression.ops + 2];
+            return can_statements_break_current_level(statement_index + 1, statement_index + 1 + num_then + num_else);
+        }
+        break;
+    case EXPRESSION_BREAK:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static u1 can_loop_break(u32 statement_index){
+    Expression container = expressions[statements[statement_index]];
+
+    switch(container.kind){
+    case EXPRESSION_WHILE:
+    case EXPRESSION_DO_WHILE: {
+            u32 num_inside = operands[container.ops + 1];
+            return can_statements_break_current_level(statement_index + 1, statement_index + 1 + num_inside);
+        }
+        break;
+    default:
+        return can_statement_break_current_level(statement_index);
+    }
+}
+
 ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 start_current_cell_index){
     Function function = functions[function_index];
     u1 can_early_return = can_function_early_return(function_index);
@@ -479,6 +651,8 @@ ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 s
         .can_function_early_return = can_early_return,
         .num_early_return_closes_needed = 0,
         .incomplete_cell = -1,
+        .can_break = 0,
+        .didnt_break_cell = 0,
     };
     
     // Allocate 'incomplete' cell if function can return early

@@ -17,6 +17,7 @@ static ErrorCode parse_while();
 static ErrorCode parse_do_while();
 static ErrorCode parse_return();
 static ErrorCode parse_break();
+static ErrorCode parse_continue();
 
 ErrorCode parse_statement(){
     if(is_type_followed_by(TOKEN_WORD)){
@@ -31,6 +32,8 @@ ErrorCode parse_statement(){
         if(parse_return()) return 1;
     } else if(eat_token(TOKEN_BREAK)){
         if(parse_break()) return 1;
+    } else if(eat_token(TOKEN_CONTINUE)){
+        if(parse_continue()) return 1;
     } else {
         Expression statement = parse_expression();
         if(had_parse_error) return 1;
@@ -391,6 +394,19 @@ static ErrorCode parse_break(){
 
     Expression statement = (Expression){
         .kind = EXPRESSION_BREAK,
+        .line = tokens[parse_i - 1].line,
+        .ops = 0,
+    };
+
+    return !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
+}
+
+static ErrorCode parse_continue(){
+    // continue
+    //          ^
+
+    Expression statement = (Expression){
+        .kind = EXPRESSION_CONTINUE,
         .line = tokens[parse_i - 1].line,
         .ops = 0,
     };

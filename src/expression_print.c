@@ -7,6 +7,17 @@
 
 u0 expression_print(Expression expression){
     switch(expression.kind){
+    case EXPRESSION_RETURN: {
+            printf("return");
+
+            u32 return_value_index = operands[expression.ops];
+
+            if(return_value_index < EXPRESSIONS_CAPACITY){
+                printf(" ");
+                expression_print(expressions[return_value_index]);
+            }
+        }
+        break;
     case EXPRESSION_DECLARE:
         type_print(types[operands[expression.ops]]);
         printf(" ");
@@ -144,6 +155,12 @@ u0 expression_print(Expression expression){
         printf("\"");
         print_aux_cstr_escaped(expression.ops);
         printf("\"");
+        break;
+    case EXPRESSION_BREAK:
+        printf("break");
+        break;
+    case EXPRESSION_CONTINUE:
+        printf("continue");
         break;
     default:
         printf("<unknown expression>");

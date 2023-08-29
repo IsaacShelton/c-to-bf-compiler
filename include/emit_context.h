@@ -16,6 +16,9 @@ typedef struct {
     u1 can_break;
     u32 didnt_break_cell;
     u16 num_break_check_closes_needed;
+    u1 can_continue;
+    u32 didnt_continue_cell;
+    u16 num_continue_check_closes_needed;
 } EmitContext;
 
 EmitContext emit_context;

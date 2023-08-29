@@ -324,12 +324,19 @@ u32 lex(){
 
     u8 c = get();
 
+    if(c != 0){
+        code_buffer[code_buffer_length++] = c;
+    }
+
     // Lex
     while(true){
         // (Re)-fill buffer
         while(code_buffer_length != CODE_BUFFER_CAPACITY && c){
-            code_buffer[code_buffer_length++] = c;
             c = get();
+
+            if(c != 0){
+                code_buffer[code_buffer_length++] = c;
+            }
         }
 
         // Process one token
@@ -375,6 +382,8 @@ u32 lex(){
                     tokens[num_tokens - 1].kind = TOKEN_RETURN;
                 } else if(lexed.consumed == 5 && memcmp(code_buffer, "break", 5) == 0){
                     tokens[num_tokens - 1].kind = TOKEN_BREAK;
+                } else if(lexed.consumed == 8 && memcmp(code_buffer, "continue", 8) == 0){
+                    tokens[num_tokens - 1].kind = TOKEN_CONTINUE;
                 } else {
                     tokens[num_tokens - 1].data = num_aux;
 

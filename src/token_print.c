@@ -58,6 +58,9 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_INT:
         printf("%d", token.data);
         break;
+    case TOKEN_NEXT:
+        printf(",");
+        break;
     case TOKEN_ASSIGN:
         printf("=");
         break;
@@ -186,6 +189,9 @@ u0 token_print(Token token, u1 safe){
         break;
     case TOKEN_BREAK:
         printf("break");
+        break;
+    case TOKEN_CONTINUE:
+        printf("continue");
         break;
     default:
         printf("<unknown>");

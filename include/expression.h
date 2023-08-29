@@ -56,6 +56,7 @@ enum {
     EXPRESSION_MEMBER, /* { subject, member_name } */
     EXPRESSION_STRING, /* { null_terminated_string } */
     EXPRESSION_BREAK,
+    EXPRESSION_CONTINUE,
 };
 typedef u8 ExpressionKind;
 

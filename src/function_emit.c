@@ -404,6 +404,8 @@ static ErrorCode emit_while(Expression expression){
 
     u1 was_breakable = emit_context.can_break;
     u32 old_didnt_break_cell = emit_context.didnt_break_cell;
+    u32 old_num_break_check_closes_needed = emit_context.num_break_check_closes_needed;
+
     emit_context.can_break = can_loop_break(emit_context.current_statement);
 
     if(emit_context.can_break){
@@ -468,6 +470,7 @@ static ErrorCode emit_while(Expression expression){
 
     emit_context.can_break = was_breakable;
     emit_context.didnt_break_cell = old_didnt_break_cell;
+    emit_context.num_break_check_closes_needed = old_num_break_check_closes_needed;
 
     emit_break_check();
     emit_early_return_check();
@@ -479,6 +482,8 @@ static ErrorCode emit_do_while(Expression expression){
 
     u1 was_breakable = emit_context.can_break;
     u32 old_didnt_break_cell = emit_context.didnt_break_cell;
+    u32 old_num_break_check_closes_needed = emit_context.num_break_check_closes_needed;
+
     emit_context.can_break = can_loop_break(emit_context.current_statement);
 
     if(emit_context.can_break){
@@ -537,6 +542,7 @@ static ErrorCode emit_do_while(Expression expression){
 
     emit_context.can_break = was_breakable;
     emit_context.didnt_break_cell = old_didnt_break_cell;
+    emit_context.num_break_check_closes_needed = old_num_break_check_closes_needed;
 
     emit_break_check();
     emit_early_return_check();

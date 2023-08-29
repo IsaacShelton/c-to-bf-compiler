@@ -15,6 +15,7 @@ set -ex
 "$self/../peck" "$self/divmod.peck"
 "$self/../peck" "$self/do_while.peck"
 "$self/../peck" "$self/do_while_break.peck"
+"$self/../peck" "$self/do_while_break_nested.peck"
 "$self/../peck" "$self/early_return.peck"
 "$self/../peck" "$self/early_return_in_loop.peck"
 "$self/../peck" "$self/empty_global.peck"
@@ -50,4 +51,5 @@ set -ex
 "$self/../peck" "$self/variable_usage_simple.peck"
 "$self/../peck" "$self/while.peck"
 "$self/../peck" "$self/while_break.peck"
+"$self/../peck" "$self/while_break_nested.peck"
 

@@ -1,0 +1,32 @@
+
+u0 main(){
+    u8[6] letters = "ABCDEF";
+
+    u8 j = 0;
+
+    while(j < 7){
+        u8 c = letters[j];
+
+        u8 i = 0;
+
+        do {
+            if(c == letters[i]){
+                break;
+            }
+
+            i += 1;
+        } while(i < 6);
+
+        if(i == 6){
+            print("Could not find\n");
+        } else {
+            print("Found at index ");
+            printu8(i);
+            print("\n");
+        }
+
+        j += 1;
+    }
+}
+
+

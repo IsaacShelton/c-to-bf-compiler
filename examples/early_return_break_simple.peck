@@ -1,0 +1,37 @@
+
+u0 main(){
+    u8[16] complete_message = "Completed test.";
+
+    print(get_message(true, true));
+    print("\n");
+    print(get_message(true, false));
+    print("\n");
+    print(get_message(false, true));
+    print("\n");
+    print(get_message(false, false));
+    print("\n");
+
+    print(complete_message);
+    print("\n");
+}
+
+u8[16] get_message(u1 condition_a, u1 condition_b){
+    if(condition_a && condition_b){
+        return "Greetings";
+    }
+
+    while(true){
+        if(condition_a){
+            return "Hello World";
+        }
+
+        if(condition_b){
+            break;
+        }
+
+        return "Goodbye.";
+    }
+
+    return "Bye World";
+}
+

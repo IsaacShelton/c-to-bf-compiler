@@ -12,6 +12,13 @@
 #include "typedef.h"
 #include "utypes.h"
 
+enum {
+    CLOSE_NEEDED_FOR_EARLY_RETURN_CHECK,
+    CLOSE_NEEDED_FOR_BREAK_CHECK,
+    CLOSE_NEEDED_FOR_CONTINUE_CHECK,
+};
+typedef u8 CloseNeeded;
+
 extern u8 code_buffer[CODE_BUFFER_CAPACITY];
 extern u32 code_buffer_length;
 
@@ -44,6 +51,9 @@ extern u32 num_globals;
 
 extern TypeDef typedefs[TYPEDEFS_CAPACITY];
 extern u32 num_typedefs;
+
+extern CloseNeeded closes_needed[CLOSES_NEEDED_CAPCAITY];
+extern u32 num_closes_needed;
 
 u32 add_type(Type type);
 u32 add_dimensions(u32 type_dimensions[4]);

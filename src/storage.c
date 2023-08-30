@@ -39,10 +39,13 @@ u32 operands[OPERANDS_CAPACITY];
 u32 num_operands = 0;
 
 Global globals[GLOBALS_CAPACITY];
-u32 num_globals;
+u32 num_globals = 0;
 
 TypeDef typedefs[TYPEDEFS_CAPACITY];
-u32 num_typedefs;
+u32 num_typedefs = 0;
+
+CloseNeeded closes_needed[CLOSES_NEEDED_CAPCAITY];
+u32 num_closes_needed = 0;
 
 u32 add_type(Type type){
     for(u32 i = 0; i < num_types; i++){

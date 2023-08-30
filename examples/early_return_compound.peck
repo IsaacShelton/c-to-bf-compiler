@@ -1,0 +1,39 @@
+
+u0 main(){
+    u8[16] complete_message = "Completed test.";
+
+    print(get_message(true, true, true));
+    print("\n");
+    print(get_message(true, false, true));
+    print("\n");
+    print(get_message(false, true, true));
+    print("\n");
+    print(get_message(false, false, true));
+    print("\n");
+
+    print(complete_message);
+    print("\n");
+}
+
+u8[16] get_message(u1 condition_a, u1 condition_b, u1 condition_c){
+    print(">>> ");
+    printu1(condition_a);
+    print(" ");
+    printu1(condition_b);
+    print(" ");
+    printu1(condition_c);
+    print("\n");
+
+    u8[16] result = "Unchanged";
+    
+    if(condition_a && condition_b){
+        if(false){
+            return "Greetings";
+        } else {
+            result = "Greetings";
+        }
+    }
+
+    return result;
+}
+

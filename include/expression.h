@@ -51,8 +51,8 @@ enum {
     EXPRESSION_TERNARY, /* { condition, when_true, when_false } */
     EXPRESSION_IF, /* { condition, num_statements } */
     EXPRESSION_IF_ELSE, /* { condition, num_statements, num_else_statements } */
-    EXPRESSION_WHILE, /* { condition, num_statements } */
-    EXPRESSION_DO_WHILE, /* { condition, num_statements } */
+    EXPRESSION_WHILE, /* { condition, num_statements, computed_might_break } */
+    EXPRESSION_DO_WHILE, /* { condition, num_statements, computed_might_break } */
     EXPRESSION_MEMBER, /* { subject, member_name } */
     EXPRESSION_STRING, /* { null_terminated_string } */
     EXPRESSION_BREAK,

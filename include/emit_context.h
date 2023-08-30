@@ -11,14 +11,11 @@ typedef struct {
     u32 current_statement;
     u1 in_recursive_function;
     u1 can_function_early_return;
-    u16 num_early_return_closes_needed;
     u32 incomplete_cell;
     u1 can_break;
     u32 didnt_break_cell;
-    u16 num_break_check_closes_needed;
     u1 can_continue;
     u32 didnt_continue_cell;
-    u16 num_continue_check_closes_needed;
 } EmitContext;
 
 EmitContext emit_context;

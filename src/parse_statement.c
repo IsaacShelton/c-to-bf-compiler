@@ -282,7 +282,7 @@ static ErrorCode parse_while(){
         return 1;
     }
 
-    u32 ops = add_operands2(condition, 0);
+    u32 ops = add_operands3(condition, 0, 0);
     if(ops >= OPERANDS_CAPACITY){
         stop_parsing();
         return 1;
@@ -354,7 +354,7 @@ static ErrorCode parse_do_while(){
         return 1;
     }
 
-    u32 ops = add_operands2(condition, num_inside);
+    u32 ops = add_operands3(condition, num_inside, 0);
     if(ops >= OPERANDS_CAPACITY){
         stop_parsing();
         return 1;

@@ -1,0 +1,29 @@
+
+u0 main(){
+    u8[4] complete_message = "Done";
+
+    print(get_message());
+    print("\n");
+
+    print(complete_message);
+    print("\n");
+}
+
+u8[2] get_message(){
+    u8[2] result = "no";
+    
+    while(true){
+        while(true){
+            if(true){
+                return "ok";
+            }
+
+            break;
+        }
+
+        break;
+    }
+
+    return "aa";
+}
+

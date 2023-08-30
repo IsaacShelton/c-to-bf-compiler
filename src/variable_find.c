@@ -71,6 +71,7 @@ u32 find_declaration(u32 start_statement, u32 stop_statement, u32 name){
 typedef struct {
     u32 delta_i;
     u32 delta_depth;
+    u32 delta_offset;
 } HoneInfo;
 
 HoneInfo hone_statement(u32 current_statement, u32 target_statement){
@@ -81,15 +82,43 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
             u32 num_statements = operands[expression.ops + 1];
 
             if(target_statement <= current_statement + num_statements){
-                return (HoneInfo){ .delta_i = 0, .delta_depth = 1 };
+                return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = 0 };
             } else {
-                return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0 };
+                return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = 0 };
+            }
+        }
+        break;
+    case EXPRESSION_IF_ELSE: {
+            u32 num_then = operands[expression.ops + 1];
+            u32 num_else = operands[expression.ops + 2];
+
+            if(target_statement <= current_statement + num_then){
+                return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = 0 };
+            } else if(target_statement <= current_statement + num_then + num_else){
+                return (HoneInfo){ .delta_i = num_then, .delta_depth = 1, .delta_offset = 0 };
+            } else {
+                return (HoneInfo){ .delta_i = num_then + num_else, .delta_depth = 0, .delta_offset = 0 };
+            }
+        }
+        break;
+    case EXPRESSION_WHILE:
+    case EXPRESSION_DO_WHILE: {
+            u32 num_statements = operands[expression.ops + 1];
+            u32 can_break = operands[expression.ops + 2];
+
+            u32 outside_variable_offset = (u32) can_break;
+            u32 inside_variable_offset = outside_variable_offset;
+
+            if(target_statement <= current_statement + num_statements){
+                return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = inside_variable_offset };
+            } else {
+                return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = outside_variable_offset };
             }
         }
         break;
     }
 
-    return (HoneInfo){ .delta_i = 0, .delta_depth = 0 };
+    return (HoneInfo){ .delta_i = 0, .delta_depth = 0, .delta_offset = 0 };
 }
 
 Variable get_variable_location_from_declaration_statement(u32 statement_index){
@@ -98,9 +127,14 @@ Variable get_variable_location_from_declaration_statement(u32 statement_index){
     u32 depth = 1;
     u32 offset = 0;
     u32 function_begin = functions[emit_context.function].begin;
+    u32 function_arity = functions[emit_context.function].arity;
 
     for(u32 i = function_begin; i < statement_index; i++){
         Expression expression = expressions[statements[i]];
+
+        if(emit_context.can_function_early_return && i == function_begin + function_arity + 1){
+            offset++;
+        }
 
         if(expression.kind == EXPRESSION_DECLARE){
             u32 type_size = type_sizeof_or_max(operands[expression.ops]);
@@ -112,6 +146,7 @@ Variable get_variable_location_from_declaration_statement(u32 statement_index){
             HoneInfo hone_info = hone_statement(i, statement_index);
             i += hone_info.delta_i;
             depth += hone_info.delta_depth;
+            offset += hone_info.delta_offset;
         }
     }
 

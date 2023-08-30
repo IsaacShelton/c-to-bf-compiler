@@ -1,0 +1,85 @@
+
+u0 main(){
+    u8[16] complete_message = "Completed test.";
+
+    print(get_message(true, true, true));
+    print("\n");
+    print(get_message(true, false, true));
+    print("\n");
+    print(get_message(false, true, true));
+    print("\n");
+    print(get_message(false, false, true));
+    print("\n");
+
+    print("\n");
+
+    print(get_message(true, true, false));
+    print("\n");
+
+    print(get_message(true, false, false));
+    print("\n");
+
+    print(get_message(false, true, false));
+    print("\n");
+    print(get_message(false, false, false));
+    print("\n");
+
+    print(complete_message);
+    print("\n");
+}
+
+u8[16] get_message(u1 condition_a, u1 condition_b, u1 condition_c){
+    u8[16] result;
+    print(">>> ");
+    printu1(condition_a);
+    print(" ");
+    printu1(condition_b);
+    print(" ");
+    printu1(condition_c);
+    print("\n");
+    
+    while(true){
+        if(condition_a && condition_b){
+            if(condition_c){
+                result = "Greetings";
+                break;
+            } else {
+                return "Greetings";
+            }
+        }
+
+        while(true){
+            if(condition_a){
+                if(condition_c){
+                    result = "Hello World";
+                    break;
+                } else {
+                    return "Hello World";
+                }
+            }
+
+            if(condition_b){
+                if(condition_c){
+                    result = "Bye World";
+                    break;
+                } else {
+                    return "Bye World";
+                }
+            }
+
+            if(condition_c){
+                result = "Goodbye.";
+                break;
+            } else {
+                return "Goodbye.";
+            }
+
+            break;
+        }
+
+        break;
+    }
+
+    return result;
+}
+

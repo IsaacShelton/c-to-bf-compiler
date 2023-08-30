@@ -104,15 +104,12 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
     case EXPRESSION_WHILE:
     case EXPRESSION_DO_WHILE: {
             u32 num_statements = operands[expression.ops + 1];
-            u32 can_break = operands[expression.ops + 2];
-
-            u32 outside_variable_offset = (u32) can_break;
-            u32 inside_variable_offset = outside_variable_offset;
+            u32 inner_variable_offset = operands[expression.ops + 2];
 
             if(target_statement <= current_statement + num_statements){
-                return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = inside_variable_offset };
+                return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = inner_variable_offset };
             } else {
-                return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = outside_variable_offset };
+                return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = 0 };
             }
         }
         break;

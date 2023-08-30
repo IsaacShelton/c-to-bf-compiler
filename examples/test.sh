@@ -16,6 +16,7 @@ set -ex
 "$self/../peck" "$self/do_while.peck"
 "$self/../peck" "$self/do_while_break.peck"
 "$self/../peck" "$self/do_while_break_nested.peck"
+"$self/../peck" "$self/do_while_continue.peck"
 "$self/../peck" "$self/early_return.peck"
 "$self/../peck" "$self/early_return_break.peck"
 "$self/../peck" "$self/early_return_break_simple.peck"
@@ -56,4 +57,5 @@ set -ex
 "$self/../peck" "$self/while.peck"
 "$self/../peck" "$self/while_break.peck"
 "$self/../peck" "$self/while_break_nested.peck"
+"$self/../peck" "$self/while_continue.peck"
 

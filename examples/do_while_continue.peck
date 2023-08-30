@@ -1,0 +1,16 @@
+
+u0 main(){
+    u8 i = 6;
+
+    do {
+        i -= 1;
+
+        if(i == 3){
+            continue;
+        }
+
+        put('0' + i);
+        print("\n");
+    } while(i > 1);
+}
+

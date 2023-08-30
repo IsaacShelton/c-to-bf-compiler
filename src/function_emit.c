@@ -143,6 +143,9 @@ static ErrorCode emit_do_while(Expression expression);
 static u1 can_statement_break_current_level(u32 statement_index);
 static u1 can_statements_break_current_level(u32 start_statement_i, u32 stop_statement_i);
 static u1 can_loop_break(u32 statement_index);
+static u1 can_statement_continue_current_level(u32 statement_index);
+static u1 can_statements_continue_current_level(u32 start_statement_i, u32 stop_statement_i);
+static u1 can_loop_continue(u32 statement_index);
 
 static ErrorCode add_close_needed(CloseNeeded close_needed){
     if(num_closes_needed >= CLOSES_NEEDED_CAPCAITY){
@@ -175,6 +178,19 @@ static ErrorCode emit_break_check(){
         printf("[-]%d<[%d>", offset, offset);
 
         return add_close_needed(CLOSE_NEEDED_FOR_BREAK_CHECK);
+    } else {
+        return 0;
+    }
+}
+
+static ErrorCode emit_continue_check(){
+    if(emit_context.can_continue){
+        u32 offset = emit_context.current_cell_index - emit_context.didnt_continue_cell;
+
+        // Allocate temporary cell, and ensure 'didnt_continue_cell' cell is still true
+        printf("[-]%d<[%d>", offset, offset);
+
+        return add_close_needed(CLOSE_NEEDED_FOR_CONTINUE_CHECK);
     } else {
         return 0;
     }
@@ -319,7 +335,7 @@ static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i){
                     return 1;
                 }
                 
-                if(expression.kind == EXPRESSION_RETURN || expression.kind == EXPRESSION_BREAK){
+                if(expression.kind == EXPRESSION_RETURN || expression.kind == EXPRESSION_BREAK || expression.kind == EXPRESSION_CONTINUE){
                     i = stop_statement_i;
                 }
             }
@@ -411,25 +427,65 @@ static ErrorCode emit_if_like(Expression expression){
         emit_context.current_cell_index--;
     }
 
-    return emit_break_check() || emit_early_return_check();
+    return emit_break_check() || emit_continue_check() || emit_early_return_check();
 }
 
-static ErrorCode emit_while(Expression expression){
-    // Emits code for if/if-else statements
+static u0 emit_reset_didnt_continue(){
+    if(emit_context.can_continue){
+        u32 offset = emit_context.current_cell_index - emit_context.didnt_continue_cell;
 
-    u1 was_breakable = emit_context.can_break;
-    u32 old_didnt_break_cell = emit_context.didnt_break_cell;
+        // Set 'didnt_continue_cell' to true
+        printf("%d<[-]+%d>", offset, offset);
+    }
+}
 
+static u0 enter_maybe_breakable_continuable_region(Expression expression, u32 inner_variable_offset_ops_offset){
     emit_context.can_break = can_loop_break(emit_context.current_statement);
+    emit_context.can_continue = can_loop_continue(emit_context.current_statement);
+
+    // Start inner variable offset at zero
+    operands[expression.ops + 2] = 0;
 
     if(emit_context.can_break){
         // Allocate 'didnt_break_cell'
         printf("[-]+>");
         emit_context.didnt_break_cell = emit_context.current_cell_index++;
 
-        // Remember that can break
-        operands[expression.ops + 2] = true;
+        // Increase inner variable offset
+        operands[expression.ops + inner_variable_offset_ops_offset]++;
     }
+
+    if(emit_context.can_continue){
+        // Allocate 'didnt_continue_cell'
+        printf("[-]+>");
+        emit_context.didnt_continue_cell = emit_context.current_cell_index++;
+
+        // Increase inner variable offset
+        operands[expression.ops + inner_variable_offset_ops_offset]++;
+    }
+}
+
+static u0 exit_maybe_breakable_continuable_region(){
+    // Deallocate 'didnt_continue_cell' if used
+    if(emit_context.can_continue){
+        printf("<");
+        emit_context.current_cell_index--;
+    }
+
+    // Deallocate 'didnt_break_cell' if used
+    if(emit_context.can_break){
+        printf("<");
+        emit_context.current_cell_index--;
+    }
+}
+
+static ErrorCode emit_while(Expression expression){
+    u1 was_breakable = emit_context.can_break;
+    u1 was_continuable = emit_context.can_continue;
+    u32 old_didnt_break_cell = emit_context.didnt_break_cell;
+    u32 old_didnt_continue_cell = emit_context.didnt_continue_cell;
+
+    enter_maybe_breakable_continuable_region(expression, 2);
 
     u32 starting_cell_index = emit_context.current_cell_index;
     
@@ -452,6 +508,7 @@ static ErrorCode emit_while(Expression expression){
 
     // While 'condition' cell
     printf("[");
+    emit_reset_didnt_continue();
 
     // Emit 'while' body
     if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1)){
@@ -478,34 +535,23 @@ static ErrorCode emit_while(Expression expression){
     // End while
     printf("]");
 
-    // Deallocate 'didnt_break_cell' if used
-    if(emit_context.can_break){
-        printf("<");
-        emit_context.current_cell_index--;
-    }
+    exit_maybe_breakable_continuable_region();
 
     emit_context.can_break = was_breakable;
+    emit_context.can_continue = was_continuable;
     emit_context.didnt_break_cell = old_didnt_break_cell;
+    emit_context.didnt_continue_cell = old_didnt_continue_cell;
 
-    return emit_break_check() || emit_early_return_check();
+    return emit_break_check() || emit_continue_check() || emit_early_return_check();
 }
 
 static ErrorCode emit_do_while(Expression expression){
-    // Emits code for if/if-else statements
-
     u1 was_breakable = emit_context.can_break;
+    u1 was_continuable = emit_context.can_continue;
     u32 old_didnt_break_cell = emit_context.didnt_break_cell;
+    u32 old_didnt_continue_cell = emit_context.didnt_continue_cell;
 
-    emit_context.can_break = can_loop_break(emit_context.current_statement);
-
-    if(emit_context.can_break){
-        // Allocate 'didnt_break_cell'
-        printf("[-]+>");
-        emit_context.didnt_break_cell = emit_context.current_cell_index++;
-
-        // Remember that can break
-        operands[expression.ops + 2] = true;
-    }
+    enter_maybe_breakable_continuable_region(expression, 2);
 
     u32 starting_cell_index = emit_context.current_cell_index;
 
@@ -514,6 +560,7 @@ static ErrorCode emit_do_while(Expression expression){
 
     // While 'condition' cell
     printf("[");
+    emit_reset_didnt_continue();
     
     // Emit 'do-while' body
     if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1)){
@@ -548,16 +595,14 @@ static ErrorCode emit_do_while(Expression expression){
     // End while
     printf("]");
     
-    // Deallocate 'didnt_break_cell' if used
-    if(emit_context.can_break){
-        printf("<");
-        emit_context.current_cell_index--;
-    }
+    exit_maybe_breakable_continuable_region();
 
     emit_context.can_break = was_breakable;
+    emit_context.can_continue = was_continuable;
     emit_context.didnt_break_cell = old_didnt_break_cell;
+    emit_context.didnt_continue_cell = old_didnt_continue_cell;
 
-    return emit_break_check() || emit_early_return_check();
+    return emit_break_check() || emit_continue_check() || emit_early_return_check();
 }
 
 u1 has_return_in_region(u32 start_statement_i, u32 stop_statement_i){
@@ -650,6 +695,62 @@ static u1 can_loop_break(u32 statement_index){
         break;
     default:
         return can_statement_break_current_level(statement_index);
+    }
+}
+
+static u1 can_statements_continue_current_level(u32 start_statement_i, u32 stop_statement_i){
+    for(u32 i = start_statement_i; i < stop_statement_i; i++){
+        Expression expression = expressions[statements[i]];
+
+        switch(expression.kind){
+        case EXPRESSION_WHILE:
+        case EXPRESSION_DO_WHILE:
+            i += operands[expression.ops + 1];
+            break;
+        default:
+            if(can_statement_continue_current_level(i)){
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+static u1 can_statement_continue_current_level(u32 statement_index){
+    Expression expression = expressions[statements[statement_index]];
+
+    switch(expression.kind){
+    case EXPRESSION_IF: {
+            u32 num_then = operands[expression.ops + 1];
+            return can_statements_continue_current_level(statement_index + 1, statement_index + 1 + num_then);
+        }
+        break;
+    case EXPRESSION_IF_ELSE: {
+            u32 num_then = operands[expression.ops + 1];
+            u32 num_else = operands[expression.ops + 2];
+            return can_statements_continue_current_level(statement_index + 1, statement_index + 1 + num_then + num_else);
+        }
+        break;
+    case EXPRESSION_CONTINUE:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static u1 can_loop_continue(u32 statement_index){
+    Expression container = expressions[statements[statement_index]];
+
+    switch(container.kind){
+    case EXPRESSION_WHILE:
+    case EXPRESSION_DO_WHILE: {
+            u32 num_inside = operands[container.ops + 1];
+            return can_statements_continue_current_level(statement_index + 1, statement_index + 1 + num_inside);
+        }
+        break;
+    default:
+        return can_statement_continue_current_level(statement_index);
     }
 }
 

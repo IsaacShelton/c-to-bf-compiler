@@ -1127,6 +1127,18 @@ static u32 expression_emit_break(Expression expression){
     return u0_type;
 }
 
+static u32 expression_emit_continue(Expression expression){
+    if(!emit_context.can_continue){
+        printf("\nerror on line %d: Cannot continue, nowhere to go\n", u24_unpack(expression.line));
+        return TYPES_CAPACITY;
+    }
+
+    // Zero 'didnt_continue_cell'
+    u32 offset = emit_context.current_cell_index - emit_context.didnt_continue_cell;
+    printf("%d<[-]%d>", offset, offset);
+    return u0_type;
+}
+
 u32 expression_emit(Expression expression){
     switch(expression.kind){
     case EXPRESSION_DECLARE: {
@@ -1244,6 +1256,8 @@ u32 expression_emit(Expression expression){
         return expression_emit_return(expression);
     case EXPRESSION_BREAK:
         return expression_emit_break(expression);
+    case EXPRESSION_CONTINUE:
+        return expression_emit_continue(expression);
     default:
         printf("\nerror: Unknown expression kind %d during expression_emit\n", expression.kind);
         return TYPES_CAPACITY;

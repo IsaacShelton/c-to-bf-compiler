@@ -176,6 +176,14 @@ u0 expression_print(Expression expression){
         type_print(types[expression.ops]);
         printf(")");
         break;
+    case EXPRESSION_SIZEOF_VALUE:
+        printf("sizeof ");
+        expression_print(expressions[expression.ops]);
+        break;
+    case EXPRESSION_SIZEOF_VALUE_U8:
+        printf("sizeof<u8> ");
+        expression_print(expressions[expression.ops]);
+        break;
     default:
         printf("<unknown expression>");
     }

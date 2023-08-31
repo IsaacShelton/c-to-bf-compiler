@@ -1162,6 +1162,27 @@ static u32 expression_emit_sizeof_type_u8(Expression expression){
     return u8_type;
 }
 
+static u32 expression_emit_sizeof_value_u8(Expression expression){
+    u32 expression_type = expression_get_type(expressions[expression.ops]);
+
+    if(expression_type > TYPES_CAPACITY){
+        printf("\nerror on line %d: Could not determine size of expression, perhaps you have undeclared variables?", u24_unpack(expression.line));
+        return TYPES_CAPACITY;
+    }
+
+    u32 size = type_sizeof_or_max(expression_type);
+
+    if(size > 255){
+        printf("\nerror on line %d: Cannot get size of '", u24_unpack(expression.line));
+        type_print(types[expression.ops]);
+        printf("' as 'u8', because its size exceeds 255 (is %d)\n", size);
+        return TYPES_CAPACITY;
+    }
+
+    emit_u8(size);
+    return u8_type;
+}
+
 u32 expression_emit(Expression expression){
     switch(expression.kind){
     case EXPRESSION_DECLARE: {
@@ -1286,6 +1307,9 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_SIZEOF_TYPE:
     case EXPRESSION_SIZEOF_TYPE_U8:
         return expression_emit_sizeof_type_u8(expression);
+    case EXPRESSION_SIZEOF_VALUE:
+    case EXPRESSION_SIZEOF_VALUE_U8:
+        return expression_emit_sizeof_value_u8(expression);
     default:
         printf("\nerror: Unknown expression kind %d during expression_emit\n", expression.kind);
         return TYPES_CAPACITY;

@@ -142,10 +142,20 @@ static Expression parse_expression_sizeof(u24 line_number){
             .ops = type_index,
         };
     } else {
-        printf("\nerror on line %d: Expected '(' after 'sizeof' keyword\n", current_line());
-        instead_got();
-        stop_parsing();
-        return (Expression){0};
+        Expression target_expression = parse_expression();
+        if(had_parse_error) return (Expression){0};
+
+        u32 target = add_expression(target_expression);
+        if(target >= EXPRESSIONS_CAPACITY){
+            stop_parsing();
+            return target_expression;
+        }
+
+        return (Expression){
+            .kind = EXPRESSION_SIZEOF_VALUE,
+            .line = line_number,
+            .ops = target,
+        };
     }
 }
 

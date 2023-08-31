@@ -38,6 +38,13 @@ ErrorCode parse_statement(){
         Expression statement = parse_expression();
         if(had_parse_error) return 1;
 
+        // Transform increments and decrements to expression with no result
+        if(statement.kind == EXPRESSION_POST_INCREMENT || statement.kind == EXPRESSION_PRE_INCREMENT){
+            statement.kind = EXPRESSION_NO_RESULT_INCREMENT;
+        } else if(statement.kind == EXPRESSION_POST_DECREMENT || statement.kind == EXPRESSION_PRE_DECREMENT){
+            statement.kind = EXPRESSION_NO_RESULT_DECREMENT;
+        }
+
         if(had_parse_error || !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY){
             return 1;
         }

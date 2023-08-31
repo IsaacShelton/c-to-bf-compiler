@@ -38,6 +38,8 @@ set -ex
 "$self/../peck" "$self/negate.peck"
 "$self/../peck" "$self/nested_expressions.peck"
 "$self/../peck" "$self/nested_while.peck"
+"$self/../peck" "$self/no_result_decrement.peck"
+"$self/../peck" "$self/no_result_increment.peck"
 "$self/../peck" "$self/not.peck"
 "$self/../peck" "$self/operator_assign.peck"
 "$self/../peck" "$self/post_increment_decrement.peck"

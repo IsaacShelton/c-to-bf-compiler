@@ -1,0 +1,15 @@
+
+u0 main(){
+    u8 letter = 'F';
+
+    while(letter >= 'A'){
+        put(letter);
+
+        // No result increment
+        letter--;
+    }
+
+    put('\n');
+}
+
+

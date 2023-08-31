@@ -72,10 +72,12 @@ u0 expression_print_operator(ExpressionKind kind){
         break;
     case EXPRESSION_PRE_INCREMENT:
     case EXPRESSION_POST_INCREMENT:
+    case EXPRESSION_NO_RESULT_INCREMENT:
         printf("++");
         break;
     case EXPRESSION_PRE_DECREMENT:
     case EXPRESSION_POST_DECREMENT:
+    case EXPRESSION_NO_RESULT_DECREMENT:
         printf("--");
         break;
     default:

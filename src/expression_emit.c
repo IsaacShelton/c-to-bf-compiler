@@ -623,6 +623,15 @@ u32 expression_emit_unary(Expression expression){
             return type;
         }
         break;
+    case EXPRESSION_NO_RESULT_INCREMENT:
+    case EXPRESSION_NO_RESULT_DECREMENT:
+        if(type == u8_type){
+            emit_u8(1);
+            emit_additive_u8(expression.kind == EXPRESSION_NO_RESULT_INCREMENT);
+            write_destination(u8_type, expressions[expression.ops], expression.line);
+            return u0_type;
+        }
+        break;
     }
 
     printf("\nerror on line %d: Cannot ", u24_unpack(expression.line));
@@ -1247,6 +1256,8 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_PRE_DECREMENT:
     case EXPRESSION_POST_INCREMENT:
     case EXPRESSION_POST_DECREMENT:
+    case EXPRESSION_NO_RESULT_INCREMENT:
+    case EXPRESSION_NO_RESULT_DECREMENT:
         return expression_emit_unary(expression);
     case EXPRESSION_TERNARY:
         return expression_emit_ternary(expression);

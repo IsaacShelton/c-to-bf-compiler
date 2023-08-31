@@ -8,6 +8,7 @@
 - `printu8` for numeric `u8`
 - `printu16` for numeric `u16`
 - `printu32` for numeric `u32`
+- `printf` for compile-time formatting (%d, %s, and %c)
 
 ### get and read
 - `get` for character `u8`

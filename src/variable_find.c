@@ -11,6 +11,8 @@ typedef struct {
     u32 self_statement;
     u32 start_statement;
     u32 stop_statement;
+    u32 secondary_start_statement;
+    u32 secondary_stop_statement;
 } Container;
 
 static Container get_parent_container(u32 statement_index){
@@ -22,6 +24,8 @@ static Container get_parent_container(u32 statement_index){
             .self_statement = STATEMENTS_CAPACITY,
             .start_statement = STATEMENTS_CAPACITY,
             .stop_statement = STATEMENTS_CAPACITY,
+            .secondary_start_statement = STATEMENTS_CAPACITY,
+            .secondary_stop_statement = STATEMENTS_CAPACITY,
         };
     }
 
@@ -39,8 +43,10 @@ static Container get_parent_container(u32 statement_index){
                 if(i + num_statements >= statement_index){
                     return (Container){
                         .self_statement = i,
-                        .start_statement = i,
+                        .start_statement = i + 1,
                         .stop_statement = i + num_statements + 1,
+                        .secondary_start_statement = STATEMENTS_CAPACITY,
+                        .secondary_stop_statement = STATEMENTS_CAPACITY,
                     };
                 }
             }
@@ -52,16 +58,20 @@ static Container get_parent_container(u32 statement_index){
                 if(i + num_then >= statement_index){
                     return (Container){
                         .self_statement = i,
-                        .start_statement = i,
+                        .start_statement = i + 1,
                         .stop_statement = i + num_then + 1,
+                        .secondary_start_statement = STATEMENTS_CAPACITY,
+                        .secondary_stop_statement = STATEMENTS_CAPACITY,
                     };
                 }
 
                 if(i + num_then + num_else >= statement_index){
                     return (Container){
                         .self_statement = i,
-                        .start_statement = i + num_then,
+                        .start_statement = i + num_then + 1,
                         .stop_statement = i + num_then + num_else + 1,
+                        .secondary_start_statement = STATEMENTS_CAPACITY,
+                        .secondary_stop_statement = STATEMENTS_CAPACITY,
                     };
                 }
             }
@@ -71,23 +81,36 @@ static Container get_parent_container(u32 statement_index){
                 u32 num_post = operands[expression.ops + 2];
                 u32 num_inside = operands[expression.ops + 3];
 
-                // Check pre-statements
+                // Check if in pre-statements
                 if(i + num_pre >= statement_index){
                     return (Container){
                         .self_statement = i,
-                        .start_statement = i,
+                        .start_statement = i + 1,
                         .stop_statement = i + num_pre + 1,
+                        .secondary_start_statement = STATEMENTS_CAPACITY,
+                        .secondary_stop_statement = STATEMENTS_CAPACITY,
                     };
                 }
 
-                // NOTE: We disallow referencing any variables created in the post-statements
+                // Check if in post-statements
+                if(i + num_pre >= statement_index){
+                    return (Container){
+                        .self_statement = i,
+                        .start_statement = i + num_pre + 1,
+                        .stop_statement = i + num_pre + num_post + 1,
+                        .secondary_start_statement = STATEMENTS_CAPACITY,
+                        .secondary_stop_statement = STATEMENTS_CAPACITY,
+                    };
+                }
 
-                // Check main body
+                // Check if in main body
                 if(i + num_pre + num_post + num_inside >= statement_index){
                     return (Container){
                         .self_statement = i,
-                        .start_statement = i + num_pre + num_post,
+                        .start_statement = i + num_pre + num_post + 1,
                         .stop_statement = i + num_pre + num_post + num_inside + 1,
+                        .secondary_start_statement = i + 1,
+                        .secondary_stop_statement = i + num_pre + 1,
                     };
                 }
             }
@@ -100,17 +123,34 @@ static Container get_parent_container(u32 statement_index){
         .self_statement = STATEMENTS_CAPACITY,
         .start_statement = function.begin,
         .stop_statement = function.begin + function.num_stmts + 1,
+        .secondary_start_statement = STATEMENTS_CAPACITY,
+        .secondary_stop_statement = STATEMENTS_CAPACITY,
     };
 }
 
 u32 find_declaration(u32 start_statement, u32 stop_statement, u32 name){
     // Returns STATEMENTS_CAPACITY when cannot find
 
-    for(u32 i = start_statement; i != stop_statement; i++){
+    for(u32 i = start_statement; i < stop_statement; i++){
         Expression expression = expressions[statements[i]];
 
-        if(expression.kind == EXPRESSION_DECLARE && aux_cstr_equals(operands[expression.ops + 1], name)){
-            return i;
+        switch(expression.kind){
+        case EXPRESSION_IF:
+        case EXPRESSION_WHILE:
+        case EXPRESSION_DO_WHILE:
+            i += operands[expression.ops + 1];
+            break;
+        case EXPRESSION_IF_ELSE:
+            i += operands[expression.ops + 1] + operands[expression.ops + 2];
+            break;
+        case EXPRESSION_FOR:
+            i += operands[expression.ops] + operands[expression.ops + 2] + operands[expression.ops + 3];
+            break;
+        case EXPRESSION_DECLARE:
+            if(aux_cstr_equals(operands[expression.ops + 1], name)){
+                return i;
+            }
+            break;
         }
     }
 
@@ -246,6 +286,14 @@ Variable variable_find(u32 name){
 
         if(declaration < STATEMENTS_CAPACITY){
             return get_variable_location_from_declaration_statement(declaration);
+        }
+
+        if(container.secondary_start_statement < STATEMENTS_CAPACITY){
+            declaration = find_declaration(container.secondary_start_statement, u32_min2(container.secondary_stop_statement, emit_context.current_statement), name);
+
+            if(declaration < STATEMENTS_CAPACITY){
+                return get_variable_location_from_declaration_statement(declaration);
+            }
         }
     }
 

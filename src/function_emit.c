@@ -449,7 +449,7 @@ static u0 enter_maybe_breakable_continuable_region(Expression expression, u32 in
     emit_context.can_continue = can_loop_continue(emit_context.current_statement);
 
     // Start inner variable offset at zero
-    operands[expression.ops + 2] = 0;
+    operands[expression.ops + inner_variable_offset_ops_offset] = 0;
 
     if(emit_context.can_break){
         // Allocate 'didnt_break_cell'

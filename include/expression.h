@@ -53,12 +53,13 @@ enum {
     EXPRESSION_TERNARY, /* { condition, when_true, when_false } */
     EXPRESSION_IF, /* { condition, num_statements } */
     EXPRESSION_IF_ELSE, /* { condition, num_statements, num_else_statements } */
-    EXPRESSION_WHILE, /* { condition, num_statements, computed_might_break } */
-    EXPRESSION_DO_WHILE, /* { condition, num_statements, computed_might_break } */
+    EXPRESSION_WHILE, /* { condition, num_statements, computed_inner_variable_offset } */
+    EXPRESSION_DO_WHILE, /* { condition, num_statements, computed_inner_variable_offset } */
     EXPRESSION_MEMBER, /* { subject, member_name } */
     EXPRESSION_STRING, /* { null_terminated_string } */
     EXPRESSION_BREAK,
     EXPRESSION_CONTINUE,
+    EXPRESSION_FOR, /* { num_pre_statements, condition, pre_post_statements, num_statements, computed_inner_variable_offset } */
 };
 typedef u8 ExpressionKind;
 

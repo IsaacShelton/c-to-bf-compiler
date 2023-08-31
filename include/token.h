@@ -68,6 +68,7 @@ enum {
     TOKEN_RETURN,
     TOKEN_BREAK,
     TOKEN_CONTINUE,
+    TOKEN_FOR,
 };
 
 typedef u8 TokenKind;

@@ -31,7 +31,9 @@ static Container get_parent_container(u32 statement_index){
         Expression expression = expressions[statements[i]];
 
         switch(expression.kind){
-        case EXPRESSION_IF: {
+        case EXPRESSION_IF:
+        case EXPRESSION_WHILE:
+        case EXPRESSION_DO_WHILE: {
                 u32 num_statements = operands[expression.ops + 1];
 
                 if(i + num_statements >= statement_index){
@@ -39,6 +41,53 @@ static Container get_parent_container(u32 statement_index){
                         .self_statement = i,
                         .start_statement = i,
                         .stop_statement = i + num_statements + 1,
+                    };
+                }
+            }
+            break;
+        case EXPRESSION_IF_ELSE: {
+                u32 num_then = operands[expression.ops + 1];
+                u32 num_else = operands[expression.ops + 2];
+
+                if(i + num_then >= statement_index){
+                    return (Container){
+                        .self_statement = i,
+                        .start_statement = i,
+                        .stop_statement = i + num_then + 1,
+                    };
+                }
+
+                if(i + num_then + num_else >= statement_index){
+                    return (Container){
+                        .self_statement = i,
+                        .start_statement = i + num_then,
+                        .stop_statement = i + num_then + num_else + 1,
+                    };
+                }
+            }
+            break;
+        case EXPRESSION_FOR: {
+                u32 num_pre = operands[expression.ops];
+                u32 num_post = operands[expression.ops + 2];
+                u32 num_inside = operands[expression.ops + 3];
+
+                // Check pre-statements
+                if(i + num_pre >= statement_index){
+                    return (Container){
+                        .self_statement = i,
+                        .start_statement = i,
+                        .stop_statement = i + num_pre + 1,
+                    };
+                }
+
+                // NOTE: We disallow referencing any variables created in the post-statements
+
+                // Check main body
+                if(i + num_pre + num_post + num_inside >= statement_index){
+                    return (Container){
+                        .self_statement = i,
+                        .start_statement = i + num_pre + num_post,
+                        .stop_statement = i + num_pre + num_post + num_inside + 1,
                     };
                 }
             }
@@ -110,6 +159,24 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
                 return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = inner_variable_offset };
             } else {
                 return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = 0 };
+            }
+        }
+        break;
+    case EXPRESSION_FOR: {
+            u32 num_pre = operands[expression.ops];
+            u32 num_post = operands[expression.ops + 2];
+            u32 len = operands[expression.ops + 3];
+            u32 inner_variable_offset = operands[expression.ops + 4];
+
+            if(target_statement <= current_statement + num_pre){
+                return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = 0 };
+            } else if(target_statement <= current_statement + num_pre + num_post){
+                // NOTE: Should never happen since referencing these variables is not allowed under normal circumstances
+                return (HoneInfo){ .delta_i = num_pre, .delta_depth = 1, .delta_offset = inner_variable_offset };
+            } else if(target_statement <= current_statement + num_pre + num_post + len){
+                return (HoneInfo){ .delta_i = num_pre + num_post, .delta_depth = 1, .delta_offset = inner_variable_offset };
+            } else {
+                return (HoneInfo){ .delta_i = num_pre + num_post + len, .delta_depth = 0, .delta_offset = 0 };
             }
         }
         break;

@@ -183,6 +183,22 @@ u32 add_operands3(u32 a, u32 b, u32 c){
     }
 }
 
+u32 add_operands5(u32 a, u32 b, u32 c, u32 d, u32 e){
+    if(num_operands < OPERANDS_CAPACITY - 4){
+        u32 result = num_operands;
+        operands[num_operands] = a;
+        operands[num_operands + 1] = b;
+        operands[num_operands + 2] = c;
+        operands[num_operands + 3] = d;
+        operands[num_operands + 4] = e;
+        num_operands += 5;
+        return result;
+    } else {
+        printf("Out of memory: Exceeded maximum number of total expression operands\n");
+        return OPERANDS_CAPACITY;
+    }
+}
+
 u32 add_global(Global global){
     if(num_globals < GLOBALS_CAPACITY){
         globals[num_globals] = global;

@@ -154,6 +154,14 @@ ErrorCode mark_recursive_functions(){
 
                 expressions_to_process[num_expressions_to_process++] = operands[expression.ops];
                 break;
+            case EXPRESSION_FOR:
+                if(num_expressions_to_process + 1 >= EXPRESSIONS_TO_PROCESS_CAPACITY){
+                    printf("\nout of memory: Exceeded maximum number of expressions being processed during determination of recursive functions\n");
+                    return 1;
+                }
+
+                expressions_to_process[num_expressions_to_process++] = operands[expression.ops + 1];
+                break;
             default:
                 /* ignore */
                 break;

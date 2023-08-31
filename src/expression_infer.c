@@ -172,6 +172,9 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
     case EXPRESSION_DO_WHILE:
         expression_infer(operands[expression.ops], EXPRESSION_U1);
         break;
+    case EXPRESSION_FOR:
+        expression_infer(operands[expression.ops + 1], EXPRESSION_U1);
+        break;
     case EXPRESSION_MEMBER:
         expression_infer(operands[expression.ops], EXPRESSION_NONE);
         break;

@@ -56,6 +56,9 @@ u0 expression_print(Expression expression){
     case EXPRESSION_IMPLEMENT_PRINTU8:
         printf("<implementation of printu8>");
         break;
+    case EXPRESSION_IMPLEMENT_GET:
+        printf("<implementation of get>");
+        break;
     case EXPRESSION_INT:
         printf("%d", expression.ops);
         break;
@@ -130,10 +133,12 @@ u0 expression_print(Expression expression){
         expression_print(expressions[expression.ops]);
         break;
     case EXPRESSION_POST_INCREMENT:
+    case EXPRESSION_NO_RESULT_INCREMENT:
         expression_print(expressions[expression.ops]);
         printf("++");
         break;
     case EXPRESSION_POST_DECREMENT:
+    case EXPRESSION_NO_RESULT_DECREMENT:
         expression_print(expressions[expression.ops]);
         printf("--");
         break;

@@ -66,6 +66,7 @@ u32 add_statement_from_new(Expression expression);
 u32 add_operand(u32 a);
 u32 add_operands2(u32 a, u32 b);
 u32 add_operands3(u32 a, u32 b, u32 c);
+u32 add_operands5(u32 a, u32 b, u32 c, u32 d, u32 e);
 u32 add_global(Global global);
 u32 add_typedef(TypeDef def);
 u32 find_typedef(u32 name);

@@ -7,6 +7,7 @@
 
 extern u32 parse_i;
 extern u1 had_parse_error;
+extern u1 parse_trailing_semicolon;
 
 u0 instead_got();
 u0 stop_parsing();

@@ -15,6 +15,7 @@ static ErrorCode parse_declaration();
 static ErrorCode parse_if();
 static ErrorCode parse_while();
 static ErrorCode parse_do_while();
+static ErrorCode parse_for();
 static ErrorCode parse_return();
 static ErrorCode parse_break();
 static ErrorCode parse_continue();
@@ -28,6 +29,8 @@ ErrorCode parse_statement(){
         if(parse_while()) return 1;
     } else if(eat_token(TOKEN_DO)){
         if(parse_do_while()) return 1;
+    } else if(eat_token(TOKEN_FOR)){
+        if(parse_for()) return 1;
     } else if(eat_token(TOKEN_RETURN)){
         if(parse_return()) return 1;
     } else if(eat_token(TOKEN_BREAK)){
@@ -54,7 +57,7 @@ ErrorCode parse_statement(){
 }
 
 static u1 eat_semicolon(){
-    if(!eat_token(TOKEN_SEMICOLON)){
+    if(parse_trailing_semicolon && !eat_token(TOKEN_SEMICOLON)){
         u32 last_line, this_line;
 
         if(parse_i > 0){
@@ -175,11 +178,13 @@ static u32 parse_block(){
     // Returns number of statements in block, otherwise STATEMENTS_CAPACITY if error
 
     u32 start = num_statements;
+    u1 previous_parse_trailing_semicolon = parse_trailing_semicolon;
+    parse_trailing_semicolon = true;
     
     // Traditional block
     if(eat_token(TOKEN_BEGIN)){
         while(parse_i < num_tokens && !is_token(TOKEN_END)){
-            if(parse_statement()) return 1;
+            if(parse_statement()) return STATEMENTS_CAPACITY;
         }
 
         if(!eat_token(TOKEN_END)){
@@ -192,6 +197,7 @@ static u32 parse_block(){
         if(parse_statement()) return STATEMENTS_CAPACITY;
     }
 
+    parse_trailing_semicolon = previous_parse_trailing_semicolon;
     return num_statements - start;
 }
 
@@ -368,6 +374,95 @@ static ErrorCode parse_do_while(){
     }
 
     expressions[statements[begin]].ops = ops;
+    return 0;
+}
+
+static ErrorCode parse_for(){
+    // for
+    //       ^
+
+    u24 line = tokens[parse_i - 1].line;
+
+    u32 ops = add_operands5(0, 0, 0, 0, 0);
+    if(ops >= OPERANDS_CAPACITY){
+        stop_parsing();
+        return 1;
+    }
+
+    Expression statement = (Expression){
+        .kind = EXPRESSION_FOR,
+        .line = line,
+        .ops = ops,
+    };
+
+    u32 begin = add_statement_else_print_error(statement);
+    if(begin >= STATEMENTS_CAPACITY) return 1;
+
+    if(!eat_token(TOKEN_OPEN)){
+        printf("\nerror on line %d: Expected '(' after 'for' keyword\n", current_line());
+        stop_parsing();
+        return 1;
+    }
+
+    if(!eat_token(TOKEN_SEMICOLON)){
+        if(parse_statement()) return 1;
+
+        // Set number of pre-statements to be 1
+        operands[ops] = num_statements - begin - 1;
+    }
+
+    Expression condition_expression;
+
+    if(eat_token(TOKEN_SEMICOLON)){
+        condition_expression = (Expression){
+            .kind = EXPRESSION_U1,
+            .line = current_line_packed(),
+            .ops = 1,
+        };
+    } else {
+        condition_expression = parse_expression();
+        if(had_parse_error) return 1;
+
+        if(!eat_token(TOKEN_SEMICOLON)){
+            printf("\nerror on line %d: Expected ';' after condition in 'for' statement\n", current_line());
+            stop_parsing();
+            return 1;
+        }
+    }
+
+    u32 condition = add_expression(condition_expression);
+    if(condition >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return 1;
+    }
+
+    operands[ops + 1] = condition;
+
+    if(!eat_token(TOKEN_SEMICOLON)){
+        // Disable trailing semicolon parsing
+        u1 previous_parse_trailing_semicolon = parse_trailing_semicolon;
+        parse_trailing_semicolon = false;
+
+        if(parse_statement()) return 1;
+
+        // Restore previous trailing semicolon parsing setting
+        parse_trailing_semicolon = previous_parse_trailing_semicolon;
+
+        // Set number of post-statements to be 1
+        operands[ops + 2] = num_statements - begin - 1 - operands[ops];
+    }
+
+    if(!eat_token(TOKEN_CLOSE)){
+        printf("\nerror on line %d: Expected ')' after 'for' condition\n", current_line());
+        stop_parsing();
+        return 1;
+    }
+
+    u32 num_inside = parse_block();
+    if(num_inside >= STATEMENTS_CAPACITY) return 1;
+
+    // Set number of statements
+    operands[ops + 3] = num_inside;
     return 0;
 }
 

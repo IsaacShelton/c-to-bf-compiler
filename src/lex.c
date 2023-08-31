@@ -384,6 +384,8 @@ u32 lex(){
                     tokens[num_tokens - 1].kind = TOKEN_BREAK;
                 } else if(lexed.consumed == 8 && memcmp(code_buffer, "continue", 8) == 0){
                     tokens[num_tokens - 1].kind = TOKEN_CONTINUE;
+                } else if(lexed.consumed == 3 && memcmp(code_buffer, "for", 3) == 0){
+                    tokens[num_tokens - 1].kind = TOKEN_FOR;
                 } else {
                     tokens[num_tokens - 1].data = num_aux;
 

@@ -179,6 +179,7 @@ static ErrorCode parse_typedef(){
 u32 parse(){
     parse_i = 0;
     had_parse_error = false;
+    parse_trailing_semicolon = true;
     
     if(add_builtin_types()) return 1;
     if(add_builtin_functions()) return 1;

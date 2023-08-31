@@ -193,6 +193,9 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_CONTINUE:
         printf("continue");
         break;
+    case TOKEN_FOR:
+        printf("for");
+        break;
     default:
         printf("<unknown>");
     }

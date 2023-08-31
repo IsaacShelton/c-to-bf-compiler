@@ -10,6 +10,7 @@
 #include "../include/variable_find.h"
 #include "../include/emit_context.h"
 #include "../include/emit.h"
+#include "../include/expression_print.h"
 
 // ============= Inlined function calls =============
 // Have layout like: `global1 global2 unknown1 unknown2 return_value1 return_value2 return_value3 param1 param2 param3 param4 local1 local2`
@@ -139,6 +140,7 @@ while(stack_pointer != 0){
 static ErrorCode emit_if_like(Expression expression);
 static ErrorCode emit_while(Expression expression);
 static ErrorCode emit_do_while(Expression expression);
+static ErrorCode emit_for(Expression expression);
 
 static u1 can_statement_break_current_level(u32 statement_index);
 static u1 can_statements_break_current_level(u32 start_statement_i, u32 stop_statement_i);
@@ -321,6 +323,10 @@ static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i){
         case EXPRESSION_WHILE:
             if(emit_while(expression)) return 1;
             i += operands[expression.ops + 1];
+            break;
+        case EXPRESSION_FOR:
+            if(emit_for(expression)) return 1;
+            i += operands[expression.ops] + operands[expression.ops + 2] + operands[expression.ops + 3];
             break;
         case EXPRESSION_DO_WHILE:
             if(emit_do_while(expression)) return 1;
@@ -605,6 +611,98 @@ static ErrorCode emit_do_while(Expression expression){
     return emit_break_check() || emit_continue_check() || emit_early_return_check();
 }
 
+static ErrorCode emit_for(Expression expression){
+    u1 was_breakable = emit_context.can_break;
+    u1 was_continuable = emit_context.can_continue;
+    u32 old_didnt_break_cell = emit_context.didnt_break_cell;
+    u32 old_didnt_continue_cell = emit_context.didnt_continue_cell;
+
+    u32 num_pre = operands[expression.ops];
+    u32 num_post = operands[expression.ops + 2];
+    u32 num_inside = operands[expression.ops + 3];
+
+    u32 pre_start_statement = emit_context.current_statement + 1;
+    u32 post_start_statement = pre_start_statement + num_pre;
+    u32 inside_start_statement = post_start_statement + num_post;
+
+    u32 pre_starting_cell_index = emit_context.current_cell_index;
+
+    // Emit pre-statements
+    if(emit_body(pre_start_statement, pre_start_statement + num_pre)){
+        return 1;
+    }
+
+    enter_maybe_breakable_continuable_region(expression, 4);
+
+    u32 starting_cell_index = emit_context.current_cell_index;
+    
+    // Evaluate condition
+    emit_pre_loop_condition_early_return_check();
+    u32 condition_type = expression_emit(expressions[operands[expression.ops + 1]]);
+    if(condition_type >= TYPES_CAPACITY) return 1;
+    emit_post_loop_condition_early_return_check();
+
+    if(condition_type != u1_type){
+        printf("\nerror on line %d: Expected 'for' condition to be 'u1', got '", u24_unpack(expression.line));
+        type_print(types[condition_type]);
+        printf("'\n");
+        return 1;
+    }
+
+    // Go to 'condition' cell
+    printf("<");
+    emit_context.current_cell_index--;
+
+    // While 'condition' cell
+    printf("[");
+    emit_reset_didnt_continue();
+
+    // Emit 'for' body
+    if(emit_body(inside_start_statement, inside_start_statement + num_inside)){
+        return 1;
+    }
+
+    // Evaluate post-statements
+    if(emit_body(post_start_statement, post_start_statement + num_post)){
+        return 1;
+    }
+
+    // Deallocate variables
+    if(emit_context.current_cell_index > starting_cell_index){
+        printf("%d<", emit_context.current_cell_index - starting_cell_index);
+        emit_context.current_cell_index = starting_cell_index;
+    }
+
+    // Re-evaluate condition (should never fail)
+    emit_pre_loop_condition_early_return_check();
+    emit_pre_loop_condition_break_check();
+    expression_emit(expressions[operands[expression.ops + 1]]);
+    emit_post_loop_condition_break_check();
+    emit_post_loop_condition_early_return_check();
+
+    // Go to 'condition' cell
+    printf("<");
+    emit_context.current_cell_index--;
+
+    // End while
+    printf("]");
+
+    exit_maybe_breakable_continuable_region();
+
+    // Deallocate pre-statement variables
+    if(emit_context.current_cell_index > pre_starting_cell_index){
+        printf("%d<", emit_context.current_cell_index - pre_starting_cell_index);
+        emit_context.current_cell_index = pre_starting_cell_index;
+    }
+
+    emit_context.can_break = was_breakable;
+    emit_context.can_continue = was_continuable;
+    emit_context.didnt_break_cell = old_didnt_break_cell;
+    emit_context.didnt_continue_cell = old_didnt_continue_cell;
+
+    return emit_break_check() || emit_continue_check() || emit_early_return_check();
+}
+
 u1 has_return_in_region(u32 start_statement_i, u32 stop_statement_i){
     for(u32 i = start_statement_i; i < stop_statement_i; i++){
         if(expressions[statements[i]].kind == EXPRESSION_RETURN){
@@ -628,11 +726,21 @@ u1 can_function_early_return(u32 function_index){
             if(has_return_in_region(i + 1, i + operands[expression.ops + 1] + 1)) return true;
             i += operands[expression.ops + 1];
             break;
-        case EXPRESSION_IF_ELSE:
-            if(has_return_in_region(i + 1, i + operands[expression.ops + 1] + 1)) return true;
-            i += operands[expression.ops + 1];
-            if(has_return_in_region(i + 1, i + operands[expression.ops + 2] + 1)) return true;
-            i += operands[expression.ops + 2];
+        case EXPRESSION_IF_ELSE: {
+                u32 num_then = operands[expression.ops + 1];
+                u32 num_else = operands[expression.ops + 2];
+                if(has_return_in_region(i + 1, i + num_then + num_else + 1)) return true;
+                i += num_then + num_else;
+            }
+            break;
+        case EXPRESSION_FOR: {
+                u32 num_pre = operands[expression.ops];
+                u32 num_post = operands[expression.ops + 2];
+                u32 len = operands[expression.ops + 3];
+
+                if(has_return_in_region(i + 1, i + num_pre + num_post + len + 1)) return true;
+                i += num_pre + num_post + len;
+            }
             break;
         case EXPRESSION_RETURN:
             return false;
@@ -650,6 +758,12 @@ static u1 can_statements_break_current_level(u32 start_statement_i, u32 stop_sta
         case EXPRESSION_WHILE:
         case EXPRESSION_DO_WHILE:
             i += operands[expression.ops + 1];
+            break;
+        case EXPRESSION_FOR:
+            if(can_statement_break_current_level(i)){
+                return true;
+            }
+            i += operands[expression.ops] + operands[expression.ops + 2] + operands[expression.ops + 3];
             break;
         default:
             if(can_statement_break_current_level(i)){
@@ -674,6 +788,11 @@ static u1 can_statement_break_current_level(u32 statement_index){
             u32 num_then = operands[expression.ops + 1];
             u32 num_else = operands[expression.ops + 2];
             return can_statements_break_current_level(statement_index + 1, statement_index + 1 + num_then + num_else);
+        }
+        break;
+    case EXPRESSION_FOR: {
+            u32 num_pre = operands[expression.ops];
+            return can_statements_break_current_level(statement_index + 1, statement_index + num_pre + 1);
         }
         break;
     case EXPRESSION_BREAK:
@@ -707,6 +826,12 @@ static u1 can_statements_continue_current_level(u32 start_statement_i, u32 stop_
         case EXPRESSION_DO_WHILE:
             i += operands[expression.ops + 1];
             break;
+        case EXPRESSION_FOR:
+            if(can_statement_continue_current_level(i)){
+                return true;
+            }
+            i += operands[expression.ops] + operands[expression.ops + 2] + operands[expression.ops + 3];
+            break;
         default:
             if(can_statement_continue_current_level(i)){
                 return true;
@@ -730,6 +855,11 @@ static u1 can_statement_continue_current_level(u32 statement_index){
             u32 num_then = operands[expression.ops + 1];
             u32 num_else = operands[expression.ops + 2];
             return can_statements_continue_current_level(statement_index + 1, statement_index + 1 + num_then + num_else);
+        }
+        break;
+    case EXPRESSION_FOR: {
+            u32 num_pre = operands[expression.ops];
+            return can_statements_continue_current_level(statement_index + 1, statement_index + num_pre + 1);
         }
         break;
     case EXPRESSION_CONTINUE:

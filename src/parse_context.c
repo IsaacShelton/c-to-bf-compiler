@@ -6,6 +6,7 @@
 
 u32 parse_i;
 u1 had_parse_error;
+u1 parse_trailing_semicolon;
 
 u0 instead_got(){
     if(parse_i < num_tokens){

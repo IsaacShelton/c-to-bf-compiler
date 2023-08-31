@@ -348,8 +348,7 @@ static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i){
         }
     }
 
-    emit_close_checks_until(closes_needed_waterline);
-    return 0;
+    return emit_close_checks_until(closes_needed_waterline);
 }
 
 static ErrorCode emit_if_like(Expression expression){
@@ -662,8 +661,14 @@ static ErrorCode emit_for(Expression expression){
         return 1;
     }
 
-    // Evaluate post-statements
-    if(emit_body(post_start_statement, post_start_statement + num_post)){
+    // Emit post-statements
+    u32 post_statements_closes_needed_waterline = num_closes_needed;
+
+    if( emit_break_check()
+     || emit_early_return_check()
+     || emit_body(post_start_statement, post_start_statement + num_post)
+     || emit_close_checks_until(post_statements_closes_needed_waterline)
+    ){
         return 1;
     }
 

@@ -379,7 +379,7 @@ static ErrorCode parse_do_while(){
 
 static ErrorCode parse_for(){
     // for
-    //       ^
+    //     ^
 
     u24 line = tokens[parse_i - 1].line;
 

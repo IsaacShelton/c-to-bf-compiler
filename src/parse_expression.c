@@ -115,6 +115,41 @@ static Expression parse_expression_call(u32 name, u24 line_number){
     return expression;
 }
 
+static Expression parse_expression_sizeof(u24 line_number){
+    // sizeof
+    //        ^
+
+    if(eat_token(TOKEN_OPEN)){
+        Type type = parse_type();
+        if(had_parse_error) return (Expression){0};
+
+        if(!eat_token(TOKEN_CLOSE)){
+            printf("\nerror on line %d: Expected ')' after type in 'sizeof'\n", current_line());
+            instead_got();
+            stop_parsing();
+            return (Expression){0};
+        }
+
+        u32 type_index = add_type(type);
+        if(type_index >= TYPES_CAPACITY){
+            stop_parsing();
+            return (Expression){0};
+        }
+
+        return (Expression){
+            .kind = EXPRESSION_SIZEOF_TYPE,
+            .line = line_number,
+            .ops = type_index,
+        };
+    } else {
+        printf("\nerror on line %d: Expected '(' after 'sizeof' keyword\n", current_line());
+        instead_got();
+        stop_parsing();
+        return (Expression){0};
+    }
+}
+
+
 static Expression parse_primary_expression(){
     u24 line_number = current_line_packed();
 
@@ -237,6 +272,10 @@ static Expression parse_primary_expression(){
      || eat_token(TOKEN_DECREMENT)
     ){
         return parse_unary_prefix(tokens[parse_i - 1].kind, line_number);
+    }
+
+    if(eat_token(TOKEN_SIZEOF)){
+        return parse_expression_sizeof(line_number);
     }
     
     printf("\nerror on line %d: Expected expression\n", current_line());

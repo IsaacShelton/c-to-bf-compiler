@@ -69,6 +69,7 @@ enum {
     TOKEN_BREAK,
     TOKEN_CONTINUE,
     TOKEN_FOR,
+    TOKEN_SIZEOF,
 };
 
 typedef u8 TokenKind;

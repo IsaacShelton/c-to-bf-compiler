@@ -54,6 +54,7 @@ set -ex
 "$self/../peck" "$self/return_culling.peck"
 "$self/../peck" "$self/shifts.peck"
 "$self/../peck" "$self/string.peck"
+"$self/../peck" "$self/sizeof_type.peck"
 "$self/../peck" "$self/struct.peck"
 "$self/../peck" "$self/ternary.peck"
 "$self/../peck" "$self/variable_usage_simple.peck"

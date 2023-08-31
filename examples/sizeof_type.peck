@@ -1,0 +1,32 @@
+
+typedef struct {
+    u8 firstname[16];
+    u8 age;
+} Person;
+
+u0 main(){
+    print("sizeof(u8) = ");
+    printu8(sizeof(u8));
+    print("\n");
+
+    print("sizeof(u16) = ");
+    printu8(sizeof(u16));
+    print("\n");
+
+    print("sizeof(u16[4]) = ");
+    printu8(sizeof(u16[4]));
+    print("\n");
+
+    print("sizeof(Person) = ");
+    printu8(sizeof(Person));
+    print("\n");
+
+    print("sizeof(Person[2]) = ");
+    printu8(sizeof(Person[2]));
+    print("\n");
+
+    print("sizeof(Person[2][3]) = ");
+    printu8(sizeof(Person[2][3]));
+    print("\n");
+}
+

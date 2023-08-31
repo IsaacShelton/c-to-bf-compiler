@@ -167,6 +167,15 @@ u0 expression_print(Expression expression){
     case EXPRESSION_CONTINUE:
         printf("continue");
         break;
+    case EXPRESSION_SIZEOF_TYPE:
+        printf("sizeof(");
+        type_print(types[expression.ops]);
+        printf(")");
+    case EXPRESSION_SIZEOF_TYPE_U8:
+        printf("sizeof<u8>(");
+        type_print(types[expression.ops]);
+        printf(")");
+        break;
     default:
         printf("<unknown expression>");
     }

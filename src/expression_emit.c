@@ -1148,6 +1148,20 @@ static u32 expression_emit_continue(Expression expression){
     return u0_type;
 }
 
+static u32 expression_emit_sizeof_type_u8(Expression expression){
+    u32 size = type_sizeof_or_max(expression.ops);
+
+    if(size > 255){
+        printf("\nerror on line %d: Cannot get size of '", u24_unpack(expression.line));
+        type_print(types[expression.ops]);
+        printf("' as 'u8', because its size exceeds 255 (is %d)\n", size);
+        return TYPES_CAPACITY;
+    }
+
+    emit_u8(size);
+    return u8_type;
+}
+
 u32 expression_emit(Expression expression){
     switch(expression.kind){
     case EXPRESSION_DECLARE: {
@@ -1269,6 +1283,9 @@ u32 expression_emit(Expression expression){
         return expression_emit_break(expression);
     case EXPRESSION_CONTINUE:
         return expression_emit_continue(expression);
+    case EXPRESSION_SIZEOF_TYPE:
+    case EXPRESSION_SIZEOF_TYPE_U8:
+        return expression_emit_sizeof_type_u8(expression);
     default:
         printf("\nerror: Unknown expression kind %d during expression_emit\n", expression.kind);
         return TYPES_CAPACITY;

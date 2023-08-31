@@ -178,6 +178,13 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
     case EXPRESSION_MEMBER:
         expression_infer(operands[expression.ops], EXPRESSION_NONE);
         break;
+    case EXPRESSION_SIZEOF_TYPE:
+        switch(preferred_int_kind){
+        case EXPRESSION_U8:
+            expressions[expression_index].kind = EXPRESSION_SIZEOF_TYPE_U8;
+            break;
+        }
+        break;
     }
 }
 

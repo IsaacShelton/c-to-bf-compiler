@@ -60,6 +60,8 @@ enum {
     EXPRESSION_BREAK,
     EXPRESSION_CONTINUE,
     EXPRESSION_FOR, /* { num_pre_statements, condition, pre_post_statements, num_statements, computed_inner_variable_offset } */
+    EXPRESSION_SIZEOF_TYPE, /* { type } */
+    EXPRESSION_SIZEOF_TYPE_U8, /* { type } */
 };
 typedef u8 ExpressionKind;
 

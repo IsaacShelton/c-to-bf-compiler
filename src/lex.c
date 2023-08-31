@@ -386,6 +386,8 @@ u32 lex(){
                     tokens[num_tokens - 1].kind = TOKEN_CONTINUE;
                 } else if(lexed.consumed == 3 && memcmp(code_buffer, "for", 3) == 0){
                     tokens[num_tokens - 1].kind = TOKEN_FOR;
+                } else if(lexed.consumed == 6 && memcmp(code_buffer, "sizeof", 6) == 0){
+                    tokens[num_tokens - 1].kind = TOKEN_SIZEOF;
                 } else {
                     tokens[num_tokens - 1].data = num_aux;
 

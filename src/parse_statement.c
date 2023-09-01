@@ -19,6 +19,9 @@ static ErrorCode parse_for();
 static ErrorCode parse_return();
 static ErrorCode parse_break();
 static ErrorCode parse_continue();
+static ErrorCode parse_switch();
+static ErrorCode parse_case();
+static ErrorCode parse_default();
 
 ErrorCode parse_statement(){
     if(is_type_followed_by(TOKEN_WORD)){
@@ -37,6 +40,12 @@ ErrorCode parse_statement(){
         if(parse_break()) return 1;
     } else if(eat_token(TOKEN_CONTINUE)){
         if(parse_continue()) return 1;
+    } else if(eat_token(TOKEN_SWITCH)){
+        if(parse_switch()) return 1;
+    } else if(eat_token(TOKEN_CASE)){
+        if(parse_case()) return 1;
+    } else if(eat_token(TOKEN_DEFAULT)){
+        if(parse_default()) return 1;
     } else {
         Expression statement = parse_expression();
         if(had_parse_error) return 1;
@@ -174,17 +183,42 @@ static ErrorCode parse_declaration(){
     }
 }
 
-static u32 parse_block(){
+static u32 parse_block(u1 allow_cases){
     // Returns number of statements in block, otherwise STATEMENTS_CAPACITY if error
 
     u32 start = num_statements;
     u1 previous_parse_trailing_semicolon = parse_trailing_semicolon;
     parse_trailing_semicolon = true;
+
+    u32 last_case = STATEMENTS_CAPACITY;
     
     // Traditional block
     if(eat_token(TOKEN_BEGIN)){
         while(parse_i < num_tokens && !is_token(TOKEN_END)){
             if(parse_statement()) return STATEMENTS_CAPACITY;
+
+            Expression expression = expressions[statements[num_statements - 1]];
+
+            if(expression.kind == EXPRESSION_CASE){
+                if(allow_cases){
+                    if(last_case < STATEMENTS_CAPACITY){
+                        // Set number of statements for last 'case' statement
+                        operands[expressions[statements[last_case]].ops + 1] = num_statements - last_case - 2;
+                    }
+
+                    last_case = num_statements - 1;
+                } else {
+                    expression_print_cannot_use_case_here_error(expression);
+                    stop_parsing();
+                    return STATEMENTS_CAPACITY;
+                }
+            }
+        }
+
+        if(last_case < STATEMENTS_CAPACITY){
+            // Set number of statements for last 'case' statement
+            // NOTE: We only have to subtract 1, since we don't create a final 'case' statement
+            operands[expressions[statements[last_case]].ops + 1] = num_statements - last_case - 1;
         }
 
         if(!eat_token(TOKEN_END)){
@@ -193,6 +227,12 @@ static u32 parse_block(){
             return STATEMENTS_CAPACITY;
         }
     } else {
+        if(allow_cases){
+            printf("\nerror on line %d: Expected '{' after value of 'switch' statement\n", current_line());
+            stop_parsing();
+            return STATEMENTS_CAPACITY;
+        }
+
         // Single statement block
         if(parse_statement()) return STATEMENTS_CAPACITY;
     }
@@ -237,14 +277,14 @@ static ErrorCode parse_if(){
     u32 begin = add_statement_else_print_error(statement);
     if(begin >= STATEMENTS_CAPACITY) return 1;
 
-    u32 num_then = parse_block();
+    u32 num_then = parse_block(false);
     if(num_then >= STATEMENTS_CAPACITY) return 1;
 
     u32 num_else = 0;
 
     // Handle else
     if(eat_token(TOKEN_ELSE)){
-        num_else = parse_block();
+        num_else = parse_block(false);
         if(num_else >= STATEMENTS_CAPACITY) return 1;
     }
 
@@ -310,7 +350,7 @@ static ErrorCode parse_while(){
     u32 begin = add_statement_else_print_error(statement);
     if(begin >= STATEMENTS_CAPACITY) return 1;
 
-    u32 num_inside = parse_block();
+    u32 num_inside = parse_block(false);
     if(num_inside >= STATEMENTS_CAPACITY) return 1;
 
     // Set number of statements
@@ -333,7 +373,7 @@ static ErrorCode parse_do_while(){
     u32 begin = add_statement_else_print_error(statement);
     if(begin >= STATEMENTS_CAPACITY) return 1;
 
-    u32 num_inside = parse_block();
+    u32 num_inside = parse_block(false);
     if(num_inside >= STATEMENTS_CAPACITY) return 1;
 
     if(!eat_token(TOKEN_WHILE)){
@@ -458,7 +498,7 @@ static ErrorCode parse_for(){
         return 1;
     }
 
-    u32 num_inside = parse_block();
+    u32 num_inside = parse_block(false);
     if(num_inside >= STATEMENTS_CAPACITY) return 1;
 
     // Set number of statements
@@ -514,5 +554,119 @@ static ErrorCode parse_continue(){
     };
 
     return !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
+}
+
+static ErrorCode parse_switch(){
+    // switch
+    //        ^
+
+    u24 line = tokens[parse_i - 1].line;
+
+    if(!eat_token(TOKEN_OPEN)){
+        printf("\nerror on line %d: Expected '(' after 'switch' keyword\n", current_line());
+        stop_parsing();
+        return 1;
+    }
+
+    Expression condition_expression = parse_expression();
+    if(had_parse_error) return 1;
+
+    if(!eat_token(TOKEN_CLOSE)){
+        printf("\nerror on line %d: Expected ')' after 'switch' condition\n", current_line());
+        stop_parsing();
+        return 1;
+    }
+
+    u32 condition = add_expression(condition_expression);
+    if(condition >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return 1;
+    }
+
+    u32 ops = add_operands2(condition, 0);
+    if(ops >= OPERANDS_CAPACITY){
+        stop_parsing();
+        return 1;
+    }
+
+    Expression statement = (Expression){
+        .kind = EXPRESSION_SWITCH,
+        .line = line,
+        .ops = ops,
+    };
+
+    u32 begin = add_statement_else_print_error(statement);
+    if(begin >= STATEMENTS_CAPACITY) return 1;
+
+    u32 num_inside = parse_block(true);
+    if(num_inside >= STATEMENTS_CAPACITY) return 1;
+
+    // Set number of statements
+    operands[ops + 1] = num_inside;
+    return 0;
+}
+
+static ErrorCode parse_case(){
+    // case 
+    //      ^
+
+    u24 line = tokens[parse_i - 1].line;
+
+    Expression value_expression = parse_expression();
+    if(had_parse_error) return 1;
+
+    u32 value = add_expression(value_expression);
+    if(value >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return 1;
+    }
+
+    u32 ops = add_operands2(value, 0);
+    if(ops >= OPERANDS_CAPACITY){
+        stop_parsing();
+        return 1;
+    }
+
+    Expression statement = (Expression){
+        .kind = EXPRESSION_CASE,
+        .line = line,
+        .ops = ops,
+    };
+
+    if(!eat_token(TOKEN_COLON)){
+        printf("error on line %d: Expected ':' after 'case' value\n", current_line());
+        stop_parsing();
+        return 1;
+    }
+
+    return add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
+}
+
+static ErrorCode parse_default(){
+    // default 
+    //         ^
+
+    u24 line = tokens[parse_i - 1].line;
+
+    u32 ops = add_operands2(EXPRESSIONS_CAPACITY, 0);
+    if(ops >= OPERANDS_CAPACITY){
+        stop_parsing();
+        return 1;
+    }
+
+    // NOTE: 'default' is just a 'case' with an out of bounds expression id
+    Expression statement = (Expression){
+        .kind = EXPRESSION_CASE,
+        .line = line,
+        .ops = ops,
+    };
+
+    if(!eat_token(TOKEN_COLON)){
+        printf("error on line %d: Expected ':' after 'default' value\n", current_line());
+        stop_parsing();
+        return 1;
+    }
+
+    return add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
 }
 

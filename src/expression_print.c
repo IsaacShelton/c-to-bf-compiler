@@ -184,6 +184,14 @@ u0 expression_print(Expression expression){
         printf("sizeof<u8> ");
         expression_print(expressions[expression.ops]);
         break;
+    case EXPRESSION_CASE:
+        if(operands[expression.ops] < EXPRESSIONS_CAPACITY){
+            printf("case ");
+            expression_print(expressions[operands[expression.ops]]);
+        } else {
+            printf("default");
+        }
+        break;
     default:
         printf("<unknown expression>");
     }

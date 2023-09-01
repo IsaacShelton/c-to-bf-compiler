@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include "../include/storage.h"
 #include "../include/expression.h"
 
 u0 expression_print_operator(ExpressionKind kind){
@@ -252,5 +253,17 @@ ExpressionKind expression_kind_binary_from_assignment_token_kind(TokenKind kind)
     default:
         return EXPRESSION_NONE;
     }
+}
+
+u0 expression_print_cannot_use_case_here_error(Expression expression){
+    printf("\nerror on line %d: Cannot use '", u24_unpack(expression.line));
+
+    if(operands[expression.ops] >= EXPRESSIONS_CAPACITY){
+        printf("default");
+    } else {
+        printf("case");
+    }
+
+    printf("' here, must be used inside 'switch' statement\n");
 }
 

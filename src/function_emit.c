@@ -141,6 +141,8 @@ static ErrorCode emit_if_like(Expression expression);
 static ErrorCode emit_while(Expression expression);
 static ErrorCode emit_do_while(Expression expression);
 static ErrorCode emit_for(Expression expression);
+static ErrorCode emit_switch(Expression expression);
+static ErrorCode emit_case(Expression expression);
 
 static u1 can_statement_break_current_level(u32 statement_index);
 static u1 can_statements_break_current_level(u32 start_statement_i, u32 stop_statement_i);
@@ -303,7 +305,7 @@ ErrorCode emit_close_checks_until(u32 waterline){
     return 0;
 }
 
-static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i){
+static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i, u1 allow_cases){
     u32 closes_needed_waterline = num_closes_needed;
 
     for(u32 i = start_statement_i; i < stop_statement_i; i++){
@@ -330,6 +332,18 @@ static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i){
             break;
         case EXPRESSION_DO_WHILE:
             if(emit_do_while(expression)) return 1;
+            i += operands[expression.ops + 1];
+            break;
+        case EXPRESSION_SWITCH:
+            if(emit_switch(expression)) return 1;
+            i += operands[expression.ops + 1];
+            break;
+        case EXPRESSION_CASE:
+            if(!allow_cases){
+                expression_print_cannot_use_case_here_error(expression);
+                return 1;
+            }
+            if(emit_case(expression)) return 1;
             i += operands[expression.ops + 1];
             break;
         default: {
@@ -382,7 +396,7 @@ static ErrorCode emit_if_like(Expression expression){
     printf("[");
 
     // Emit 'if' body
-    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1)){
+    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false)){
         return 1;
     }
 
@@ -414,7 +428,7 @@ static ErrorCode emit_if_like(Expression expression){
         printf("[");
 
         // Emit 'else' body
-        if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 2] + 1)){
+        if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 2] + 1, false)){
             return 1;
         }
 
@@ -444,11 +458,10 @@ static u0 emit_reset_didnt_continue(){
     }
 }
 
-static u0 enter_maybe_breakable_continuable_region(Expression expression, u32 inner_variable_offset_ops_offset){
+static u0 enter_maybe_breakable_continuable_loop(Expression expression, u32 inner_variable_offset_ops_offset){
     emit_context.can_break = can_loop_break(emit_context.current_statement);
     emit_context.can_continue = can_loop_continue(emit_context.current_statement);
 
-    // Start inner variable offset at zero
     operands[expression.ops + inner_variable_offset_ops_offset] = 0;
 
     if(emit_context.can_break){
@@ -470,7 +483,7 @@ static u0 enter_maybe_breakable_continuable_region(Expression expression, u32 in
     }
 }
 
-static u0 exit_maybe_breakable_continuable_region(){
+static u0 exit_maybe_breakable_continuable_loop(){
     // Deallocate 'didnt_continue_cell' if used
     if(emit_context.can_continue){
         printf("<");
@@ -484,13 +497,27 @@ static u0 exit_maybe_breakable_continuable_region(){
     }
 }
 
+static u0 enter_switch(){
+    emit_context.can_break = true;
+
+    // Allocate 'didnt_break_cell'
+    printf("[-]+>");
+    emit_context.didnt_break_cell = emit_context.current_cell_index++;
+}
+
+static u0 exit_switch(){
+    // Deallocate 'didnt_break_cell'
+    printf("<");
+    emit_context.current_cell_index--;
+}
+
 static ErrorCode emit_while(Expression expression){
     u1 was_breakable = emit_context.can_break;
     u1 was_continuable = emit_context.can_continue;
     u32 old_didnt_break_cell = emit_context.didnt_break_cell;
     u32 old_didnt_continue_cell = emit_context.didnt_continue_cell;
 
-    enter_maybe_breakable_continuable_region(expression, 2);
+    enter_maybe_breakable_continuable_loop(expression, 2);
 
     u32 starting_cell_index = emit_context.current_cell_index;
     
@@ -516,7 +543,7 @@ static ErrorCode emit_while(Expression expression){
     emit_reset_didnt_continue();
 
     // Emit 'while' body
-    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1)){
+    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false)){
         return 1;
     }
 
@@ -540,7 +567,7 @@ static ErrorCode emit_while(Expression expression){
     // End while
     printf("]");
 
-    exit_maybe_breakable_continuable_region();
+    exit_maybe_breakable_continuable_loop();
 
     emit_context.can_break = was_breakable;
     emit_context.can_continue = was_continuable;
@@ -556,7 +583,7 @@ static ErrorCode emit_do_while(Expression expression){
     u32 old_didnt_break_cell = emit_context.didnt_break_cell;
     u32 old_didnt_continue_cell = emit_context.didnt_continue_cell;
 
-    enter_maybe_breakable_continuable_region(expression, 2);
+    enter_maybe_breakable_continuable_loop(expression, 2);
 
     u32 starting_cell_index = emit_context.current_cell_index;
 
@@ -568,7 +595,7 @@ static ErrorCode emit_do_while(Expression expression){
     emit_reset_didnt_continue();
     
     // Emit 'do-while' body
-    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1)){
+    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false)){
         return 1;
     }
 
@@ -600,7 +627,7 @@ static ErrorCode emit_do_while(Expression expression){
     // End while
     printf("]");
     
-    exit_maybe_breakable_continuable_region();
+    exit_maybe_breakable_continuable_loop();
 
     emit_context.can_break = was_breakable;
     emit_context.can_continue = was_continuable;
@@ -627,11 +654,11 @@ static ErrorCode emit_for(Expression expression){
     u32 pre_starting_cell_index = emit_context.current_cell_index;
 
     // Emit pre-statements
-    if(emit_body(pre_start_statement, pre_start_statement + num_pre)){
+    if(emit_body(pre_start_statement, pre_start_statement + num_pre, false)){
         return 1;
     }
 
-    enter_maybe_breakable_continuable_region(expression, 4);
+    enter_maybe_breakable_continuable_loop(expression, 4);
 
     u32 starting_cell_index = emit_context.current_cell_index;
     
@@ -657,7 +684,7 @@ static ErrorCode emit_for(Expression expression){
     emit_reset_didnt_continue();
 
     // Emit 'for' body
-    if(emit_body(inside_start_statement, inside_start_statement + num_inside)){
+    if(emit_body(inside_start_statement, inside_start_statement + num_inside, false)){
         return 1;
     }
 
@@ -666,7 +693,7 @@ static ErrorCode emit_for(Expression expression){
 
     if( emit_break_check()
      || emit_early_return_check()
-     || emit_body(post_start_statement, post_start_statement + num_post)
+     || emit_body(post_start_statement, post_start_statement + num_post, false)
      || emit_close_checks_until(post_statements_closes_needed_waterline)
     ){
         return 1;
@@ -692,7 +719,7 @@ static ErrorCode emit_for(Expression expression){
     // End while
     printf("]");
 
-    exit_maybe_breakable_continuable_region();
+    exit_maybe_breakable_continuable_loop();
 
     // Deallocate pre-statement variables
     if(emit_context.current_cell_index > pre_starting_cell_index){
@@ -704,6 +731,163 @@ static ErrorCode emit_for(Expression expression){
     emit_context.can_continue = was_continuable;
     emit_context.didnt_break_cell = old_didnt_break_cell;
     emit_context.didnt_continue_cell = old_didnt_continue_cell;
+
+    return emit_break_check() || emit_continue_check() || emit_early_return_check();
+}
+
+static ErrorCode emit_switch(Expression expression){
+    // Switches are implemented by leveraging existing break/continue/early-return infrastructure.
+    
+    /*
+    EXAMPLE SOURCE CODE:
+
+        switch(value){
+        case 100:
+            a();
+            break;
+        case 75:
+            b();
+        default:
+            c();
+        }
+
+    PSEUDO CODE RESULT:
+
+        {
+            u8 value = value;
+            u1 didnt_break = true;
+
+            if(value == 100){
+                a();
+                didnt_break = false;
+            }
+
+            if(didnt_break && didnt_continue && didnt_return_early){
+                if(value == 75){
+                    b();
+                    // no break here, so we continue downward
+                }
+
+                // NOTE: In practice these checks are omitted when previous code cannot cause them.
+                if(didnt_break && didnt_continue && didnt_return_early){
+                    // (default case)
+                    c();
+                }
+            }
+        }
+    */
+
+    u1 was_breakable = emit_context.can_break;
+    u32 old_didnt_break_cell = emit_context.didnt_break_cell;
+    u32 old_switch_value_type = emit_context.switch_value_type;
+    u32 old_switch_value_type_cached_size = emit_context.switch_value_type_cached_size;
+    u32 old_switch_start_cell_index = emit_context.switch_start_cell_index;
+
+    enter_switch();
+
+    u32 starting_cell_index = emit_context.current_cell_index;
+    emit_context.switch_start_cell_index = starting_cell_index;
+    
+    // Evaluate condition
+    u32 condition_type = expression_emit(expressions[operands[expression.ops]]);
+    if(condition_type >= TYPES_CAPACITY) return 1;
+
+    if(condition_type != u8_type){
+        printf("\nerror on line %d: Expected 'switch' value to be 'u8', got '", u24_unpack(expression.line));
+        type_print(types[condition_type]);
+        printf("'\n");
+        return 1;
+    }
+
+    u32 condition_type_size = type_sizeof_or_max(condition_type);
+    if(condition_type_size == -1) return 1;
+
+    emit_context.switch_value_type = condition_type;
+    emit_context.switch_value_type_cached_size = condition_type_size;
+
+    // Emit 'switch' body
+    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, true)){
+        return 1;
+    }
+
+    // Deallocate variables
+    if(emit_context.current_cell_index > starting_cell_index){
+        printf("%d<", emit_context.current_cell_index - starting_cell_index);
+        emit_context.current_cell_index = starting_cell_index;
+    }
+
+    exit_switch();
+
+    emit_context.can_break = was_breakable;
+    emit_context.didnt_break_cell = old_didnt_break_cell;
+    emit_context.switch_value_type = old_switch_value_type;
+    emit_context.switch_value_type_cached_size = old_switch_value_type_cached_size;
+    emit_context.switch_start_cell_index = old_switch_start_cell_index;
+
+    return emit_break_check() || emit_continue_check() || emit_early_return_check();
+}
+
+static ErrorCode emit_case(Expression expression){
+    // Emits code for case statements
+
+    if(emit_context.switch_value_type >= TYPES_CAPACITY){
+        expression_print_cannot_use_case_here_error(expression);
+        return 1;
+    }
+
+    u32 starting_cell_index = emit_context.current_cell_index;
+    u1 default_case = operands[expression.ops] >= EXPRESSIONS_CAPACITY;
+
+    if(!default_case){
+        // Dupe switch value
+        copy_cells_static(emit_context.switch_start_cell_index, emit_context.switch_value_type_cached_size);
+        
+        // Evaluate test value
+        u32 test_type = expression_emit(expressions[operands[expression.ops]]);
+        if(test_type >= TYPES_CAPACITY) return 1;
+
+        if(test_type != emit_context.switch_value_type){
+            printf("\nerror on line %d: Expected 'case' value to be '", u24_unpack(expression.line));
+            type_print(types[emit_context.switch_value_type]);
+            printf(", got '");
+            type_print(types[test_type]);
+            printf("'\n");
+            return 1;
+        }
+
+        // Compare test value to switch value
+        if(emit_context.switch_value_type == u8_type){
+            emit_eq_u8();
+        } else {
+            printf("\nerror on line %d: Unsupported 'case' type '", u24_unpack(expression.line));
+            type_print(types[test_type]);
+            printf("'\n");
+            return 1;
+        }
+
+        // Go to condition
+        printf("<");
+        emit_context.current_cell_index--;
+
+        // If condition
+        printf("[");
+    }
+
+    // Emit 'case' body
+    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false)){
+        return 1;
+    }
+
+    // Deallocate variables
+    if(emit_context.current_cell_index > starting_cell_index){
+        printf("%d<", emit_context.current_cell_index - starting_cell_index);
+        emit_context.current_cell_index = starting_cell_index;
+    }
+
+    if(!default_case){
+        // End if
+        printf("[-]]");
+    }
 
     return emit_break_check() || emit_continue_check() || emit_early_return_check();
 }
@@ -907,6 +1091,9 @@ ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 s
         .didnt_break_cell = -1,
         .can_continue = false,
         .didnt_continue_cell = -1,
+        .switch_start_cell_index = -1,
+        .switch_value_type = TYPES_CAPACITY,
+        .switch_value_type_cached_size = -1,
     };
     
     // Allocate 'incomplete' cell if function can return early
@@ -915,7 +1102,7 @@ ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 s
         emit_context.incomplete_cell = emit_context.current_cell_index++;
     }
 
-    if(emit_body(function.begin + function.arity, function.begin + function.num_stmts)){
+    if(emit_body(function.begin + function.arity, function.begin + function.num_stmts, false)){
         return 1;
     }
 

@@ -1,10 +1,10 @@
 
 # Features and bugs left
 
-- `Nested structures (never fully implemented)`
-- `switch(value){ case A: statements; break; case B: statements; break; default: statements; }`
+- ensure proper variable lookup inside switch statements
 - `{ 1, 2, 3, 4 }`
 - `(Type){ .a = a, .b = b, .c = c }`
+- `Nested structures (never fully implemented)`
 - ensure support for n-d arrays
 - enums
 - `u16`
@@ -15,4 +15,5 @@
 - `readu8()` 
 - `read()` array
 - file directives
+- `memcmp`, `strcmp`, `strlen`, `strcat`, `memset`
 

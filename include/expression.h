@@ -64,6 +64,9 @@ enum {
     EXPRESSION_SIZEOF_TYPE_U8, /* { type } */
     EXPRESSION_SIZEOF_VALUE, /* { type } */
     EXPRESSION_SIZEOF_VALUE_U8, /* { type } */
+    EXPRESSION_SWITCH, /* { condition, num_statements } */
+    EXPRESSION_CASE, /* { numeric_expression, num_statements } */
+    EXPRESSION_DEFAULT,
 };
 typedef u8 ExpressionKind;
 
@@ -79,6 +82,8 @@ ExpressionKind expression_kind_unary_prefix_from_token_kind(TokenKind kind);
 ExpressionKind expression_kind_unary_postfix_from_token_kind(TokenKind kind);
 ExpressionKind expression_kind_binary_from_token_kind(TokenKind kind);
 ExpressionKind expression_kind_binary_from_assignment_token_kind(TokenKind kind);
+
+u0 expression_print_cannot_use_case_here_error(Expression expression);
 
 #endif // _PECK_AST_EXPRESSION_H
 

@@ -16,6 +16,9 @@ typedef struct {
     u32 didnt_break_cell;
     u1 can_continue;
     u32 didnt_continue_cell;
+    u32 switch_value_type;
+    u32 switch_value_type_cached_size;
+    u32 switch_start_cell_index;
 } EmitContext;
 
 EmitContext emit_context;

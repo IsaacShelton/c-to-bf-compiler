@@ -388,6 +388,12 @@ u32 lex(){
                     tokens[num_tokens - 1].kind = TOKEN_FOR;
                 } else if(lexed.consumed == 6 && memcmp(code_buffer, "sizeof", 6) == 0){
                     tokens[num_tokens - 1].kind = TOKEN_SIZEOF;
+                } else if(lexed.consumed == 6 && memcmp(code_buffer, "switch", 6) == 0){
+                    tokens[num_tokens - 1].kind = TOKEN_SWITCH;
+                } else if(lexed.consumed == 4 && memcmp(code_buffer, "case", 4) == 0){
+                    tokens[num_tokens - 1].kind = TOKEN_CASE;
+                } else if(lexed.consumed == 7 && memcmp(code_buffer, "default", 7) == 0){
+                    tokens[num_tokens - 1].kind = TOKEN_DEFAULT;
                 } else {
                     tokens[num_tokens - 1].data = num_aux;
 

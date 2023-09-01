@@ -70,6 +70,9 @@ enum {
     TOKEN_CONTINUE,
     TOKEN_FOR,
     TOKEN_SIZEOF,
+    TOKEN_SWITCH,
+    TOKEN_CASE,
+    TOKEN_DEFAULT,
 };
 
 typedef u8 TokenKind;

@@ -199,6 +199,15 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_SIZEOF:
         printf("sizeof");
         break;
+    case TOKEN_SWITCH:
+        printf("switch");
+        break;
+    case TOKEN_CASE:
+        printf("case");
+        break;
+    case TOKEN_DEFAULT:
+        printf("default");
+        break;
     default:
         printf("<unknown>");
     }

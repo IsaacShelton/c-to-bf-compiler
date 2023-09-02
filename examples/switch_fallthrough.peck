@@ -1,0 +1,25 @@
+
+u0 main(){
+    print("Enter a letter: ");
+    u8 letter = get();
+
+    switch(letter){
+    case 'A':
+        print("got 'A'\n");
+    case 'B':
+        print("got 'B'\n");
+        print("You entered 'A' or 'B'\n");
+        break;
+    case 'C':
+        print("got 'C'\n");
+    case 'D':
+        print("got 'D'\n");
+    case 'E':
+        print("got 'E'\n");
+        print("You entered 'C', 'D', or 'E'\n");
+        break;
+    default:
+        print("You entered in a letter other than 'A', 'B', 'C', 'D', or 'E'\n");
+    }
+}
+

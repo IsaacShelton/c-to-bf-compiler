@@ -19,6 +19,7 @@ typedef struct {
     u32 switch_value_type;
     u32 switch_value_type_cached_size;
     u32 switch_start_cell_index;
+    u32 fell_through_cell;
 } EmitContext;
 
 EmitContext emit_context;

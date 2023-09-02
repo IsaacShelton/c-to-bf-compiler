@@ -256,6 +256,33 @@ static u0 emit_post_loop_condition_break_check(){
     }
 }
 
+static u0 emit_pre_case_fallthrough_check(){
+    // Allocate default result (true)
+    printf("[-]+>");
+    emit_context.current_cell_index++;
+
+    // Copy 'fell_through_cell'
+    copy_cell_static(emit_context.fell_through_cell);
+
+    // Negate 'fell_through_cell'
+    emit_not_u1();
+
+    // Go to '!fell_through_cell'
+    printf("<");
+    emit_context.current_cell_index--;
+
+    // If hasn't fallen through, evalute case value instead of
+    // default value
+    printf("[<");
+    emit_context.current_cell_index--;
+}
+
+static u0 emit_post_case_fallthrough_check(){
+    // Remain pointing at next available cell
+    // End if
+    printf("[-]]");
+}
+
 ErrorCode emit_close_checks_until(u32 waterline){
     while(num_closes_needed > waterline){
         CloseNeeded close_needed = closes_needed[--num_closes_needed];
@@ -503,6 +530,10 @@ static u0 enter_switch(){
     // Allocate 'didnt_break_cell'
     printf("[-]+>");
     emit_context.didnt_break_cell = emit_context.current_cell_index++;
+
+    // Allocate 'fell_through_cell'
+    printf("[-]>");
+    emit_context.fell_through_cell = emit_context.current_cell_index++;
 }
 
 static u0 exit_switch(){
@@ -756,16 +787,17 @@ static ErrorCode emit_switch(Expression expression){
         {
             u8 value = value;
             u1 didnt_break = true;
+            u1 fell_through = false;
 
-            if(value == 100){
+            if(fell_through || value == 100){
                 a();
                 didnt_break = false;
             }
 
             if(didnt_break && didnt_continue && didnt_return_early){
-                if(value == 75){
+                if(fell_through || value == 75){
                     b();
-                    // no break here, so we continue downward
+                    fell_through = true;
                 }
 
                 // NOTE: In practice these checks are omitted when previous code cannot cause them.
@@ -782,6 +814,7 @@ static ErrorCode emit_switch(Expression expression){
     u32 old_switch_value_type = emit_context.switch_value_type;
     u32 old_switch_value_type_cached_size = emit_context.switch_value_type_cached_size;
     u32 old_switch_start_cell_index = emit_context.switch_start_cell_index;
+    u32 old_fell_through_cell = emit_context.fell_through_cell;
 
     enter_switch();
 
@@ -823,6 +856,7 @@ static ErrorCode emit_switch(Expression expression){
     emit_context.switch_value_type = old_switch_value_type;
     emit_context.switch_value_type_cached_size = old_switch_value_type_cached_size;
     emit_context.switch_start_cell_index = old_switch_start_cell_index;
+    emit_context.fell_through_cell = old_fell_through_cell;
 
     return emit_break_check() || emit_continue_check() || emit_early_return_check();
 }
@@ -839,6 +873,8 @@ static ErrorCode emit_case(Expression expression){
     u1 default_case = operands[expression.ops] >= EXPRESSIONS_CAPACITY;
 
     if(!default_case){
+        emit_pre_case_fallthrough_check();
+
         // Dupe switch value
         copy_cells_static(emit_context.switch_start_cell_index, emit_context.switch_value_type_cached_size);
         
@@ -865,6 +901,8 @@ static ErrorCode emit_case(Expression expression){
             return 1;
         }
 
+        emit_post_case_fallthrough_check();
+
         // Go to condition
         printf("<");
         emit_context.current_cell_index--;
@@ -874,7 +912,8 @@ static ErrorCode emit_case(Expression expression){
     }
 
     // Emit 'case' body
-    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false)){
+    u32 len = operands[expression.ops + 1];
+    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + len + 1, false)){
         return 1;
     }
 
@@ -885,6 +924,14 @@ static ErrorCode emit_case(Expression expression){
     }
 
     if(!default_case){
+        u32 termination = expressions[statements[emit_context.current_statement]].kind;
+
+        if(len == 0 || !(termination == EXPRESSION_BREAK || termination == EXPRESSION_CONTINUE || termination == EXPRESSION_RETURN)){
+            // Fall through
+            u32 offset = emit_context.current_cell_index - emit_context.fell_through_cell;
+            printf("%d<[-]+%d>", offset, offset);
+        }
+
         // End if
         printf("[-]]");
     }

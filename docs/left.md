@@ -1,7 +1,6 @@
 
 # Features and bugs left
 
-- ensure proper variable lookup inside switch statements
 - `{ 1, 2, 3, 4 }`
 - `(Type){ .a = a, .b = b, .c = c }`
 - `Nested structures (never fully implemented)`

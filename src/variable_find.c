@@ -31,6 +31,8 @@ static Container get_parent_container(u32 statement_index){
 
     Function function = functions[emit_context.function];
 
+    u1 allow_case = expressions[statements[statement_index]].kind != EXPRESSION_CASE;
+
     for(u32 i = statement_index - 1; i != function.begin - 1; i--){
         Expression expression = expressions[statements[i]];
 
@@ -45,6 +47,20 @@ static Container get_parent_container(u32 statement_index){
                         .self_statement = i,
                         .start_statement = i + 1,
                         .stop_statement = i + num_statements + 1,
+                        .secondary_start_statement = STATEMENTS_CAPACITY,
+                        .secondary_stop_statement = STATEMENTS_CAPACITY,
+                    };
+                }
+            }
+            break;
+        case EXPRESSION_SWITCH: {
+                u32 num_statements = operands[expression.ops + 1];
+
+                if(i + num_statements >= statement_index){
+                    return (Container){
+                        .self_statement = i,
+                        .start_statement = i + 1,
+                        .stop_statement = i + 1,
                         .secondary_start_statement = STATEMENTS_CAPACITY,
                         .secondary_stop_statement = STATEMENTS_CAPACITY,
                     };
@@ -115,6 +131,20 @@ static Container get_parent_container(u32 statement_index){
                 }
             }
             break;
+        case EXPRESSION_CASE: {
+                u32 num_statements = operands[expression.ops + 1];
+
+                if(allow_case && i + num_statements >= statement_index){
+                    return (Container){
+                        .self_statement = i,
+                        .start_statement = i + 1,
+                        .stop_statement = i + num_statements + 1,
+                        .secondary_start_statement = STATEMENTS_CAPACITY,
+                        .secondary_stop_statement = STATEMENTS_CAPACITY,
+                    };
+                }
+            }
+            break;
         }
     }
 
@@ -138,6 +168,7 @@ u32 find_declaration(u32 start_statement, u32 stop_statement, u32 name){
         case EXPRESSION_IF:
         case EXPRESSION_WHILE:
         case EXPRESSION_DO_WHILE:
+        case EXPRESSION_SWITCH:
             i += operands[expression.ops + 1];
             break;
         case EXPRESSION_IF_ELSE:
@@ -162,6 +193,36 @@ typedef struct {
     u32 delta_depth;
     u32 delta_offset;
 } HoneInfo;
+
+static HoneInfo hone_switch_case_or_skip(u32 current_statement, u32 target_statement, u32 num_statements){
+    for(u32 i = current_statement + 1; i < current_statement + num_statements + 1; i++){
+        Expression expression = expressions[statements[i]];
+
+        switch(expression.kind){
+        case EXPRESSION_IF:
+        case EXPRESSION_WHILE:
+        case EXPRESSION_DO_WHILE:
+        case EXPRESSION_SWITCH:
+            i += operands[expression.ops + 1];
+            break;
+        case EXPRESSION_IF_ELSE:
+            i += operands[expression.ops + 1] + operands[expression.ops + 2];
+        case EXPRESSION_FOR:
+            i += operands[expression.ops] + operands[expression.ops + 2] + operands[expression.ops + 3];
+            break;
+        case EXPRESSION_CASE: {
+                u32 num_case_statements = operands[expression.ops + 1];
+
+                if(target_statement <= i + num_case_statements){
+                    return (HoneInfo){ .delta_i = i - (current_statement + 1), .delta_depth = 1, .delta_offset = 2 };
+                }
+            }
+            break;
+        }
+    }
+
+    return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = 0 };
+}
 
 HoneInfo hone_statement(u32 current_statement, u32 target_statement){
     Expression expression = expressions[statements[current_statement]];
@@ -218,6 +279,13 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
             } else {
                 return (HoneInfo){ .delta_i = num_pre + num_post + len, .delta_depth = 0, .delta_offset = 0 };
             }
+        }
+        break;
+    case EXPRESSION_SWITCH: {
+            u32 num_statements = operands[expression.ops + 1];
+
+            // Find which case
+            return hone_switch_case_or_skip(current_statement, target_statement, num_statements);
         }
         break;
     }

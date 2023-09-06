@@ -159,6 +159,62 @@ static Expression parse_expression_sizeof(u24 line_number){
     }
 }
 
+static Expression parse_array_initializer_expression(u24 line_number){
+    // {
+    //   ^
+
+    u32 length = 0;
+    u32 temporary_storage[MAX_ARRAY_INITIALIZER_LENGTH];
+
+    while(!eat_token(TOKEN_END)){
+        Expression item_expression = parse_expression();
+        if(had_parse_error) return (Expression){0};
+
+        u32 item = add_expression(item_expression);
+        if(item >= EXPRESSIONS_CAPACITY){
+            stop_parsing();
+            return (Expression){0};
+        }
+
+        if(length + 1 >= MAX_ARRAY_INITIALIZER_LENGTH){
+            printf("\nerror on line %d: Exceeded maximum array initializer length\n", u24_unpack(line_number));
+            stop_parsing();
+            return (Expression){0};
+        }
+
+        temporary_storage[length++] = item;
+
+        if(!eat_token(TOKEN_NEXT)){
+            if(!is_token(TOKEN_END)){
+                printf("\nerror on line %d: Expected '}' or ',' after item of array initializer list\n", u24_unpack(line_number));
+                instead_got();
+                stop_parsing();
+                return (Expression){0};
+            }
+        }
+    }
+
+    if(num_operands + length + 1 >= OPERANDS_CAPACITY){
+        printf("\nOut of memory: Exceeded maximum number of total expression operands\n");
+        stop_parsing();
+        return (Expression){0};
+    }
+
+    u32 ops = num_operands;
+    operands[num_operands++] = length;
+
+    for(u32 i = 0; i < length; i++){
+        operands[num_operands++] = temporary_storage[i];
+    }
+
+    num_operands += length + 1;
+
+    return (Expression){
+        .kind = EXPRESSION_ARRAY_INITIALIZER,
+        .ops = ops,
+        .line = line_number,
+    };
+}
 
 static Expression parse_primary_expression(){
     u24 line_number = current_line_packed();
@@ -273,6 +329,10 @@ static Expression parse_primary_expression(){
         }
 
         return expression;
+    }
+
+    if(eat_token(TOKEN_BEGIN)){
+        return parse_array_initializer_expression(line_number);
     }
 
     if( eat_token(TOKEN_SUBTRACT)

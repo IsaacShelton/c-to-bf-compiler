@@ -1183,6 +1183,56 @@ static u32 expression_emit_sizeof_value_u8(Expression expression){
     return u8_type;
 }
 
+static u32 expression_emit_array_initializer(Expression expression){
+    u32 element_type = u0_type;
+    u32 length = operands[expression.ops];
+
+    for(u32 i = 0; i < length; i++){
+        u32 item_type = expression_emit(expressions[operands[expression.ops + 1 + i]]);
+        if(item_type >= TYPES_CAPACITY) return item_type;
+
+        if(i == 0){
+            element_type = item_type;
+        } else if(item_type != element_type){
+            printf("\nerror on line %d: Element %d of array initializer has different type than first element\n", u24_unpack(expression.line), i + 1);
+            printf("  Expected '");
+            type_print(types[element_type]);
+            printf("',");
+            printf(" got '");
+            type_print(types[item_type]);
+            printf("'\n");
+            return TYPES_CAPACITY;
+        }
+    }
+
+    u32 new_dims[4];
+    memcpy(new_dims, dimensions[types[element_type].dimensions], sizeof new_dims);
+
+    u8 empty_i = 0;
+    for(empty_i = 0; empty_i < 4; empty_i++){
+        if(new_dims[empty_i] == 0){
+            break;
+        }
+    }
+
+    if(empty_i >= 4){
+        printf("\nerror on line %d: Cannot create array intializer with element type that already has maximum number of dimensions\n", u24_unpack(expression.line));
+        return TYPES_CAPACITY;
+    }
+
+    new_dims[empty_i] = length;
+
+    u32 initializer_type_dimensions = add_dimensions(new_dims);
+    if(initializer_type_dimensions >= UNIQUE_DIMENSIONS_CAPACITY) return TYPES_CAPACITY;
+
+    Type initializer_type = (Type){
+        .name = types[element_type].name,
+        .dimensions = initializer_type_dimensions,
+    };
+
+    return add_type(initializer_type);
+}
+
 u32 expression_emit(Expression expression){
     switch(expression.kind){
     case EXPRESSION_DECLARE: {
@@ -1310,6 +1360,8 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_SIZEOF_VALUE:
     case EXPRESSION_SIZEOF_VALUE_U8:
         return expression_emit_sizeof_value_u8(expression);
+    case EXPRESSION_ARRAY_INITIALIZER:
+        return expression_emit_array_initializer(expression);
     default:
         printf("\nerror: Unknown expression kind %d during expression_emit\n", expression.kind);
         return TYPES_CAPACITY;

@@ -1,7 +1,6 @@
 
 # Features and bugs left
 
-- `{ 1, 2, 3, 4 }`
 - `(Type){ .a = a, .b = b, .c = c }`
 - `Nested structures (never fully implemented)`
 - ensure support for n-d arrays

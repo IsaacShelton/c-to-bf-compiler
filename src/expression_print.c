@@ -192,6 +192,21 @@ u0 expression_print(Expression expression){
             printf("default");
         }
         break;
+    case EXPRESSION_ARRAY_INITIALIZER: {
+            u32 length = operands[expression.ops];
+            printf("{");
+
+            for(u32 i = 0; i < length; i++){
+                if(i != 0){
+                    printf(", ");
+                }
+
+                expression_print(expressions[operands[expression.ops + 1 + i]]);
+            }
+
+            printf("}");
+        }
+        break;
     default:
         printf("<unknown expression>");
     }

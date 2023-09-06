@@ -175,6 +175,8 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
     case EXPRESSION_FOR:
         expression_infer(operands[expression.ops + 1], EXPRESSION_U1);
         break;
+    case EXPRESSION_SWITCH:
+    case EXPRESSION_CASE:
     case EXPRESSION_MEMBER:
         expression_infer(operands[expression.ops], EXPRESSION_NONE);
         break;
@@ -192,6 +194,13 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
         case EXPRESSION_U8:
             expressions[expression_index].kind = EXPRESSION_SIZEOF_VALUE_U8;
             break;
+        }
+        break;
+    case EXPRESSION_ARRAY_INITIALIZER: {
+            u32 length = operands[expression.ops];
+            for(u32 i = 0; i < length; i++){
+                expression_infer(operands[expression.ops + 1 + i], EXPRESSION_NONE);
+            }
         }
         break;
     }

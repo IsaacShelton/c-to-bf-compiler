@@ -1,0 +1,17 @@
+
+u0 main(){
+    u8[16] name = { 'J', 'o', 'h', 'n' };
+
+    print(name);
+    print("\n");
+
+    u8[16] numbers = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+
+    print("Printing numbers...\n");
+
+    for(u8 i = 0; i < 16; i++){
+        printu8(numbers[i]);
+        print("\n");
+    }
+}
+

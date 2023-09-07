@@ -207,6 +207,31 @@ u0 expression_print(Expression expression){
             printf("}");
         }
         break;
+    case EXPRESSION_STRUCT_INITIALIZER: {
+            u32 type = operands[expression.ops];
+            u32 length = operands[expression.ops + 1];
+            printf("(");
+            type_print(types[type]);
+            printf("){ ");
+
+            for(u32 i = 0; i < length; i++){
+                if(i != 0){
+                    printf(", ");
+                }
+
+                expression_print(expressions[operands[expression.ops + 2 + i]]);
+            }
+
+            printf(" }");
+        }
+        break;
+    case EXPRESSION_FIELD_INITIALIZER: {
+            printf(".");
+            print_aux_cstr(operands[expression.ops]);
+            printf(" = ");
+            expression_print(expressions[operands[expression.ops + 1]]);
+        }
+        break;
     default:
         printf("<unknown expression>");
     }

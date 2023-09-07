@@ -159,12 +159,121 @@ static Expression parse_expression_sizeof(u24 line_number){
     }
 }
 
+static u32 create_field_initializer(u32 field_name, u32 field_value, u24 line_number){
+    // Creates and expression for `.field_name = field_value`
+
+    u32 ops = add_operands2(field_name, field_value);
+    if(ops >= OPERANDS_CAPACITY){
+        stop_parsing();
+        return EXPRESSIONS_CAPACITY;
+    }
+
+    Expression member_expression = (Expression){
+        .kind = EXPRESSION_FIELD_INITIALIZER,
+        .ops = ops,
+        .line = line_number,
+    };
+
+    u32 member = add_expression(member_expression);
+    if(member >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+    }
+
+    return member;
+}
+
+static Expression parse_struct_initializer(Type type, u24 line_number){
+    // (Type) { 
+    //          ^
+
+    u32 length = 0;
+    u32 temporary_storage[MAX_INITIALIZER_LIST_LENGTH];
+
+    while(!eat_token(TOKEN_END)){
+        if(!eat_token(TOKEN_MEMBER)){
+            printf("\nerror on line %d: Expected '.' for field of struct literal\n", u24_unpack(line_number));
+            stop_parsing();
+            return (Expression){0};
+        }
+
+        if(!is_token(TOKEN_WORD)){
+            printf("\nerror on line %d: Expected name of field after '.' in struct literal\n", u24_unpack(line_number));
+            stop_parsing();
+            return (Expression){0};
+        }
+
+        u32 field = eat_word();
+        u24 line_number = current_line_packed();
+
+        if(!eat_token(TOKEN_ASSIGN)){
+            printf("\nerror on line %d: Expected '=' after name of field in struct literal\n", u24_unpack(line_number));
+            stop_parsing();
+            return (Expression){0};
+        }
+
+        Expression field_value_expression = parse_expression();
+        if(had_parse_error) return (Expression){0};
+
+        u32 field_value = add_expression(field_value_expression);
+        if(field_value >= EXPRESSIONS_CAPACITY){
+            stop_parsing();
+            return (Expression){0};
+        }
+
+        if(length + 1 >= MAX_INITIALIZER_LIST_LENGTH){
+            printf("\nerror on line %d: Exceeded maximum struct initializer length\n", u24_unpack(line_number));
+            stop_parsing();
+            return (Expression){0};
+        }
+
+        u32 member = create_field_initializer(field, field_value, line_number);
+        if(member >= EXPRESSIONS_CAPACITY) return (Expression){0};
+
+        temporary_storage[length++] = member;
+
+        if(!eat_token(TOKEN_NEXT)){
+            if(!is_token(TOKEN_END)){
+                printf("\nerror on line %d: Expected '}' or ',' after item of array initializer list\n", u24_unpack(line_number));
+                instead_got();
+                stop_parsing();
+                return (Expression){0};
+            }
+        }
+    }
+
+    if(num_operands + length + 2 >= OPERANDS_CAPACITY){
+        printf("\nOut of memory: Exceeded maximum number of total expression operands\n");
+        stop_parsing();
+        return (Expression){0};
+    }
+
+    u32 type_index = add_type(type);
+    if(type_index >= TYPES_CAPACITY){
+        stop_parsing();
+        return (Expression){0};
+    }
+
+    u32 ops = num_operands;
+    operands[num_operands++] = type_index;
+    operands[num_operands++] = length;
+
+    for(u32 i = 0; i < length; i++){
+        operands[num_operands++] = temporary_storage[i];
+    }
+
+    return (Expression){
+        .kind = EXPRESSION_STRUCT_INITIALIZER,
+        .ops = ops,
+        .line = line_number,
+    };
+}
+
 static Expression parse_array_initializer_expression(u24 line_number){
     // {
     //   ^
 
     u32 length = 0;
-    u32 temporary_storage[MAX_ARRAY_INITIALIZER_LENGTH];
+    u32 temporary_storage[MAX_INITIALIZER_LIST_LENGTH];
 
     while(!eat_token(TOKEN_END)){
         Expression item_expression = parse_expression();
@@ -176,7 +285,7 @@ static Expression parse_array_initializer_expression(u24 line_number){
             return (Expression){0};
         }
 
-        if(length + 1 >= MAX_ARRAY_INITIALIZER_LENGTH){
+        if(length + 1 >= MAX_INITIALIZER_LIST_LENGTH){
             printf("\nerror on line %d: Exceeded maximum array initializer length\n", u24_unpack(line_number));
             stop_parsing();
             return (Expression){0};
@@ -206,8 +315,6 @@ static Expression parse_array_initializer_expression(u24 line_number){
     for(u32 i = 0; i < length; i++){
         operands[num_operands++] = temporary_storage[i];
     }
-
-    num_operands += length + 1;
 
     return (Expression){
         .kind = EXPRESSION_ARRAY_INITIALIZER,
@@ -289,32 +396,36 @@ static Expression parse_primary_expression(){
                 return (Expression){0};
             }
 
-            Expression expression = parse_primary_expression();
-            if(had_parse_error) return (Expression){0};
+            if(eat_token(TOKEN_BEGIN)){
+                return parse_struct_initializer(type, line_number);
+            } else {
+                Expression expression = parse_primary_expression();
+                if(had_parse_error) return (Expression){0};
 
-            u32 type_index = add_type(type);
-            if(type_index >= TYPES_CAPACITY){
-                stop_parsing();
-                return (Expression){0};
+                u32 type_index = add_type(type);
+                if(type_index >= TYPES_CAPACITY){
+                    stop_parsing();
+                    return (Expression){0};
+                }
+
+                u32 expression_index = add_expression(expression);
+                if(expression_index >= EXPRESSIONS_CAPACITY){
+                    stop_parsing();
+                    return (Expression){0};
+                }
+
+                u32 ops = add_operands2(type_index, expression_index);
+                if(ops >= OPERANDS_CAPACITY){
+                    stop_parsing();
+                    return (Expression){0};
+                }
+
+                return (Expression){
+                    .kind = EXPRESSION_CAST,
+                    .line = line_number,
+                    .ops = ops,
+                };
             }
-
-            u32 expression_index = add_expression(expression);
-            if(expression_index >= EXPRESSIONS_CAPACITY){
-                stop_parsing();
-                return (Expression){0};
-            }
-
-            u32 ops = add_operands2(type_index, expression_index);
-            if(ops >= OPERANDS_CAPACITY){
-                stop_parsing();
-                return (Expression){0};
-            }
-
-            return (Expression){
-                .kind = EXPRESSION_CAST,
-                .line = line_number,
-                .ops = ops,
-            };
         }
 
         // Normal nested expression

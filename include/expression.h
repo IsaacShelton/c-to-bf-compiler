@@ -66,7 +66,9 @@ enum {
     EXPRESSION_SIZEOF_VALUE_U8, /* { type } */
     EXPRESSION_SWITCH, /* { condition, num_statements } */
     EXPRESSION_CASE, /* { numeric_expression, num_statements } */
-    EXPRESSION_ARRAY_INITIALIZER, /* { num_expressions, expressoin1, expression2, expressoin3, ..., expressoinN } */
+    EXPRESSION_ARRAY_INITIALIZER, /* { num_expressions, expression1, expression2, expression3, ..., expressionN } */
+    EXPRESSION_STRUCT_INITIALIZER, /* { type, num_expressions, field_initializer1, field_initializer2, ..., field_initializerN } */
+    EXPRESSION_FIELD_INITIALIZER, /* { field_name, field_value } */
 };
 typedef u8 ExpressionKind;
 

@@ -254,6 +254,73 @@ static u1 is_destination(Expression expression){
     }
 }
 
+static Destination destination_member(Destination destination, u32 target_field_name, u24 line_on_error){
+    if(destination.offset_size > 0){
+        printf("\nerror on line %d: Cannot member into destination that already has an offset yet (not supported)\n", u24_unpack(line_on_error));
+        return (Destination) { .type = TYPES_CAPACITY };
+    }
+
+    Type type = types[destination.type];
+    u1 is_struct_type = true;
+    TypeDef def;
+
+    // Ensure not array
+    if(type.dimensions != 0){
+        is_struct_type = false;
+    }
+
+    // Ensure typedef exists
+    if(is_struct_type){
+        // Get typedef
+        u32 def_index = find_typedef(types[destination.type].name);
+        if(def_index >= TYPES_CAPACITY){
+            is_struct_type = false;
+        } else {
+            def = typedefs[def_index];
+        }
+    }
+
+    // Ensure typedef is a struct
+    if(is_struct_type){
+        if(def.kind != TYPEDEF_STRUCT){
+            is_struct_type = false;
+        }
+    }
+
+    if(!is_struct_type){
+        printf("\nerror on line %d: Cannot get '", u24_unpack(line_on_error));
+        print_aux_cstr(target_field_name);
+        printf("' of non-struct type '");
+        type_print(type);
+        printf("'\n");
+        return (Destination) { .type = TYPES_CAPACITY };
+    }
+
+    // Result destination type is invalid unless we find the member
+    destination.type = TYPES_CAPACITY;
+
+    for(u32 i = 0; i < def.num_fields; i++){
+        Expression expression = expressions[statements[def.begin + i]];
+        if(expression.kind != EXPRESSION_DECLARE) continue;
+
+        u32 field_name = operands[expression.ops + 1];
+        u32 field_type = operands[expression.ops];
+
+        if(aux_cstr_equals(target_field_name, field_name)){
+            destination.type = field_type;
+            break;
+        }
+
+        u32 field_size = type_sizeof_or_max(field_type);
+        if(field_size == -1) return (Destination){ .type = TYPES_CAPACITY };
+
+        destination.tape_location += field_size;
+    }
+
+    // If successful, then .type will be less than TYPES_CAPACITY
+    return destination;
+}
+
 static Destination expression_get_destination(Expression expression, u32 tape_anchor){
     // Creates a u32 value on the tape with the mutable location for an expression.
     // If result is `on_stack`, then the u32 offset will be relative to the stack pointer,
@@ -336,82 +403,14 @@ static Destination expression_get_destination(Expression expression, u32 tape_an
         Destination destination = expression_get_destination(subject_expression, tape_anchor);
         if(destination.type >= TYPES_CAPACITY) return (Destination) { .type = TYPES_CAPACITY };
 
-        if(destination.offset_size > 0){
-            printf("\nerror on line %d: Cannot member into destination that already has an offset yet (not supported)\n", u24_unpack(expression.line));
-            return (Destination) { .type = TYPES_CAPACITY };
-        }
-
-        Type type = types[destination.type];
-        u1 is_struct_type = true;
-        TypeDef def;
-
-        // Ensure not array
-        if(type.dimensions != 0){
-            is_struct_type = false;
-        }
-
-        // Ensure typedef exists
-        if(is_struct_type){
-            // Get typedef
-            u32 def_index = find_typedef(types[destination.type].name);
-            if(def_index >= TYPES_CAPACITY){
-                is_struct_type = false;
-            } else {
-                def = typedefs[def_index];
-            }
-        }
-
-        // Ensure typedef is a struct
-        if(is_struct_type){
-            if(def.kind != TYPEDEF_STRUCT){
-                is_struct_type = false;
-            }
-        }
-
-        if(!is_struct_type){
-            printf("\nerror on line %d: Cannot get '", u24_unpack(expression.line));
-            print_aux_cstr(operands[expression.ops + 1]);
-            printf("' of non-struct type '");
-            type_print(type);
-            printf("'\n");
-            return (Destination) { .type = TYPES_CAPACITY };
-        }
-
-        u32 target_field_name = operands[expression.ops + 1];
-
-        // Result destination type is invalid unless we find the member
-        destination.type = TYPES_CAPACITY;
-
-        for(u32 i = 0; i < def.num_fields; i++){
-            Expression expression = expressions[statements[def.begin + i]];
-            if(expression.kind != EXPRESSION_DECLARE) continue;
-
-            u32 field_name = operands[expression.ops + 1];
-            u32 field_type = operands[expression.ops];
-
-            if(aux_cstr_equals(target_field_name, field_name)){
-                destination.type = field_type;
-                break;
-            }
-
-            u32 field_size = type_sizeof_or_max(field_type);
-            if(field_size == -1) return (Destination){ .type = TYPES_CAPACITY };
-
-            destination.tape_location += field_size;
-        }
-
-        // If successful, then .type will be less than TYPES_CAPACITY
-        return destination;
+        return destination_member(destination, operands[expression.ops + 1], expression.line);
     } else {
         printf("\nerror on line %d: Cannot assign value to that destination\n", u24_unpack(expression.line));
         return (Destination){ .type = TYPES_CAPACITY };
     }
 }
 
-static u32 write_destination(u32 new_value_type, Expression destination_expression, u24 error_line_number){
-    Destination destination = expression_get_destination(destination_expression, emit_context.current_cell_index);
-    if(destination.type >= TYPES_CAPACITY) return TYPES_CAPACITY;
-
+static u32 write_destination(u32 new_value_type, Destination destination, u24 error_line_number){
     if(new_value_type != destination.type){
         if(grow_type(new_value_type, destination.type)){
             printf("\nerror on line %d: Cannot assign '", u24_unpack(error_line_number));
@@ -444,12 +443,19 @@ static u32 write_destination(u32 new_value_type, Expression destination_expressi
     }
 }
 
+static u32 write_destination_expression(u32 new_value_type, Expression destination_expression, u24 error_line_number){
+    Destination destination = expression_get_destination(destination_expression, emit_context.current_cell_index);
+    if(destination.type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    return write_destination(new_value_type, destination, error_line_number);
+}
+
 static u32 expression_emit_assign(Expression expression){
     u32 new_value = operands[expression.ops + 1];
     u32 new_value_type = expression_emit(expressions[new_value]);
     if(new_value_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
-    return write_destination(new_value_type, expressions[operands[expression.ops]], expression.line);
+    return write_destination_expression(new_value_type, expressions[operands[expression.ops]], expression.line);
 }
 
 u32 expression_emit_variable(Expression expression){
@@ -609,7 +615,7 @@ u32 expression_emit_unary(Expression expression){
             emit_u8(1);
             emit_additive_u8(expression.kind == EXPRESSION_PRE_INCREMENT);
             dupe_cell();
-            write_destination(u8_type, expressions[expression.ops], expression.line);
+            write_destination_expression(u8_type, expressions[expression.ops], expression.line);
             return type;
         }
         break;
@@ -619,7 +625,7 @@ u32 expression_emit_unary(Expression expression){
             dupe_cell();
             emit_u8(1);
             emit_additive_u8(expression.kind == EXPRESSION_POST_INCREMENT);
-            write_destination(u8_type, expressions[expression.ops], expression.line);
+            write_destination_expression(u8_type, expressions[expression.ops], expression.line);
             return type;
         }
         break;
@@ -628,7 +634,7 @@ u32 expression_emit_unary(Expression expression){
         if(type == u8_type){
             emit_u8(1);
             emit_additive_u8(expression.kind == EXPRESSION_NO_RESULT_INCREMENT);
-            write_destination(u8_type, expressions[expression.ops], expression.line);
+            write_destination_expression(u8_type, expressions[expression.ops], expression.line);
             return u0_type;
         }
         break;
@@ -1233,6 +1239,47 @@ static u32 expression_emit_array_initializer(Expression expression){
     return add_type(initializer_type);
 }
 
+static u32 expression_emit_struct_initializer(Expression expression){
+    u32 type = operands[expression.ops];
+
+    u32 type_size = type_sizeof_or_max(type);
+    if(type_size == -1) return TYPES_CAPACITY;
+
+    // Allocate space for result
+    for(u32 i = 0; i < type_size; i++){
+        printf("[-]>");
+        emit_context.current_cell_index++;
+    }
+
+    // Set fields
+    u32 length = operands[expression.ops + 1];
+
+    for(u32 i = 0; i < length; i++){
+        Expression field_initializer = expressions[operands[expression.ops + 2 + i]];
+
+        // Assume expression is field initializer expression
+        u32 field_name = operands[field_initializer.ops];
+        u32 field_value = operands[field_initializer.ops + 1];
+
+        u32 field_value_type = expression_emit(expressions[field_value]);
+        if(field_value_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+        Destination destination = (Destination){
+            .type = type,
+            .on_stack = false,
+            .offset_size = 0,
+            .tape_location = type_size,
+        };
+        destination = destination_member(destination, field_name, field_initializer.line);
+        if(destination.type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+        u32 result = write_destination(field_value_type, destination, field_initializer.line);
+        if(result >= TYPES_CAPACITY) return TYPES_CAPACITY;
+    }
+
+    return type;
+}
+
 u32 expression_emit(Expression expression){
     switch(expression.kind){
     case EXPRESSION_DECLARE: {
@@ -1362,6 +1409,8 @@ u32 expression_emit(Expression expression){
         return expression_emit_sizeof_value_u8(expression);
     case EXPRESSION_ARRAY_INITIALIZER:
         return expression_emit_array_initializer(expression);
+    case EXPRESSION_STRUCT_INITIALIZER:
+        return expression_emit_struct_initializer(expression);
     default:
         printf("\nerror: Unknown expression kind %d during expression_emit\n", expression.kind);
         return TYPES_CAPACITY;

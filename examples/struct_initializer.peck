@@ -1,0 +1,27 @@
+
+typedef struct {
+    u8[16] name;
+    u8 age;
+    u8 height_ft;
+} Person;
+
+u0 main(){
+    Person person = (Person){
+        .name = "John",
+        .age = 47,
+        .height_ft = 6,
+    };
+
+    person_print(person);
+    print("\n");
+}
+
+u0 person_print(Person person){
+    print(person.name);
+    print(" is ");
+    printu8(person.age);
+    print(" years old, and is ");
+    printu8(person.height_ft);
+    print(" feet tall.");
+}
+

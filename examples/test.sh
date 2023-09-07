@@ -58,6 +58,7 @@ set -ex
 "$self/../peck" "$self/sizeof_type.peck"
 "$self/../peck" "$self/sizeof_value.peck"
 "$self/../peck" "$self/struct.peck"
+"$self/../peck" "$self/struct_initializer.peck"
 "$self/../peck" "$self/switch_fallthrough.peck"
 "$self/../peck" "$self/switch_simple.peck"
 "$self/../peck" "$self/switch_variables.peck"

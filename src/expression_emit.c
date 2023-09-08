@@ -373,16 +373,29 @@ static Destination expression_get_destination(Expression expression, u32 tape_an
             return (Destination) { .type = TYPES_CAPACITY };
         }
 
-        if(array_destination.offset_size > 0){
-            printf("\nerror on line %d: Cannot index into destination that already has an offset yet (not supported)\n", u24_unpack(expression.line));
-            return (Destination) { .type = TYPES_CAPACITY };
-        }
-
         u32 item_type = get_item_type(types[array_destination.type], array_expression.line, true);
         if(item_type >= TYPES_CAPACITY) return (Destination) { .type = TYPES_CAPACITY };
 
         if(index_type == u8_type){
             // u8 indexing
+
+            u32 item_size = type_sizeof_or_max(item_type);
+            if(item_size == -1) return (Destination) { .type = TYPES_CAPACITY };
+
+            if(item_size != 1){
+                emit_u8(item_size);
+                emit_multiply_u8();
+            }
+
+            if(array_destination.offset_size > 0){
+                if(array_destination.offset_size == 1 && index_type == u8_type){
+                    emit_additive_u8(true);
+                    fprintf(stderr, "warning on line %d: combining two u8 indicies\n", u24_unpack(expression.line));
+                } else {
+                    printf("\nerror on line %d: Cannot index into destination that already has an offset yet (not supported)\n", u24_unpack(expression.line));
+                    return (Destination) { .type = TYPES_CAPACITY };
+                }
+            }
             
             return (Destination) {
                 .tape_location = array_destination.tape_location,
@@ -872,12 +885,15 @@ static u32 expression_emit_read_destination(Expression expression){
     return read_destination(destination, expression.line);
 }
 
-ErrorCode print_array_reference(Destination destination, u32 max_length){
+ErrorCode print_array_reference(Destination destination, u32 max_length, u24 line_on_error){
     if(destination.offset_size == 0){
         print_cells_static(destination.tape_location, max_length);
     } else {
-        printf("\nerror: Cannot print array reference with u%d offset\n", 8*destination.offset_size);
-        return 1;
+        // TODO: Optimize this
+        // Ignore index and just copy and print the value
+        printf("%d<", destination.offset_size);
+        read_destination(destination, line_on_error);
+        emit_print_array_value(max_length);
     }
 
     return 0;
@@ -1317,7 +1333,7 @@ u32 expression_emit(Expression expression){
                 }
 
                 u32 max_length = dimensions[types[destination.type].dimensions][0];
-                if(print_array_reference(destination, max_length)){
+                if(print_array_reference(destination, max_length, expression.line)){
                     return TYPES_CAPACITY;
                 }
             } else {

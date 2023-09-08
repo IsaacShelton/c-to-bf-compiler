@@ -224,6 +224,31 @@ static HoneInfo hone_switch_case_or_skip(u32 current_statement, u32 target_state
     return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = 0 };
 }
 
+HoneInfo hone_statement(u32 current_statement, u32 target_statement);
+
+static HoneInfo hone_for_body_or_skip(u32 current_statement, u32 target_statement, u32 num_pre, u32 num_post, u32 len, u32 inner_variable_offset){
+    u32 pre_offset = 0;
+
+    for(u32 i = current_statement + 1; i < current_statement + 1 + num_pre; i++){
+        Expression expression = expressions[statements[i]];
+
+        if(expression.kind == EXPRESSION_DECLARE){
+            u32 type_size = type_sizeof_or_max(operands[expression.ops]);
+
+            if(type_size != -1){
+                pre_offset += type_size;
+            }
+        } else {
+            // Skip over constructs
+            HoneInfo hone_info = hone_statement(i, target_statement);
+            i += hone_info.delta_i;
+            pre_offset += hone_info.delta_offset;
+        }
+    }
+
+    return (HoneInfo){ .delta_i = num_pre + num_post, .delta_depth = 1, .delta_offset = pre_offset + inner_variable_offset };
+}
+
 HoneInfo hone_statement(u32 current_statement, u32 target_statement){
     Expression expression = expressions[statements[current_statement]];
 
@@ -275,7 +300,7 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
                 // NOTE: Should never happen since referencing these variables is not allowed under normal circumstances
                 return (HoneInfo){ .delta_i = num_pre, .delta_depth = 1, .delta_offset = inner_variable_offset };
             } else if(target_statement <= current_statement + num_pre + num_post + len){
-                return (HoneInfo){ .delta_i = num_pre + num_post, .delta_depth = 1, .delta_offset = inner_variable_offset };
+                return hone_for_body_or_skip(current_statement, target_statement, num_pre, num_post, len, inner_variable_offset);
             } else {
                 return (HoneInfo){ .delta_i = num_pre + num_post + len, .delta_depth = 0, .delta_offset = 0 };
             }

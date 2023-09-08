@@ -1,0 +1,12 @@
+
+u0 main(){
+    u8 size = 9;
+
+    for(u8 i = 0; i < size; i++){
+        for(u8 j = 0; j < size; j++){
+            put(i == j || size - 1 - i == j ? 'X' : ' ');
+        }
+        print("\n");
+    }
+}
+

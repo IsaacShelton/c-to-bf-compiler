@@ -114,12 +114,63 @@ u0 copy_cells_static(u32 start_index, u32 size){
     }
 }
 
+u0 emit_swap_u8(){
+    // a b
+    //     ^
+
+    // Zero temporary cell
+    printf("[-]");
+
+    // Go to 'b' cell
+    printf("<");
+
+    // Move 'b' to temporary cell
+    printf("[->+<]");
+
+    // a 0 b
+    //     ^
+    
+    // Go to 'a' cell
+    printf("<<");
+
+    // Move 'a' cell to 'b' cell
+    printf("[>+<-]");
+
+    // Go to temporary cell
+    printf(">>");
+
+    // Move temporary cell to 'a' cell
+    printf("[<<+>-]");
+
+    // Remain pointing at next available cell
+}
+
+u0 copy_cell_dynamic_u8_maintain(u32 start_index){
+    // u8_dynamic_index
+    //                  ^
+
+    // value1 u8_dynamic_index 
+    //                         ^
+
+    dupe_cell();
+    copy_cell_dynamic_u8(start_index);
+    emit_swap_u8();
+}
+
 u0 copy_cells_dynamic_u8(u32 start_index, u32 size){
-    if(size != 1){
-        printf("\nwarning: can only use move_cells_dynamic_u8 with single cell for now\n");
+    // u8_dynamic_index
+    //                  ^
+
+    // value1 value2 value3 valueN
+    //                             ^
+
+    if(size == 0) return;
+
+    for(u32 i = 0; i < size - 1; i++){
+        copy_cell_dynamic_u8_maintain(start_index + i);
     }
 
-    copy_cell_dynamic_u8(start_index);
+    copy_cell_dynamic_u8(start_index + size - 1);
 }
 
 u0 copy_cell_dynamic_u8(u32 start_index){
@@ -366,11 +417,9 @@ u0 move_cell_dynamic_u8(u32 destination_start_index){
 }
 
 u0 move_cells_dynamic_u8(u32 destination_index, u32 size){
-    if(size != 1){
-        printf("\nwarning: can only use move_cells_dynamic_u8 with single cell for now\n");
+    for(u32 i = 0; i < size; i++){
+        move_cell_dynamic_u8(destination_index + size - 1 - i);
     }
-
-    move_cell_dynamic_u8(destination_index);
 }
 
 u0 print_cells_static(u32 start_index, u32 max_length){

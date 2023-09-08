@@ -50,34 +50,25 @@ ErrorCode compute_typedef_sizes(){
                     return 1;
                 }
 
-                dependencies[num_dependencies++] = (TypeDependency){
-                    .from = i,
-                    .to = required,
-                };
+                u1 already_exists = false;
 
-                outgoing[i]++;
+                for(u32 k = 0; k < num_dependencies; k++){
+                    if(dependencies[k].from == i && dependencies[k].to == required){
+                        already_exists = true;
+                        break;
+                    }
+                }
+
+                if(!already_exists){
+                    dependencies[num_dependencies++] = (TypeDependency){
+                        .from = i,
+                        .to = required,
+                    };
+
+                    outgoing[i]++;
+                }
             }
         }
-    }
-
-    // Compute sizes for all trivial typedefs
-    for(u32 i = 0; i < num_typedefs; i++){
-        if(outgoing[i] != 0) continue;
-
-        TypeDef def = typedefs[i];
-        u32 size = 0;
-
-        for(u32 j = 0; j < def.num_fields; j++){
-            Expression expression = expressions[statements[def.begin + j]];
-            if(expression.kind != EXPRESSION_DECLARE) continue;
-
-            u32 field_size = type_sizeof_or_max(operands[expression.ops]);
-            if(field_size == -1) return 1;
-
-            size += field_size;
-        }
-
-        typedefs[i].computed_size = size;
     }
 
     u1 progress = true;
@@ -85,12 +76,41 @@ ErrorCode compute_typedef_sizes(){
     // Compute types that have no remaining dependencies
     while(progress){
         progress = false;
+        
+        // Compute sizes for all trivial typedefs
+        for(u32 i = 0; i < num_typedefs; i++){
+            if(!(outgoing[i] == 0 && typedefs[i].computed_size == -1)) continue;
+
+            TypeDef def = typedefs[i];
+            u32 size = 0;
+
+            for(u32 j = 0; j < def.num_fields; j++){
+                Expression expression = expressions[statements[def.begin + j]];
+                if(expression.kind != EXPRESSION_DECLARE) continue;
+
+                u32 field_size = type_sizeof_or_max(operands[expression.ops]);
+                if(field_size == -1) return 1;
+
+                size += field_size;
+            }
+
+            typedefs[i].computed_size = size;
+
+            for(u32 j = 0; j < num_dependencies; j++){
+                if(dependencies[j].to == i){
+                    outgoing[dependencies[j].from]--;
+                    progress = true;
+                }
+            }
+
+            break;
+        }
     }
 
     // Ensure all typedefs were processed
     for(u32 i = 0; i < num_typedefs; i++){
         if(outgoing[i] != 0){
-            printf("\nerror: Type '");
+            printf("\nerror on line %d: Type '", u24_unpack(typedefs[i].line));
             print_aux_cstr(typedefs[i].name);
             printf("' has infinite size\n");
             return 1;

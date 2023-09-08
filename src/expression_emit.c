@@ -12,6 +12,7 @@
 #include "../include/variable_find.h"
 #include "../include/emit_context.h"
 #include "../include/parse_dimensions.h"
+#include "../include/expression_print.h"
 
 static u0 print_nth_argument_label(u32 number){
     switch(number){
@@ -211,13 +212,13 @@ typedef struct {
     u32 type; // If >= TYPES_CAPACITY, then error occurred
 } Destination;
 
-static u32 get_item_type(Type type, u1 show_error_message){
+static u32 get_item_type(Type type, u24 line_on_error, u1 show_error_message){
     u32 dims[4];
     memcpy(dims, &dimensions[type.dimensions], sizeof(u32) * 4);
 
     if(dims[0] == 0){
         if(show_error_message){
-            printf("\nerror: Cannot index into non-array type '");
+            printf("\nerror on line %d: Cannot index into non-array type '", u24_unpack(line_on_error));
             type_print(type);
             printf("'\n");
         }
@@ -377,7 +378,7 @@ static Destination expression_get_destination(Expression expression, u32 tape_an
             return (Destination) { .type = TYPES_CAPACITY };
         }
 
-        u32 item_type = get_item_type(types[array_destination.type], true);
+        u32 item_type = get_item_type(types[array_destination.type], array_expression.line, true);
         if(item_type >= TYPES_CAPACITY) return (Destination) { .type = TYPES_CAPACITY };
 
         if(index_type == u8_type){
@@ -929,7 +930,7 @@ static u32 expression_get_type(Expression expression){
     case EXPRESSION_INDEX: {
             u32 array_type = expression_get_type(expressions[operands[expression.ops]]);
             if(array_type >= TYPES_CAPACITY) return array_type;
-            return get_item_type(types[array_type], false);
+            return get_item_type(types[array_type], expression.line, false);
         }
     case EXPRESSION_MEMBER: {
             u32 subject_type_index = expression_get_type(expressions[operands[expression.ops]]);
@@ -1253,6 +1254,7 @@ static u32 expression_emit_struct_initializer(Expression expression){
 
     // Set fields
     u32 length = operands[expression.ops + 1];
+    u32 out_struct_location = emit_context.current_cell_index - type_size;
 
     for(u32 i = 0; i < length; i++){
         Expression field_initializer = expressions[operands[expression.ops + 2 + i]];
@@ -1268,8 +1270,9 @@ static u32 expression_emit_struct_initializer(Expression expression){
             .type = type,
             .on_stack = false,
             .offset_size = 0,
-            .tape_location = type_size,
+            .tape_location = out_struct_location,
         };
+
         destination = destination_member(destination, field_name, field_initializer.line);
         if(destination.type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
@@ -1306,8 +1309,10 @@ u32 expression_emit(Expression expression){
                 Destination destination = expression_get_destination(expressions[expression.ops], tape_anchor);
                 if(destination.type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
-                if(get_item_type(types[destination.type], true) != u8_type){
-                    printf("\nerror on line %d: Cannot print non u8[] value\n", u24_unpack(expression.line));
+                if(get_item_type(types[destination.type], expression.line, false) != u8_type){
+                    printf("\nerror on line %d: Can only print 'u8[]' but got '", u24_unpack(expression.line));
+                    type_print(types[destination.type]);
+                    printf("'\n");
                     return TYPES_CAPACITY;
                 }
 
@@ -1320,8 +1325,10 @@ u32 expression_emit(Expression expression){
                 u32 array_type = expression_emit(expressions[expression.ops]);
                 if(array_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
-                if(get_item_type(types[array_type], true) != u8_type){
-                    printf("\nerror on line %d: Cannot print non u8[] value\n", u24_unpack(expression.line));
+                if(get_item_type(types[array_type], expression.line, false) != u8_type){
+                    printf("\nerror on line %d: Can only print 'u8[]' but got '", u24_unpack(expression.line));
+                    type_print(types[array_type]);
+                    printf("'\n");
                     return TYPES_CAPACITY;
                 }
 

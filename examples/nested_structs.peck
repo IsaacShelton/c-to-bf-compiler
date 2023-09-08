@@ -1,0 +1,75 @@
+
+typedef struct {
+    FullName full_name;
+    Position position;
+    Occupation occupation;
+} Person;
+
+typedef struct {
+    u8 x;
+    u8 y;
+    u8 z;
+} Position;
+
+typedef struct {
+    u8[16] firstname;
+    u8[16] lastname;
+} FullName;
+
+typedef struct {
+    u8[32] employer;
+    u8[16] title;
+    Location location;
+} Occupation;
+
+typedef struct {
+    u8[2] state_code;
+    u8[32] city;
+} Location;
+
+u0 main(){
+    Person person = (Person){
+        .full_name = (FullName){
+            .firstname = "John",
+            .lastname = "Smith",
+        },
+        .position = (Position){
+            .x = 10,
+            .y = 11,
+            .z = 12,
+        },
+        .occupation = (Occupation){
+            .employer = "Smith Tech",
+            .title = "Developer",
+            .location = (Location){
+                .state_code = "WI",
+                .city = "Appleton",
+            }
+        }
+    };
+
+    person_print(person);
+}
+
+u0 person_print(Person person){
+    print(person.full_name.firstname);
+    print(" ");
+    print(person.full_name.lastname);
+    print(" is at ");
+    printu8(person.position.x);
+    print(", ");
+    printu8(person.position.y);
+    print(", ");
+    printu8(person.position.z);
+    print(".\n");
+    print("They work at ");
+    print(person.occupation.employer);
+    print(" as a ");
+    print(person.occupation.title);
+    print(" in ");
+    print(person.occupation.location.city);
+    print(", ");
+    print(person.occupation.location.state_code);
+    print(".\n");
+}
+

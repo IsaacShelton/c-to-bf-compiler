@@ -114,7 +114,7 @@ ErrorCode parse_function(u32 symbol_name, u32 symbol_type){
     return 0;
 }
 
-static ErrorCode parse_typedef_struct(){
+static ErrorCode parse_typedef_struct(u24 line_number){
     // typedef struct {
     //                ^
 
@@ -155,9 +155,11 @@ static ErrorCode parse_typedef_struct(){
 
     u32 def = add_typedef((TypeDef){
         .kind = TYPEDEF_STRUCT,
+        .line = line_number,
         .name = name,
         .begin = begin,
         .num_fields = num_statements - begin,
+        .computed_size = -1,
     });
 
     return def >= TYPEDEFS_CAPACITY;
@@ -167,8 +169,10 @@ static ErrorCode parse_typedef(){
     // typedef 
     //         ^
 
+    u24 line_number = tokens[parse_i - 1].line;
+
     if(eat_token(TOKEN_STRUCT)){
-        return parse_typedef_struct();
+        return parse_typedef_struct(line_number);
     }
 
     printf("error on line %d: Alias typdefs are not supported yet\n", current_line());

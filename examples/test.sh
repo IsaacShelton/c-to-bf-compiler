@@ -39,6 +39,7 @@ set -ex
 "$self/../peck" "$self/multiplication.peck"
 "$self/../peck" "$self/negate.peck"
 "$self/../peck" "$self/nested_expressions.peck"
+"$self/../peck" "$self/nested_structs.peck"
 "$self/../peck" "$self/nested_while.peck"
 "$self/../peck" "$self/no_result_decrement.peck"
 "$self/../peck" "$self/no_result_increment.peck"

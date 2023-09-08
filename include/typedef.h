@@ -12,6 +12,9 @@ typedef struct {
     // Kind of typedef
     TypeDefKind kind;
 
+    // Line
+    u24 line;
+
     // Name of typedef
     u32 name;
 

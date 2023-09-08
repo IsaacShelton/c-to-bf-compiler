@@ -1,7 +1,6 @@
 
 # Features and bugs left
 
-- `Nested structures (never fully implemented)`
 - ensure support for n-d arrays
 - enums
 - `u16`

@@ -1,7 +1,6 @@
 
 # Features and bugs left
 
-- ensure support for n-d arrays
 - enums
 - `u16`
 - `u32`

@@ -6,6 +6,7 @@
 
 typedef enum {
     TYPEDEF_STRUCT,
+    TYPEDEF_ENUM,
 } TypeDefKind;
 
 typedef struct {

@@ -37,6 +37,74 @@ static Container get_parent_container(u32 statement_index){
         Expression expression = expressions[statements[i]];
 
         switch(expression.kind){
+        case EXPRESSION_NONE:
+        case EXPRESSION_RETURN:
+        case EXPRESSION_DECLARE:
+        case EXPRESSION_PRINT_LITERAL:
+        case EXPRESSION_PRINT_ARRAY:
+        case EXPRESSION_CALL:
+        case EXPRESSION_IMPLEMENT_PUT:
+        case EXPRESSION_IMPLEMENT_PRINTU1:
+        case EXPRESSION_IMPLEMENT_PRINTU8:
+        case EXPRESSION_IMPLEMENT_GET:
+        case EXPRESSION_U1:
+        case EXPRESSION_U8:
+        case EXPRESSION_U16:
+        case EXPRESSION_U24:
+        case EXPRESSION_U32:
+        case EXPRESSION_INT:
+        case EXPRESSION_VARIABLE:
+        case EXPRESSION_CAST:
+        case EXPRESSION_ASSIGN:
+        case EXPRESSION_ADD:
+        case EXPRESSION_SUBTRACT:
+        case EXPRESSION_MULTIPLY:
+        case EXPRESSION_DIVIDE:
+        case EXPRESSION_MOD:
+        case EXPRESSION_EQUALS:
+        case EXPRESSION_NOT_EQUALS:
+        case EXPRESSION_LESS_THAN:
+        case EXPRESSION_GREATER_THAN:
+        case EXPRESSION_LESS_THAN_OR_EQUAL:
+        case EXPRESSION_GREATER_THAN_OR_EQUAL:
+        case EXPRESSION_LSHIFT:
+        case EXPRESSION_RSHIFT:
+        case EXPRESSION_AND:
+        case EXPRESSION_OR:
+        case EXPRESSION_BIT_AND:
+        case EXPRESSION_BIT_OR:
+        case EXPRESSION_BIT_XOR:
+        case EXPRESSION_NEGATE:
+        case EXPRESSION_NOT:
+        case EXPRESSION_BIT_COMPLEMENT:
+        case EXPRESSION_INDEX:
+        case EXPRESSION_PRE_INCREMENT:
+        case EXPRESSION_PRE_DECREMENT:
+        case EXPRESSION_POST_INCREMENT:
+        case EXPRESSION_POST_DECREMENT:
+        case EXPRESSION_NO_RESULT_INCREMENT:
+        case EXPRESSION_NO_RESULT_DECREMENT:
+        case EXPRESSION_TERNARY:
+        case EXPRESSION_MEMBER:
+        case EXPRESSION_STRING:
+        case EXPRESSION_BREAK:
+        case EXPRESSION_CONTINUE:
+        case EXPRESSION_SIZEOF_TYPE:
+        case EXPRESSION_SIZEOF_TYPE_U8:
+        case EXPRESSION_SIZEOF_TYPE_U16:
+        case EXPRESSION_SIZEOF_TYPE_U24:
+        case EXPRESSION_SIZEOF_TYPE_U32:
+        case EXPRESSION_SIZEOF_VALUE:
+        case EXPRESSION_SIZEOF_VALUE_U8:
+        case EXPRESSION_SIZEOF_VALUE_U16:
+        case EXPRESSION_SIZEOF_VALUE_U24:
+        case EXPRESSION_SIZEOF_VALUE_U32:
+        case EXPRESSION_ARRAY_INITIALIZER:
+        case EXPRESSION_STRUCT_INITIALIZER:
+        case EXPRESSION_FIELD_INITIALIZER:
+        case EXPRESSION_ENUM_VARIANT:
+            break;
+
         case EXPRESSION_IF:
         case EXPRESSION_WHILE:
         case EXPRESSION_DO_WHILE: {
@@ -165,6 +233,74 @@ u32 find_declaration(u32 start_statement, u32 stop_statement, u32 name){
         Expression expression = expressions[statements[i]];
 
         switch(expression.kind){
+        case EXPRESSION_NONE:
+        case EXPRESSION_RETURN:
+        case EXPRESSION_PRINT_LITERAL:
+        case EXPRESSION_PRINT_ARRAY:
+        case EXPRESSION_CALL:
+        case EXPRESSION_IMPLEMENT_PUT:
+        case EXPRESSION_IMPLEMENT_PRINTU1:
+        case EXPRESSION_IMPLEMENT_PRINTU8:
+        case EXPRESSION_IMPLEMENT_GET:
+        case EXPRESSION_U1:
+        case EXPRESSION_U8:
+        case EXPRESSION_U16:
+        case EXPRESSION_U24:
+        case EXPRESSION_U32:
+        case EXPRESSION_INT:
+        case EXPRESSION_VARIABLE:
+        case EXPRESSION_CAST:
+        case EXPRESSION_ASSIGN:
+        case EXPRESSION_ADD:
+        case EXPRESSION_SUBTRACT:
+        case EXPRESSION_MULTIPLY:
+        case EXPRESSION_DIVIDE:
+        case EXPRESSION_MOD:
+        case EXPRESSION_EQUALS:
+        case EXPRESSION_NOT_EQUALS:
+        case EXPRESSION_LESS_THAN:
+        case EXPRESSION_GREATER_THAN:
+        case EXPRESSION_LESS_THAN_OR_EQUAL:
+        case EXPRESSION_GREATER_THAN_OR_EQUAL:
+        case EXPRESSION_LSHIFT:
+        case EXPRESSION_RSHIFT:
+        case EXPRESSION_AND:
+        case EXPRESSION_OR:
+        case EXPRESSION_BIT_AND:
+        case EXPRESSION_BIT_OR:
+        case EXPRESSION_BIT_XOR:
+        case EXPRESSION_NEGATE:
+        case EXPRESSION_NOT:
+        case EXPRESSION_BIT_COMPLEMENT:
+        case EXPRESSION_INDEX:
+        case EXPRESSION_PRE_INCREMENT:
+        case EXPRESSION_PRE_DECREMENT:
+        case EXPRESSION_POST_INCREMENT:
+        case EXPRESSION_POST_DECREMENT:
+        case EXPRESSION_NO_RESULT_INCREMENT:
+        case EXPRESSION_NO_RESULT_DECREMENT:
+        case EXPRESSION_TERNARY:
+        case EXPRESSION_MEMBER:
+        case EXPRESSION_STRING:
+        case EXPRESSION_BREAK:
+        case EXPRESSION_CONTINUE:
+        case EXPRESSION_SIZEOF_TYPE:
+        case EXPRESSION_SIZEOF_TYPE_U8:
+        case EXPRESSION_SIZEOF_TYPE_U16:
+        case EXPRESSION_SIZEOF_TYPE_U24:
+        case EXPRESSION_SIZEOF_TYPE_U32:
+        case EXPRESSION_SIZEOF_VALUE:
+        case EXPRESSION_SIZEOF_VALUE_U8:
+        case EXPRESSION_SIZEOF_VALUE_U16:
+        case EXPRESSION_SIZEOF_VALUE_U24:
+        case EXPRESSION_SIZEOF_VALUE_U32:
+        case EXPRESSION_CASE:
+        case EXPRESSION_ARRAY_INITIALIZER:
+        case EXPRESSION_STRUCT_INITIALIZER:
+        case EXPRESSION_FIELD_INITIALIZER:
+        case EXPRESSION_ENUM_VARIANT:
+            break;
+
         case EXPRESSION_IF:
         case EXPRESSION_WHILE:
         case EXPRESSION_DO_WHILE:
@@ -199,6 +335,74 @@ static HoneInfo hone_switch_case_or_skip(u32 current_statement, u32 target_state
         Expression expression = expressions[statements[i]];
 
         switch(expression.kind){
+        case EXPRESSION_NONE:
+        case EXPRESSION_RETURN:
+        case EXPRESSION_DECLARE:
+        case EXPRESSION_PRINT_LITERAL:
+        case EXPRESSION_PRINT_ARRAY:
+        case EXPRESSION_CALL:
+        case EXPRESSION_IMPLEMENT_PUT:
+        case EXPRESSION_IMPLEMENT_PRINTU1:
+        case EXPRESSION_IMPLEMENT_PRINTU8:
+        case EXPRESSION_IMPLEMENT_GET:
+        case EXPRESSION_U1:
+        case EXPRESSION_U8:
+        case EXPRESSION_U16:
+        case EXPRESSION_U24:
+        case EXPRESSION_U32:
+        case EXPRESSION_INT:
+        case EXPRESSION_VARIABLE:
+        case EXPRESSION_CAST:
+        case EXPRESSION_ASSIGN:
+        case EXPRESSION_ADD:
+        case EXPRESSION_SUBTRACT:
+        case EXPRESSION_MULTIPLY:
+        case EXPRESSION_DIVIDE:
+        case EXPRESSION_MOD:
+        case EXPRESSION_EQUALS:
+        case EXPRESSION_NOT_EQUALS:
+        case EXPRESSION_LESS_THAN:
+        case EXPRESSION_GREATER_THAN:
+        case EXPRESSION_LESS_THAN_OR_EQUAL:
+        case EXPRESSION_GREATER_THAN_OR_EQUAL:
+        case EXPRESSION_LSHIFT:
+        case EXPRESSION_RSHIFT:
+        case EXPRESSION_AND:
+        case EXPRESSION_OR:
+        case EXPRESSION_BIT_AND:
+        case EXPRESSION_BIT_OR:
+        case EXPRESSION_BIT_XOR:
+        case EXPRESSION_NEGATE:
+        case EXPRESSION_NOT:
+        case EXPRESSION_BIT_COMPLEMENT:
+        case EXPRESSION_INDEX:
+        case EXPRESSION_PRE_INCREMENT:
+        case EXPRESSION_PRE_DECREMENT:
+        case EXPRESSION_POST_INCREMENT:
+        case EXPRESSION_POST_DECREMENT:
+        case EXPRESSION_NO_RESULT_INCREMENT:
+        case EXPRESSION_NO_RESULT_DECREMENT:
+        case EXPRESSION_TERNARY:
+        case EXPRESSION_MEMBER:
+        case EXPRESSION_STRING:
+        case EXPRESSION_BREAK:
+        case EXPRESSION_CONTINUE:
+        case EXPRESSION_SIZEOF_TYPE:
+        case EXPRESSION_SIZEOF_TYPE_U8:
+        case EXPRESSION_SIZEOF_TYPE_U16:
+        case EXPRESSION_SIZEOF_TYPE_U24:
+        case EXPRESSION_SIZEOF_TYPE_U32:
+        case EXPRESSION_SIZEOF_VALUE:
+        case EXPRESSION_SIZEOF_VALUE_U8:
+        case EXPRESSION_SIZEOF_VALUE_U16:
+        case EXPRESSION_SIZEOF_VALUE_U24:
+        case EXPRESSION_SIZEOF_VALUE_U32:
+        case EXPRESSION_ARRAY_INITIALIZER:
+        case EXPRESSION_STRUCT_INITIALIZER:
+        case EXPRESSION_FIELD_INITIALIZER:
+        case EXPRESSION_ENUM_VARIANT:
+            break;
+
         case EXPRESSION_IF:
         case EXPRESSION_WHILE:
         case EXPRESSION_DO_WHILE:
@@ -253,6 +457,75 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
     Expression expression = expressions[statements[current_statement]];
 
     switch(expression.kind){
+    case EXPRESSION_NONE:
+    case EXPRESSION_RETURN:
+    case EXPRESSION_DECLARE:
+    case EXPRESSION_PRINT_LITERAL:
+    case EXPRESSION_PRINT_ARRAY:
+    case EXPRESSION_CALL:
+    case EXPRESSION_IMPLEMENT_PUT:
+    case EXPRESSION_IMPLEMENT_PRINTU1:
+    case EXPRESSION_IMPLEMENT_PRINTU8:
+    case EXPRESSION_IMPLEMENT_GET:
+    case EXPRESSION_U1:
+    case EXPRESSION_U8:
+    case EXPRESSION_U16:
+    case EXPRESSION_U24:
+    case EXPRESSION_U32:
+    case EXPRESSION_INT:
+    case EXPRESSION_VARIABLE:
+    case EXPRESSION_CAST:
+    case EXPRESSION_ASSIGN:
+    case EXPRESSION_ADD:
+    case EXPRESSION_SUBTRACT:
+    case EXPRESSION_MULTIPLY:
+    case EXPRESSION_DIVIDE:
+    case EXPRESSION_MOD:
+    case EXPRESSION_EQUALS:
+    case EXPRESSION_NOT_EQUALS:
+    case EXPRESSION_LESS_THAN:
+    case EXPRESSION_GREATER_THAN:
+    case EXPRESSION_LESS_THAN_OR_EQUAL:
+    case EXPRESSION_GREATER_THAN_OR_EQUAL:
+    case EXPRESSION_LSHIFT:
+    case EXPRESSION_RSHIFT:
+    case EXPRESSION_AND:
+    case EXPRESSION_OR:
+    case EXPRESSION_BIT_AND:
+    case EXPRESSION_BIT_OR:
+    case EXPRESSION_BIT_XOR:
+    case EXPRESSION_NEGATE:
+    case EXPRESSION_NOT:
+    case EXPRESSION_BIT_COMPLEMENT:
+    case EXPRESSION_INDEX:
+    case EXPRESSION_PRE_INCREMENT:
+    case EXPRESSION_PRE_DECREMENT:
+    case EXPRESSION_POST_INCREMENT:
+    case EXPRESSION_POST_DECREMENT:
+    case EXPRESSION_NO_RESULT_INCREMENT:
+    case EXPRESSION_NO_RESULT_DECREMENT:
+    case EXPRESSION_TERNARY:
+    case EXPRESSION_MEMBER:
+    case EXPRESSION_STRING:
+    case EXPRESSION_BREAK:
+    case EXPRESSION_CONTINUE:
+    case EXPRESSION_SIZEOF_TYPE:
+    case EXPRESSION_SIZEOF_TYPE_U8:
+    case EXPRESSION_SIZEOF_TYPE_U16:
+    case EXPRESSION_SIZEOF_TYPE_U24:
+    case EXPRESSION_SIZEOF_TYPE_U32:
+    case EXPRESSION_SIZEOF_VALUE:
+    case EXPRESSION_SIZEOF_VALUE_U8:
+    case EXPRESSION_SIZEOF_VALUE_U16:
+    case EXPRESSION_SIZEOF_VALUE_U24:
+    case EXPRESSION_SIZEOF_VALUE_U32:
+    case EXPRESSION_CASE:
+    case EXPRESSION_ARRAY_INITIALIZER:
+    case EXPRESSION_STRUCT_INITIALIZER:
+    case EXPRESSION_FIELD_INITIALIZER:
+    case EXPRESSION_ENUM_VARIANT:
+        break;
+
     case EXPRESSION_IF: {
             u32 num_statements = operands[expression.ops + 1];
 
@@ -352,9 +625,8 @@ Variable get_variable_location_from_declaration_statement(u32 statement_index){
         .type = operands[expression.ops + 0],
         .defined = true,
         .depth = depth,
-        .declaration = statement_index,
         .location = (VariableLocation){
-            .on_stack = false,
+            .kind = VARIABLE_LOCATION_ON_TAPE,
             .location = emit_context.function_cell_index + offset,
         },
     };
@@ -392,6 +664,43 @@ Variable variable_find(u32 name){
 
     // Search global
     // (not implemented yet)
+
+    // Search for enum variant
+    for(u32 typedef_i = 0; typedef_i < num_typedefs; typedef_i++){
+        TypeDef def = typedefs[typedef_i];
+
+        if(def.kind != TYPEDEF_ENUM) continue;
+
+
+        for(u32 i = 0; i < def.num_fields; i++){
+            Expression variant = expressions[statements[def.begin + i]];
+            if(variant.kind != EXPRESSION_ENUM_VARIANT) continue;
+
+            if(aux_cstr_equals(variant.ops, name)){
+                u32 enum_type = add_type((Type){
+                    .name = def.name,
+                    .dimensions = 0
+                });
+
+                if(enum_type >= TYPES_CAPACITY){
+                    return (Variable){ .defined = false };
+                }
+
+                u32 variant_value = i;
+
+                return (Variable){
+                    .name = name,
+                    .defined = true,
+                    .type = enum_type,
+                    .depth = 0,
+                    .location = (VariableLocation){
+                        .kind = VARIABLE_LOCATION_IMMUTABLE,
+                        .location = variant_value,
+                    }
+                };
+            }
+        }
+    }
 
     // Not found
     return (Variable){ .defined = false };

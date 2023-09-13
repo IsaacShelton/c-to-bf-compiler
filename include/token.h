@@ -4,7 +4,7 @@
 
 #include "utypes.h"
 
-enum {
+typedef enum {
     TOKEN_NONE,
     TOKEN_DONE,
     TOKEN_ERROR,
@@ -73,9 +73,8 @@ enum {
     TOKEN_SWITCH,
     TOKEN_CASE,
     TOKEN_DEFAULT,
-};
-
-typedef u8 TokenKind;
+    TOKEN_ENUM,
+} TokenKind;
 
 typedef struct {
     TokenKind kind;

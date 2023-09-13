@@ -5,7 +5,7 @@
 #include "utypes.h"
 #include "token.h"
 
-enum {
+typedef enum {
     EXPRESSION_NONE,
     EXPRESSION_RETURN, /* { expression } */
     EXPRESSION_DECLARE, /* { type, name } */
@@ -18,6 +18,9 @@ enum {
     EXPRESSION_IMPLEMENT_GET,
     EXPRESSION_U1, /* { value } */
     EXPRESSION_U8, /* { value } */
+    EXPRESSION_U16, /* { value } */
+    EXPRESSION_U24, /* { value } */
+    EXPRESSION_U32, /* { value } */
     EXPRESSION_INT, /* { value } */
     EXPRESSION_VARIABLE, /* { name } */
     EXPRESSION_CAST, /* { type, expression } */
@@ -62,15 +65,21 @@ enum {
     EXPRESSION_FOR, /* { num_pre_statements, condition, pre_post_statements, num_statements, computed_inner_variable_offset } */
     EXPRESSION_SIZEOF_TYPE, /* { type } */
     EXPRESSION_SIZEOF_TYPE_U8, /* { type } */
-    EXPRESSION_SIZEOF_VALUE, /* { type } */
-    EXPRESSION_SIZEOF_VALUE_U8, /* { type } */
+    EXPRESSION_SIZEOF_TYPE_U16, /* { type } */
+    EXPRESSION_SIZEOF_TYPE_U24, /* { type } */
+    EXPRESSION_SIZEOF_TYPE_U32, /* { type } */
+    EXPRESSION_SIZEOF_VALUE, /* { value } */
+    EXPRESSION_SIZEOF_VALUE_U8, /* { value } */
+    EXPRESSION_SIZEOF_VALUE_U16, /* { value } */
+    EXPRESSION_SIZEOF_VALUE_U24, /* { value } */
+    EXPRESSION_SIZEOF_VALUE_U32, /* { value } */
     EXPRESSION_SWITCH, /* { condition, num_statements } */
     EXPRESSION_CASE, /* { numeric_expression, num_statements } */
     EXPRESSION_ARRAY_INITIALIZER, /* { num_expressions, expression1, expression2, expression3, ..., expressionN } */
     EXPRESSION_STRUCT_INITIALIZER, /* { type, num_expressions, field_initializer1, field_initializer2, ..., field_initializerN } */
     EXPRESSION_FIELD_INITIALIZER, /* { field_name, field_value } */
-};
-typedef u8 ExpressionKind;
+    EXPRESSION_ENUM_VARIANT, /* { name } */
+} ExpressionKind;
 
 typedef struct {
     ExpressionKind kind;

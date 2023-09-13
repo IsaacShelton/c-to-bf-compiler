@@ -10,7 +10,44 @@ ExpressionKind expression_get_preferred_int_kind_or_none(u32 expression_index){
     Expression expression = expressions[expression_index];
 
     switch(expression.kind){
+    case EXPRESSION_NONE:
+    case EXPRESSION_RETURN:
+    case EXPRESSION_DECLARE:
+    case EXPRESSION_PRINT_LITERAL:
+    case EXPRESSION_PRINT_ARRAY:
+    case EXPRESSION_IMPLEMENT_PUT:
+    case EXPRESSION_IMPLEMENT_PRINTU1:
+    case EXPRESSION_IMPLEMENT_PRINTU8:
+    case EXPRESSION_IMPLEMENT_GET:
+    case EXPRESSION_INT:
+    case EXPRESSION_VARIABLE:
+    case EXPRESSION_INDEX:
+    case EXPRESSION_NO_RESULT_INCREMENT:
+    case EXPRESSION_NO_RESULT_DECREMENT:
+    case EXPRESSION_TERNARY:
+    case EXPRESSION_IF:
+    case EXPRESSION_IF_ELSE:
+    case EXPRESSION_WHILE:
+    case EXPRESSION_DO_WHILE:
+    case EXPRESSION_MEMBER:
+    case EXPRESSION_STRING:
+    case EXPRESSION_BREAK:
+    case EXPRESSION_CONTINUE:
+    case EXPRESSION_FOR:
+    case EXPRESSION_SIZEOF_TYPE:
+    case EXPRESSION_SIZEOF_VALUE:
+    case EXPRESSION_SWITCH:
+    case EXPRESSION_CASE:
+    case EXPRESSION_ARRAY_INITIALIZER:
+    case EXPRESSION_STRUCT_INITIALIZER:
+    case EXPRESSION_FIELD_INITIALIZER:
+    case EXPRESSION_ENUM_VARIANT:
+        break;
+    case EXPRESSION_U1:
     case EXPRESSION_U8:
+    case EXPRESSION_U16:
+    case EXPRESSION_U24:
+    case EXPRESSION_U32:
         return expression.kind;
     case EXPRESSION_CALL: {
             u32 name = operands[expression.ops];
@@ -41,6 +78,8 @@ ExpressionKind expression_get_preferred_int_kind_or_none(u32 expression_index){
     case EXPRESSION_NOT_EQUALS:
     case EXPRESSION_LESS_THAN:
     case EXPRESSION_GREATER_THAN:
+    case EXPRESSION_LESS_THAN_OR_EQUAL:
+    case EXPRESSION_GREATER_THAN_OR_EQUAL:
     case EXPRESSION_LSHIFT:
     case EXPRESSION_RSHIFT:
     case EXPRESSION_BIT_AND:
@@ -64,6 +103,18 @@ ExpressionKind expression_get_preferred_int_kind_or_none(u32 expression_index){
     case EXPRESSION_POST_INCREMENT:
     case EXPRESSION_POST_DECREMENT:
         return expression_get_preferred_int_kind_or_none(expression.ops);
+    case EXPRESSION_SIZEOF_TYPE_U8:
+    case EXPRESSION_SIZEOF_VALUE_U8:
+        return u8_type;
+    case EXPRESSION_SIZEOF_TYPE_U16:
+    case EXPRESSION_SIZEOF_VALUE_U16:
+        return u16_type;
+    case EXPRESSION_SIZEOF_TYPE_U24:
+    case EXPRESSION_SIZEOF_VALUE_U24:
+        return u24_type;
+    case EXPRESSION_SIZEOF_TYPE_U32:
+    case EXPRESSION_SIZEOF_VALUE_U32:
+        return u32_type;
     }
     
     return EXPRESSION_NONE;
@@ -116,6 +167,46 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
     Expression expression = expressions[expression_index];
 
     switch(expression.kind){
+    case EXPRESSION_NONE:
+    case EXPRESSION_RETURN:
+    case EXPRESSION_DECLARE:
+    case EXPRESSION_PRINT_LITERAL:
+    case EXPRESSION_IMPLEMENT_PUT:
+    case EXPRESSION_IMPLEMENT_PRINTU1:
+    case EXPRESSION_IMPLEMENT_PRINTU8:
+    case EXPRESSION_IMPLEMENT_GET:
+    case EXPRESSION_U1:
+    case EXPRESSION_U8:
+    case EXPRESSION_U16:
+    case EXPRESSION_U24:
+    case EXPRESSION_U32:
+    case EXPRESSION_VARIABLE:
+    case EXPRESSION_STRING:
+    case EXPRESSION_BREAK:
+    case EXPRESSION_CONTINUE:
+    case EXPRESSION_SIZEOF_TYPE_U8:
+    case EXPRESSION_SIZEOF_TYPE_U16:
+    case EXPRESSION_SIZEOF_TYPE_U24:
+    case EXPRESSION_SIZEOF_TYPE_U32:
+    case EXPRESSION_STRUCT_INITIALIZER:
+    case EXPRESSION_FIELD_INITIALIZER:
+    case EXPRESSION_ENUM_VARIANT:
+        break;
+
+    case EXPRESSION_ASSIGN:
+        if(preferred_int_kind == EXPRESSION_NONE){
+            preferred_int_kind = expression_get_preferred_int_kind_or_none(operands[expression.ops]);
+        }
+        expression_infer(operands[expression.ops], preferred_int_kind);
+        expression_infer(operands[expression.ops + 1], preferred_int_kind);
+        break;
+    case EXPRESSION_INDEX:
+        expression_infer(operands[expression.ops], EXPRESSION_NONE);
+        expression_infer(operands[expression.ops + 1], EXPRESSION_NONE);
+        break;
+    case EXPRESSION_PRINT_ARRAY:
+        expression_infer(expression.ops, EXPRESSION_NONE);
+        break;
     case EXPRESSION_INT:
         if(preferred_int_kind != EXPRESSION_NONE){
             expressions[expression_index].kind = preferred_int_kind;
@@ -136,12 +227,15 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
     case EXPRESSION_RSHIFT:
     case EXPRESSION_BIT_AND:
     case EXPRESSION_BIT_OR:
+    case EXPRESSION_BIT_XOR:
         expression_infer_math(expression, preferred_int_kind);
         break;
     case EXPRESSION_EQUALS:
     case EXPRESSION_NOT_EQUALS:
     case EXPRESSION_LESS_THAN:
     case EXPRESSION_GREATER_THAN:
+    case EXPRESSION_LESS_THAN_OR_EQUAL:
+    case EXPRESSION_GREATER_THAN_OR_EQUAL:
         expression_infer_math(expression, EXPRESSION_NONE);
         break;
     case EXPRESSION_AND:
@@ -157,6 +251,8 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
     case EXPRESSION_PRE_DECREMENT:
     case EXPRESSION_POST_INCREMENT:
     case EXPRESSION_POST_DECREMENT:
+    case EXPRESSION_NO_RESULT_INCREMENT:
+    case EXPRESSION_NO_RESULT_DECREMENT:
         expression_infer(expression.ops, preferred_int_kind);
         break;
     case EXPRESSION_TERNARY: {
@@ -185,16 +281,42 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
         case EXPRESSION_U8:
             expressions[expression_index].kind = EXPRESSION_SIZEOF_TYPE_U8;
             break;
+        case EXPRESSION_U16:
+            expressions[expression_index].kind = EXPRESSION_SIZEOF_TYPE_U16;
+            break;
+        case EXPRESSION_U24:
+            expressions[expression_index].kind = EXPRESSION_SIZEOF_TYPE_U24;
+            break;
+        case EXPRESSION_U32:
+            expressions[expression_index].kind = EXPRESSION_SIZEOF_TYPE_U32;
+            break;
+        default:
+            break;
         }
         break;
     case EXPRESSION_SIZEOF_VALUE:
-        expression_infer(expression.ops, EXPRESSION_NONE);
-
         switch(preferred_int_kind){
         case EXPRESSION_U8:
             expressions[expression_index].kind = EXPRESSION_SIZEOF_VALUE_U8;
             break;
+        case EXPRESSION_U16:
+            expressions[expression_index].kind = EXPRESSION_SIZEOF_VALUE_U16;
+            break;
+        case EXPRESSION_U24:
+            expressions[expression_index].kind = EXPRESSION_SIZEOF_VALUE_U24;
+            break;
+        case EXPRESSION_U32:
+            expressions[expression_index].kind = EXPRESSION_SIZEOF_VALUE_U32;
+            break;
+        default:
+            break;
         }
+        /* fallthrough */
+    case EXPRESSION_SIZEOF_VALUE_U8:
+    case EXPRESSION_SIZEOF_VALUE_U16:
+    case EXPRESSION_SIZEOF_VALUE_U24:
+    case EXPRESSION_SIZEOF_VALUE_U32:
+        expression_infer(expression.ops, preferred_int_kind);
         break;
     case EXPRESSION_ARRAY_INITIALIZER: {
             u32 length = operands[expression.ops];

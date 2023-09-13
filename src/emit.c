@@ -574,11 +574,31 @@ u0 emit_u8(u8 value){
     emit_context.current_cell_index++;
 }
 
-u0 emit_u32(u32 value){
-    emit_u8(value >> 24);
-    emit_u8((value >> 16) & 0xFF);
+u0 emit_u16(u16 value){
+    // Little endian
+    emit_u8(value & 0xFF);
+    emit_u8((value >> 8) & 0xFF);
+}
+
+u0 emit_u24(u24 value){
+    /*
+    emit_u8(value >> 16);
     emit_u8((value >> 8) & 0xFF);
     emit_u8(value & 0xFF);
+    */
+
+    // Little endian
+    emit_u8(value.bytes[2]);
+    emit_u8(value.bytes[1]);
+    emit_u8(value.bytes[0]);
+}
+
+u0 emit_u32(u32 value){
+    // Little endian
+    emit_u8(value & 0xFF);
+    emit_u8((value >> 8) & 0xFF);
+    emit_u8((value >> 16) & 0xFF);
+    emit_u8(value >> 24);
 }
 
 u0 emit_printu1(){

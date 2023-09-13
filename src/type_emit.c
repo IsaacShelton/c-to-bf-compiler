@@ -28,6 +28,13 @@ u32 type_sizeof_or_max(u32 type_index){
         }
 
         size = typedefs[found_typedef].computed_size;
+
+        if(size == -1){
+            printf("\nerror: Type '");
+            type_print(types[type_index]);
+            printf("' doesn't have its size computed yet\n");
+            return -1;
+        }
     }
 
     u32 dims[4];

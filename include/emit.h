@@ -20,6 +20,8 @@ u0 print_cells_static(u32 start_index, u32 max_length);
 
 u0 emit_u1(u1 value);
 u0 emit_u8(u8 value);
+u0 emit_u16(u16 value);
+u0 emit_u24(u24 value);
 u0 emit_u32(u32 value);
 
 u0 emit_printu1();

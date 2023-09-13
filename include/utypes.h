@@ -11,6 +11,7 @@ typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 
+// NOTE: `bytes` are in big endian
 typedef struct { u8 bytes[3]; } u24;
 u24 u24_pack(u32 value);
 u32 u24_unpack(u24 value);

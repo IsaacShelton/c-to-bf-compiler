@@ -16,6 +16,7 @@
 #include "../include/parse_statement.h"
 #include "../include/parse_type.h"
 #include "../include/typedef.h"
+#include "../include/parse_typedef.h"
 
 static u32 parse_function_body(Function function){
     // { ... }
@@ -112,72 +113,6 @@ ErrorCode parse_function(u32 symbol_name, u32 symbol_type){
     }
 
     return 0;
-}
-
-static ErrorCode parse_typedef_struct(u24 line_number){
-    // typedef struct {
-    //                ^
-
-    if(!eat_token(TOKEN_BEGIN)){
-        printf("error on line %d: Expected '{' after struct keyword in type definition\n", current_line());
-        stop_parsing();
-        return 1;
-    }
-
-    u32 begin = num_statements;
-
-    while(parse_i < num_tokens && !is_token(TOKEN_END)){
-        if(parse_statement()) return 1;
-    }
-
-    if(!eat_token(TOKEN_END)){
-        printf("error on line %d: Expected '}' after function body\n", current_line());
-        instead_got();
-        stop_parsing();
-        return 1;
-    }
-
-    if(!is_token(TOKEN_WORD)){
-        printf("error on line %d: Expected typedef name after '}'\n", current_line());
-        instead_got();
-        stop_parsing();
-        return 1;
-    }
-
-    u32 name = eat_word();
-
-    if(!eat_token(TOKEN_SEMICOLON)){
-        printf("error on line %d: Expected ';' after typedef name\n", current_line());
-        instead_got();
-        stop_parsing();
-        return 1;
-    }
-
-    u32 def = add_typedef((TypeDef){
-        .kind = TYPEDEF_STRUCT,
-        .line = line_number,
-        .name = name,
-        .begin = begin,
-        .num_fields = num_statements - begin,
-        .computed_size = -1,
-    });
-
-    return def >= TYPEDEFS_CAPACITY;
-}
-
-static ErrorCode parse_typedef(){
-    // typedef 
-    //         ^
-
-    u24 line_number = tokens[parse_i - 1].line;
-
-    if(eat_token(TOKEN_STRUCT)){
-        return parse_typedef_struct(line_number);
-    }
-
-    printf("error on line %d: Alias typdefs are not supported yet\n", current_line());
-    stop_parsing();
-    return 1;
 }
 
 u32 parse(){

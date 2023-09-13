@@ -504,15 +504,31 @@ u32 expression_emit_variable(Expression expression){
     u32 size = type_sizeof_or_max(variable.type);
     if(size == -1) return TYPES_CAPACITY;
 
+    if(variable.location.kind == VARIABLE_LOCATION_IMMUTABLE){
+        if(size == 1){
+            emit_u8(variable.location.location);
+        } else if(size == 2){
+            emit_u16(variable.location.location);
+        } else if(size == 3){
+            emit_u24(u24_pack(variable.location.location));
+        } else if(size == 4){
+            emit_u32(variable.location.location);
+        } else {
+            printf("\nerror on line %d: Cannot emit immutable value of size %d\n", u24_unpack(expression.line), size);
+            return TYPES_CAPACITY;
+        }
+        return variable.type;
+    }
+
     if(variable.depth == 0){
         // Global variable
         printf("\nerror: global variable expression not supported yet\n");
         return TYPES_CAPACITY;
     }
 
-    if(variable.location.on_stack){
+    if(variable.location.kind != VARIABLE_LOCATION_ON_TAPE){
         // Stack variable
-        printf("\nerror: stack variable expression not supported yet\n");
+        printf("\nerror: stack/immutable variable expression not supported yet\n");
         return TYPES_CAPACITY;
     }
 
@@ -549,6 +565,38 @@ u32 expression_emit_cast(Expression expression){
         emit_u8(0);
         emit_neq_u8();
         return to_type;
+    }
+
+    u32 from_enum = find_enum_from_type(from_type);
+    u32 to_enum = find_enum_from_type(to_type);
+
+    // Try to cast from enum to integer
+    if(from_enum != TYPEDEFS_CAPACITY){
+        TypeDef def = typedefs[from_enum];
+
+        if(to_type == u8_type && def.computed_size == 1){
+            return to_type;
+        } else if(to_type == u16_type && def.computed_size == 2){
+            return to_type;
+        } else if(to_type == u24_type && def.computed_size == 3){
+            return to_type;
+        } else if(to_type == u32_type && def.computed_size == 4){
+            return to_type;
+        }
+    }
+
+    if(to_enum != TYPEDEFS_CAPACITY){
+        TypeDef def = typedefs[to_enum];
+
+        if(from_type == u8_type && def.computed_size == 1){
+            return to_type;
+        } else if(from_type == u16_type && def.computed_size == 2){
+            return to_type;
+        } else if(from_type == u24_type && def.computed_size == 3){
+            return to_type;
+        } else if(from_type == u32_type && def.computed_size == 4){
+            return to_type;
+        }
     }
 
     printf("\nerror on line %d: Cannot cast '", u24_unpack(expression.line));
@@ -668,6 +716,8 @@ u32 expression_emit_unary(Expression expression){
             write_destination_expression(u8_type, expressions[expression.ops], expression.line);
             return u0_type;
         }
+        break;
+    default:
         break;
     }
 
@@ -918,6 +968,25 @@ ErrorCode print_array_reference(Destination destination, u32 max_length, u24 lin
 
 static u32 expression_get_type(Expression expression){
     switch(expression.kind){
+    case EXPRESSION_NONE:
+    case EXPRESSION_RETURN:
+    case EXPRESSION_NO_RESULT_INCREMENT:
+    case EXPRESSION_NO_RESULT_DECREMENT:
+    case EXPRESSION_IF:
+    case EXPRESSION_IF_ELSE:
+    case EXPRESSION_WHILE:
+    case EXPRESSION_DO_WHILE:
+    case EXPRESSION_BREAK:
+    case EXPRESSION_CONTINUE:
+    case EXPRESSION_FOR:
+    case EXPRESSION_SWITCH:
+    case EXPRESSION_CASE:
+    case EXPRESSION_ARRAY_INITIALIZER:
+    case EXPRESSION_STRUCT_INITIALIZER:
+    case EXPRESSION_FIELD_INITIALIZER:
+    case EXPRESSION_ENUM_VARIANT:
+        break;
+
     case EXPRESSION_DECLARE:
     case EXPRESSION_PRINT_LITERAL:
     case EXPRESSION_PRINT_ARRAY:
@@ -934,6 +1003,12 @@ static u32 expression_get_type(Expression expression){
     case EXPRESSION_INT:
     case EXPRESSION_U8:
         return u8_type;
+    case EXPRESSION_U16:
+        return u16_type;
+    case EXPRESSION_U24:
+        return u24_type;
+    case EXPRESSION_U32:
+        return u32_type;
     case EXPRESSION_ASSIGN:
         return u0_type;
     case EXPRESSION_VARIABLE:
@@ -1007,7 +1082,29 @@ static u32 expression_get_type(Expression expression){
         return expression_get_type(expressions[operands[expression.ops + 1]]);
     case EXPRESSION_STRING:
         return expression_get_type_for_string(expression);
+    case EXPRESSION_SIZEOF_TYPE:
+        fprintf(stderr, "warning on line %d: assuming result type of sizeof_type to be u8\n", u24_unpack(expression.line));
+    case EXPRESSION_SIZEOF_TYPE_U8:
+        return u8_type;
+    case EXPRESSION_SIZEOF_TYPE_U16:
+        return u16_type;
+    case EXPRESSION_SIZEOF_TYPE_U24:
+        return u24_type;
+    case EXPRESSION_SIZEOF_TYPE_U32:
+        return u32_type;
+    case EXPRESSION_SIZEOF_VALUE:
+        fprintf(stderr, "warning on line %d: assuming result type of sizeof_value to be u8\n", u24_unpack(expression.line));
+    case EXPRESSION_SIZEOF_VALUE_U8:
+        return u8_type;
+    case EXPRESSION_SIZEOF_VALUE_U16:
+        return u16_type;
+    case EXPRESSION_SIZEOF_VALUE_U24:
+        return u24_type;
+    case EXPRESSION_SIZEOF_VALUE_U32:
+        return u32_type;
     }
+
+    printf("\nerror on line %d: Cannot get type of this expression\n", u24_unpack(expression.line));
     return TYPES_CAPACITY;
 }
 
@@ -1318,6 +1415,14 @@ static u32 expression_emit_struct_initializer(Expression expression){
 
 u32 expression_emit(Expression expression){
     switch(expression.kind){
+    case EXPRESSION_NONE:
+    case EXPRESSION_IF:
+    case EXPRESSION_IF_ELSE:
+    case EXPRESSION_WHILE:
+    case EXPRESSION_DO_WHILE:
+    case EXPRESSION_FOR:
+    case EXPRESSION_SWITCH:
+        break;
     case EXPRESSION_DECLARE: {
             u32 variable_size = type_sizeof_or_max(operands[expression.ops]);
             if(variable_size == -1){
@@ -1391,6 +1496,15 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_U8:
         emit_u8(expression.ops);
         return u8_type;
+    case EXPRESSION_U16:
+        emit_u16(expression.ops);
+        return u16_type;
+    case EXPRESSION_U24:
+        emit_u24(u24_pack(expression.ops));
+        return u24_type;
+    case EXPRESSION_U32:
+        emit_u32(expression.ops);
+        return u32_type;
     case EXPRESSION_ASSIGN:
         return expression_emit_assign(expression);
     case EXPRESSION_VARIABLE:
@@ -1451,9 +1565,9 @@ u32 expression_emit(Expression expression){
         return expression_emit_array_initializer(expression);
     case EXPRESSION_STRUCT_INITIALIZER:
         return expression_emit_struct_initializer(expression);
-    default:
-        printf("\nerror: Unknown expression kind %d during expression_emit\n", expression.kind);
-        return TYPES_CAPACITY;
     }
+
+    printf("\nerror: Unknown expression kind %d during expression_emit\n", expression.kind);
+    return TYPES_CAPACITY;
 }
 

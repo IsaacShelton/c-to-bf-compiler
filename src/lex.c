@@ -394,6 +394,8 @@ u32 lex(){
                     tokens[num_tokens - 1].kind = TOKEN_CASE;
                 } else if(lexed.consumed == 7 && memcmp(code_buffer, "default", 7) == 0){
                     tokens[num_tokens - 1].kind = TOKEN_DEFAULT;
+                } else if(lexed.consumed == 4 && memcmp(code_buffer, "enum", 4) == 0){
+                    tokens[num_tokens - 1].kind = TOKEN_ENUM;
                 } else {
                     tokens[num_tokens - 1].data = num_aux;
 

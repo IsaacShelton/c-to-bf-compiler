@@ -1,0 +1,39 @@
+
+typedef enum {
+    FOOD_APPLE,
+    FOOD_ORANGE,
+    FOOD_BANANA,    // Optional trailing comma
+} Food;
+
+typedef enum {
+    CONSUMER_BIG,
+    CONSUMER_SMALL,
+    CONSUMER_MEDIUM
+} Consumer;
+
+u0 main(){
+    Consumer consumer = CONSUMER_MEDIUM;
+    Food food = FOOD_APPLE;
+
+    print("CONSUMER_MEDIUM = ");
+    printu8((u8) consumer);
+    print("\n");
+    print("FOOD_APPLE = ");
+    printu8((u8) food);
+    print("\n");
+
+    print("Switch of consumer gives: ");
+
+    switch(consumer){
+    case CONSUMER_BIG:
+        print("Big consumer\n");
+        break;
+    case CONSUMER_SMALL:
+        print("Small consumer\n");
+        break;
+    case CONSUMER_MEDIUM:
+        print("Medium consumer\n");
+        break;
+    }
+}
+

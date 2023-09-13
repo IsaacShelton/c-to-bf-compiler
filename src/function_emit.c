@@ -825,7 +825,23 @@ static ErrorCode emit_switch(Expression expression){
     u32 condition_type = expression_emit(expressions[operands[expression.ops]]);
     if(condition_type >= TYPES_CAPACITY) return 1;
 
-    if(condition_type != u8_type){
+    u1 ok = false;
+
+    if(condition_type == u8_type){
+        ok = true;
+    } else {
+        u32 found_enum = find_enum_from_type(condition_type);
+        
+        if(found_enum <= TYPEDEFS_CAPACITY){
+            TypeDef def = typedefs[found_enum];
+
+            if(def.kind == TYPEDEF_ENUM && def.computed_size == 1){
+                ok = true;
+            }
+        }
+    }
+
+    if(!ok){
         printf("\nerror on line %d: Expected 'switch' value to be 'u8', got '", u24_unpack(expression.line));
         type_print(types[condition_type]);
         printf("'\n");
@@ -892,9 +908,25 @@ static ErrorCode emit_case(Expression expression){
         }
 
         // Compare test value to switch value
+        u1 ok = false;
+
         if(emit_context.switch_value_type == u8_type){
             emit_eq_u8();
+            ok = true;
         } else {
+            u32 found_enum = find_enum_from_type(emit_context.switch_value_type);
+            
+            if(found_enum <= TYPEDEFS_CAPACITY){
+                TypeDef def = typedefs[found_enum];
+
+                if(def.kind == TYPEDEF_ENUM && def.computed_size == 1){
+                    emit_eq_u8();
+                    ok = true;
+                }
+            }
+        }
+
+        if(!ok){
             printf("\nerror on line %d: Unsupported 'case' type '", u24_unpack(expression.line));
             type_print(types[test_type]);
             printf("'\n");
@@ -956,6 +988,74 @@ u1 can_function_early_return(u32 function_index){
         Expression expression = expressions[statements[i]];
 
         switch(expression.kind){
+        case EXPRESSION_NONE:
+        case EXPRESSION_DECLARE:
+        case EXPRESSION_PRINT_LITERAL:
+        case EXPRESSION_PRINT_ARRAY:
+        case EXPRESSION_CALL:
+        case EXPRESSION_IMPLEMENT_PUT:
+        case EXPRESSION_IMPLEMENT_PRINTU1:
+        case EXPRESSION_IMPLEMENT_PRINTU8:
+        case EXPRESSION_IMPLEMENT_GET:
+        case EXPRESSION_U1:
+        case EXPRESSION_U8:
+        case EXPRESSION_U16:
+        case EXPRESSION_U24:
+        case EXPRESSION_U32:
+        case EXPRESSION_INT:
+        case EXPRESSION_VARIABLE:
+        case EXPRESSION_CAST:
+        case EXPRESSION_ASSIGN:
+        case EXPRESSION_ADD:
+        case EXPRESSION_SUBTRACT:
+        case EXPRESSION_MULTIPLY:
+        case EXPRESSION_DIVIDE:
+        case EXPRESSION_MOD:
+        case EXPRESSION_EQUALS:
+        case EXPRESSION_NOT_EQUALS:
+        case EXPRESSION_LESS_THAN:
+        case EXPRESSION_GREATER_THAN:
+        case EXPRESSION_LESS_THAN_OR_EQUAL:
+        case EXPRESSION_GREATER_THAN_OR_EQUAL:
+        case EXPRESSION_LSHIFT:
+        case EXPRESSION_RSHIFT:
+        case EXPRESSION_AND:
+        case EXPRESSION_OR:
+        case EXPRESSION_BIT_AND:
+        case EXPRESSION_BIT_OR:
+        case EXPRESSION_BIT_XOR:
+        case EXPRESSION_NEGATE:
+        case EXPRESSION_NOT:
+        case EXPRESSION_BIT_COMPLEMENT:
+        case EXPRESSION_INDEX:
+        case EXPRESSION_PRE_INCREMENT:
+        case EXPRESSION_PRE_DECREMENT:
+        case EXPRESSION_POST_INCREMENT:
+        case EXPRESSION_POST_DECREMENT:
+        case EXPRESSION_NO_RESULT_INCREMENT:
+        case EXPRESSION_NO_RESULT_DECREMENT:
+        case EXPRESSION_TERNARY:
+        case EXPRESSION_MEMBER:
+        case EXPRESSION_STRING:
+        case EXPRESSION_BREAK:
+        case EXPRESSION_CONTINUE:
+        case EXPRESSION_SIZEOF_TYPE:
+        case EXPRESSION_SIZEOF_TYPE_U8:
+        case EXPRESSION_SIZEOF_TYPE_U16:
+        case EXPRESSION_SIZEOF_TYPE_U24:
+        case EXPRESSION_SIZEOF_TYPE_U32:
+        case EXPRESSION_SIZEOF_VALUE:
+        case EXPRESSION_SIZEOF_VALUE_U8:
+        case EXPRESSION_SIZEOF_VALUE_U16:
+        case EXPRESSION_SIZEOF_VALUE_U24:
+        case EXPRESSION_SIZEOF_VALUE_U32:
+        case EXPRESSION_CASE:
+        case EXPRESSION_ARRAY_INITIALIZER:
+        case EXPRESSION_STRUCT_INITIALIZER:
+        case EXPRESSION_FIELD_INITIALIZER:
+        case EXPRESSION_ENUM_VARIANT:
+            break;
+
         case EXPRESSION_IF:
         case EXPRESSION_WHILE:
         case EXPRESSION_DO_WHILE:
@@ -977,6 +1077,9 @@ u1 can_function_early_return(u32 function_index){
                 if(has_return_in_region(i + 1, i + num_pre + num_post + len + 1)) return true;
                 i += num_pre + num_post + len;
             }
+            break;
+        case EXPRESSION_SWITCH:
+            if(has_return_in_region(i + 1, i + operands[expression.ops + 1] + 1)) return true;
             break;
         case EXPRESSION_RETURN:
             return false;

@@ -168,20 +168,40 @@ u0 expression_print(Expression expression){
         printf("continue");
         break;
     case EXPRESSION_SIZEOF_TYPE:
-        printf("sizeof(");
-        type_print(types[expression.ops]);
-        printf(")");
     case EXPRESSION_SIZEOF_TYPE_U8:
-        printf("sizeof<u8>(");
+    case EXPRESSION_SIZEOF_TYPE_U16:
+    case EXPRESSION_SIZEOF_TYPE_U24:
+    case EXPRESSION_SIZEOF_TYPE_U32:
+        printf("sizeof");
+        if(expression.kind == EXPRESSION_SIZEOF_TYPE_U8){
+            printf("<u8>");
+        } else if(expression.kind == EXPRESSION_SIZEOF_TYPE_U16){
+            printf("<u16>");
+        } else if(expression.kind == EXPRESSION_SIZEOF_TYPE_U24){
+            printf("<u24>");
+        } else if(expression.kind == EXPRESSION_SIZEOF_TYPE_U32){
+            printf("<u32>");
+        }
+        printf("(");
         type_print(types[expression.ops]);
         printf(")");
         break;
     case EXPRESSION_SIZEOF_VALUE:
-        printf("sizeof ");
-        expression_print(expressions[expression.ops]);
-        break;
     case EXPRESSION_SIZEOF_VALUE_U8:
-        printf("sizeof<u8> ");
+    case EXPRESSION_SIZEOF_VALUE_U16:
+    case EXPRESSION_SIZEOF_VALUE_U24:
+    case EXPRESSION_SIZEOF_VALUE_U32:
+        printf("sizeof");
+        if(expression.kind == EXPRESSION_SIZEOF_VALUE_U8){
+            printf("<u8>");
+        } else if(expression.kind == EXPRESSION_SIZEOF_VALUE_U16){
+            printf("<u16>");
+        } else if(expression.kind == EXPRESSION_SIZEOF_VALUE_U24){
+            printf("<u24>");
+        } else if(expression.kind == EXPRESSION_SIZEOF_VALUE_U32){
+            printf("<u32>");
+        }
+        printf(" ");
         expression_print(expressions[expression.ops]);
         break;
     case EXPRESSION_CASE:
@@ -230,6 +250,11 @@ u0 expression_print(Expression expression){
             print_aux_cstr(operands[expression.ops]);
             printf(" = ");
             expression_print(expressions[operands[expression.ops + 1]]);
+        }
+        break;
+    case EXPRESSION_ENUM_VARIANT: {
+            print_aux_cstr(expression.ops);
+            printf(",");
         }
         break;
     default:

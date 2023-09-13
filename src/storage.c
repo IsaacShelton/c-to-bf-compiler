@@ -355,3 +355,21 @@ u0 print_aux_cstr_escaped(u32 index){
     }
 }
 
+u32 find_enum_from_type(u32 type_index){
+    Type type = types[type_index];
+
+    if(type.dimensions != 0){
+        return TYPEDEFS_CAPACITY;
+    }
+
+    for(u32 i = 0; i < num_typedefs; i++){
+        TypeDef def = typedefs[i];
+
+        if(def.kind == TYPEDEF_ENUM && aux_cstr_equals(def.name, type.name)){
+            return i;
+        }
+    }
+
+    return TYPEDEFS_CAPACITY;
+}
+

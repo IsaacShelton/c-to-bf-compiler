@@ -16,12 +16,17 @@ rlebf=${1%.peck}.rlebf
 
 if [ "$?" = "0" ]; then
     if [ "$#" = "2" ]; then
-        ending="$(echo -n "$2" | tail -c 4)"
+        ending4="$(echo -n "$2" | tail -c 4)"
+        ending6="$(echo -n "$2" | tail -c 6)"
 
-        if [ "$ending" = ".kbf" ]; then
+        if [ "$ending4" = ".kbf" ]; then
             /bin/cat "$rlebf" | "$self/subprograms/rle_decompress" | "$self/subprograms/kiss" > "$2"
             /bin/rm -f "$rlebf"
             echo "Wrote kissed brainf*ck file to $2"
+            exit 0
+        elif [ "$ending6" = ".rlebf" ]; then
+            mv "$rlebf" "$2"
+            echo "Wrote run-length encoded brainf*ck file to $2"
             exit 0
         else
             /bin/cat "$rlebf" | "$self/subprograms/rle_decompress" > "$2"

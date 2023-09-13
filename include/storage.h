@@ -12,12 +12,11 @@
 #include "typedef.h"
 #include "utypes.h"
 
-enum {
+typedef enum {
     CLOSE_NEEDED_FOR_EARLY_RETURN_CHECK,
     CLOSE_NEEDED_FOR_BREAK_CHECK,
     CLOSE_NEEDED_FOR_CONTINUE_CHECK,
-};
-typedef u8 CloseNeeded;
+} CloseNeeded;
 
 extern u8 code_buffer[CODE_BUFFER_CAPACITY];
 extern u32 code_buffer_length;
@@ -82,6 +81,7 @@ u1 aux_cstr_equals_u32(u32 a);
 u32 aux_cstr_len(u32 str);
 u0 print_aux_cstr(u32 index);
 u0 print_aux_cstr_escaped(u32 index);
+u32 find_enum_from_type(u32 type_index);
 
 #endif // _PECK_STORAGE_H
 

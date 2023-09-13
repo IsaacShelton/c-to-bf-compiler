@@ -1,0 +1,48 @@
+
+u0 main(){
+    u8 animals[4][10];
+
+    u8 x = 89;
+
+    animals[0] = "Dog";
+    animals[1] = "Cat";
+    animals[2] = "Tiger";
+    animals[3] = "Dolphin";
+
+    print(animals[0]);
+    print("\n");
+    print(animals[1]);
+    print("\n");
+    print(animals[2]);
+    print("\n");
+    print(animals[3]);
+    print("\n");
+
+    for(u8 j = 0; j < 4; j++){
+        print("Item ");
+        printu8(j);
+        print(" >");
+        for(u8 i = 0; i < sizeof animals[0]; i++){
+            put(animals[j][i]);
+        }
+        print("<");
+        print("\n");
+    }
+
+    for(u8 j = 0; j < 4; j++){
+        print("Item ");
+        printu8(j);
+        print(" >");
+        for(u8 i = 0; i < sizeof animals[0]; i++){
+            put(animals[j][i]);
+        }
+        print("<");
+        print("\n");
+    }
+
+    for(u8 i = 0; i < 4; i++){
+        print(animals[i]);
+        print("\n");
+    }
+}
+

@@ -128,10 +128,10 @@ u0 emit_swap_u8(){
     printf("[->+<]");
 
     // a 0 b
-    //     ^
+    //   ^
     
     // Go to 'a' cell
-    printf("<<");
+    printf("<");
 
     // Move 'a' cell to 'b' cell
     printf("[>+<-]");
@@ -140,7 +140,7 @@ u0 emit_swap_u8(){
     printf(">>");
 
     // Move temporary cell to 'a' cell
-    printf("[<<+>-]");
+    printf("[<<+>>-]");
 
     // Remain pointing at next available cell
 }
@@ -286,26 +286,35 @@ u0 copy_cell_dynamic_u8(u32 start_index){
 
 u0 move_cell_static(u32 destination_index){
     u32 current_cell_index = emit_context.current_cell_index;
-    if(destination_index >= current_cell_index) return;
+    u32 offset;
+    u8 towards, backwards;
 
-    u32 offset = (current_cell_index - destination_index);
+    if(destination_index <= current_cell_index){
+        offset = current_cell_index - destination_index;
+        towards = '<';
+        backwards = '>';
+    } else {
+        offset = destination_index - current_cell_index;
+        towards = '>';
+        backwards = '<';
+    }
 
     // Zero destination cell
-    printf("%d<", offset);
+    printf("%d%c", offset, towards);
     printf("[-]");
-    printf("%d>", offset);
+    printf("%d%c", offset, backwards);
 
     // While source cell is non-zero
     printf("[");
 
     // Go backwards to destination
-    printf("%d<", offset);
+    printf("%d%c", offset, towards);
 
     // Increment destination cell
     printf("+");
 
     // Go forwards to source
-    printf("%d>", offset);
+    printf("%d%c", offset, backwards);
 
     // Decrement source cell
     printf("-");
@@ -315,16 +324,20 @@ u0 move_cell_static(u32 destination_index){
 }
 
 u0 move_cells_static(u32 destination_index, u32 size, u1 destructive){
+    // data1 data2 data3 data4
+    //                     ^
+
+    // ?
+    // ^
+
     for(u32 i = 0; i < size; i++){
-        // Copy cell to destination
         move_cell_static(destination_index + size - i - 1);
 
-        printf("<");
-        emit_context.current_cell_index--;
+        if(i + 1 < size){
+            printf("<");
+            emit_context.current_cell_index--;
+        }
     }
-
-    printf(">");
-    emit_context.current_cell_index++;
 }
 
 u0 move_cell_dynamic_u8(u32 destination_start_index){
@@ -335,8 +348,8 @@ u0 move_cell_dynamic_u8(u32 destination_start_index){
 
     u32 back_offset = emit_context.current_cell_index - destination_start_index - 1;
 
-    // new_cell index
-    //            ^
+    // value index
+    //         ^
 
     // index
     //   ^
@@ -417,6 +430,12 @@ u0 move_cell_dynamic_u8(u32 destination_start_index){
 }
 
 u0 move_cells_dynamic_u8(u32 destination_index, u32 size){
+    // value1 value2 value3 index
+    //                        ^
+
+    // index
+    //   ^
+
     for(u32 i = 0; i < size; i++){
         move_cell_dynamic_u8(destination_index + size - 1 - i);
     }
@@ -424,7 +443,11 @@ u0 move_cells_dynamic_u8(u32 destination_index, u32 size){
 
 u0 print_cells_static(u32 start_index, u32 max_length){
     u32 current_cell_index = emit_context.current_cell_index;
-    if(start_index >= current_cell_index) return;
+
+    if(start_index >= current_cell_index){
+        fprintf(stderr, "warning: print_cells_static cannot print cells that are in front of current cell index\n");
+        return;
+    }
 
     u32 back_offset = (current_cell_index - start_index);
 

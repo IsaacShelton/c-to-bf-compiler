@@ -1,0 +1,7 @@
+
+u0 main() {
+    u8 animal[10] = "Animal";
+    print(animal);
+    print("\n");
+}
+

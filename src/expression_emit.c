@@ -53,7 +53,7 @@ static u0 print_nth_argument_label(u32 number){
     }
 }
 
-static ErrorCode grow_type(u32 from_type_index, u32 to_type_index){
+static ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u32 offset_size){
     Type from_type = types[from_type_index];
     Type to_type = types[to_type_index];
 
@@ -89,11 +89,28 @@ static ErrorCode grow_type(u32 from_type_index, u32 to_type_index){
     u32 f_len = f[num_f_dims - 1];
 
     if(t_len > f_len){
+        u32 difference = t_len - f_len;
+
+        // If we have an offset, then move it forward
+        if(offset_size > 0){
+            printf("<");
+            emit_context.current_cell_index--;
+
+            u32 new_offset_position = emit_context.current_cell_index - offset_size + 1 + difference;
+
+            move_cells_static(new_offset_position, offset_size, true);
+        }
+
         // Zero extend array
         while(f_len < t_len){
             printf("[-]>");
             emit_context.current_cell_index++;
             f_len++;
+        }
+
+        if(offset_size > 0){
+            printf("%d>", offset_size);
+            emit_context.current_cell_index += offset_size;
         }
 
         return 0;
@@ -181,7 +198,7 @@ static u32 expression_emit_call(Expression expression){
         u32 expected_type = operands[expressions[statements[function.begin + i]].ops];
 
         if(type != expected_type){
-            if(grow_type(type, expected_type)){
+            if(grow_type(type, expected_type, false)){
                 printf("\nerror on line %d: ", u24_unpack(expression.line));
                 print_nth_argument_label(i + 1);
                 printf(" argument to function '");
@@ -426,7 +443,7 @@ static Destination expression_get_destination(Expression expression, u32 tape_an
 
 static u32 write_destination(u32 new_value_type, Destination destination, u24 error_line_number){
     if(new_value_type != destination.type){
-        if(grow_type(new_value_type, destination.type)){
+        if(grow_type(new_value_type, destination.type, destination.offset_size)){
             printf("\nerror on line %d: Cannot assign '", u24_unpack(error_line_number));
             type_print(types[new_value_type]);
             printf("' to '");
@@ -890,8 +907,8 @@ ErrorCode print_array_reference(Destination destination, u32 max_length, u24 lin
         print_cells_static(destination.tape_location, max_length);
     } else {
         // TODO: Optimize this
-        // Ignore index and just copy and print the value
-        printf("%d<", destination.offset_size);
+        // Ignore reference and just copy and print the value
+
         read_destination(destination, line_on_error);
         emit_print_array_value(max_length);
     }
@@ -1113,7 +1130,7 @@ static u32 expression_emit_return(Expression expression){
     if(value_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
     if(value_type != return_type){
-        if(grow_type(value_type, return_type)){
+        if(grow_type(value_type, return_type, false)){
             printf("\nerror on line %d: ", u24_unpack(expression.line));
             printf("Expected '");
             type_print(types[return_type]);

@@ -1,0 +1,22 @@
+
+typedef struct {
+    u8 a;
+    u8 b;
+} Thing;
+
+u0 main(){
+    Thing values[4];
+
+    values[0] = (Thing){ .a = 2, .b = 3 };
+    values[1] = (Thing){ .a = 4, .b = 5 };
+    values[2] = (Thing){ .a = 6, .b = 7 };
+    values[3] = (Thing){ .a = 8, .b = 9 };
+
+    for(u8 i = 0; i < 4; i++){
+        Thing result = values[i];
+        put(result.a + '0');
+        put(result.b + '0');
+        put('\n');
+    }
+}
+

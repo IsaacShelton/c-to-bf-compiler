@@ -88,7 +88,7 @@ ErrorCode compute_typedef_sizes(){
                 Expression expression = expressions[statements[def.begin + j]];
                 if(expression.kind != EXPRESSION_DECLARE) continue;
 
-                u32 field_size = type_sizeof_or_max(operands[expression.ops]);
+                u32 field_size = type_sizeof_or_max(operands[expression.ops], expression.line);
                 if(field_size == -1) return 1;
 
                 size += field_size;

@@ -437,7 +437,7 @@ static HoneInfo hone_for_body_or_skip(u32 current_statement, u32 target_statemen
         Expression expression = expressions[statements[i]];
 
         if(expression.kind == EXPRESSION_DECLARE){
-            u32 type_size = type_sizeof_or_max(operands[expression.ops]);
+            u32 type_size = type_sizeof_or_max(operands[expression.ops], expression.line);
 
             if(type_size != -1){
                 pre_offset += type_size;
@@ -607,7 +607,7 @@ Variable get_variable_location_from_declaration_statement(u32 statement_index){
         }
 
         if(expression.kind == EXPRESSION_DECLARE){
-            u32 type_size = type_sizeof_or_max(operands[expression.ops]);
+            u32 type_size = type_sizeof_or_max(operands[expression.ops], expression.line);
 
             if(type_size != -1){
                 offset += type_size;

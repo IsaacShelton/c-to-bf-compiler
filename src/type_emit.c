@@ -6,7 +6,7 @@
 #include "../include/storage.h"
 #include "../include/type_print.h"
 
-u32 type_sizeof_or_max(u32 type_index){
+u32 type_sizeof_or_max(u32 type_index, u24 line_on_error){
     u32 name = types[type_index].name;
     u32 size;
 
@@ -21,7 +21,7 @@ u32 type_sizeof_or_max(u32 type_index){
     } else {
         u32 found_typedef = find_typedef(name);
         if(found_typedef >= TYPEDEFS_CAPACITY){
-            printf("\nerror: Type '");
+            printf("\nerror on line %d: Type '", u24_unpack(line_on_error));
             type_print(types[type_index]);
             printf("' does not exist\n");
             return -1;
@@ -30,7 +30,7 @@ u32 type_sizeof_or_max(u32 type_index){
         size = typedefs[found_typedef].computed_size;
 
         if(size == -1){
-            printf("\nerror: Type '");
+            printf("\nerror on line %d: Type '", u24_unpack(line_on_error));
             type_print(types[type_index]);
             printf("' doesn't have its size computed yet\n");
             return -1;

@@ -15,6 +15,7 @@ u0 main(){
     for(u8 i = 0; i < 4; i++){
         Thing result = values[i];
         put(result.a + '0');
+        put(' ');
         put(result.b + '0');
         put('\n');
     }

@@ -24,6 +24,9 @@ typedef struct {
 
     // Whether function is recursive
     u1 is_recursive;
+
+    // What line number the function was declared on
+    u24 line;
 } Function;
 
 #endif // _PECK_AST_FUNCTION_H

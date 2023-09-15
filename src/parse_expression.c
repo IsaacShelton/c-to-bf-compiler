@@ -5,9 +5,118 @@
 #include "../include/parse_type.h"
 #include "../include/storage.h"
 
-static Expression parse_secondary_expression(u8 precedence, Expression lhs);
+static Expression parse_operator_expression(u8 precedence, Expression lhs);
 static Expression parse_unary_prefix(TokenKind operator, u24 line_number);
 static Expression parse_unary_postfix(Expression expression);
+static Expression parse_primary_base_expression();
+static Expression parse_primary_post_expression(Expression expression);
+static Expression parse_array_index_expression(Expression array, u24 line_number);
+static Expression parse_member_expression(Expression array, u24 line_number);
+
+static Expression parse_primary_expression(){
+    Expression expression = parse_primary_base_expression();
+    if(had_parse_error) return (Expression){0};
+
+    expression = parse_primary_post_expression(expression);
+    if(had_parse_error) return (Expression){0};
+
+    return expression;
+}
+
+static Expression parse_primary_post_expression(Expression lhs){
+    while(true){
+        u24 line_number = tokens[parse_i].line;
+
+        switch(tokens[parse_i].kind){
+        case TOKEN_OPEN_BRACKET:
+            lhs = parse_array_index_expression(lhs, line_number);
+            break;
+        case TOKEN_MEMBER:
+            lhs = parse_member_expression(lhs, line_number);
+            break;
+        case TOKEN_INCREMENT:
+        case TOKEN_DECREMENT:
+            lhs = parse_unary_postfix(lhs);
+            break;
+        default:
+            return lhs;
+        }
+    }
+
+    return lhs;
+}
+
+static Expression parse_array_index_expression(Expression array, u24 line_number){
+    // Skip over '[' operator
+    parse_i++;
+
+    Expression index = parse_expression();
+    if(had_parse_error) return array;
+
+    if(!eat_token(TOKEN_CLOSE_BRACKET)){
+        printf("\nerror on line %d: Expected ']' after index expression\n", current_line());
+        instead_got();
+        stop_parsing();
+        return array;
+    }
+
+    u32 a = add_expression(array);
+    if(a >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return array;
+    }
+
+    u32 b = add_expression(index);
+    if(b >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return array;
+    }
+
+    u32 ops = add_operands2(a, b);
+    if(ops >= OPERANDS_CAPACITY){
+        stop_parsing();
+        return array;
+    }
+
+    return (Expression){
+        .kind = EXPRESSION_INDEX,
+        .line = line_number,
+        .ops = ops,
+    };
+}
+
+static Expression parse_member_expression(Expression subject_expression, u24 line_number){
+    // Skip over '.' operator
+    parse_i++;
+
+    u32 subject = add_expression(subject_expression);
+    if(subject >= EXPRESSIONS_CAPACITY){
+        stop_parsing();
+        return subject_expression;
+    }
+
+    if(!is_token(TOKEN_WORD)){
+        printf("\nerror on line %d: Expected member name after '.'\n", u24_unpack(line_number));
+        instead_got();
+        stop_parsing();
+        return subject_expression;
+    }
+
+    u32 member_name = eat_word();
+
+    u32 ops = add_operands2(subject, member_name);
+    if(ops >= OPERANDS_CAPACITY){
+        stop_parsing();
+        return subject_expression;
+    }
+
+    return (Expression){
+        .kind = EXPRESSION_MEMBER,
+        .line = line_number,
+        .ops = ops,
+    };
+}
+
 
 static Expression parse_expression_print(u24 line_number){
     Expression expression = (Expression){0};
@@ -142,7 +251,7 @@ static Expression parse_expression_sizeof(u24 line_number){
             .ops = type_index,
         };
     } else {
-        Expression target_expression = parse_expression();
+        Expression target_expression = parse_primary_expression();
         if(had_parse_error) return (Expression){0};
 
         u32 target = add_expression(target_expression);
@@ -323,7 +432,7 @@ static Expression parse_array_initializer_expression(u24 line_number){
     };
 }
 
-static Expression parse_primary_expression(){
+static Expression parse_primary_base_expression(){
     u24 line_number = current_line_packed();
 
     if(is_token(TOKEN_WORD)){
@@ -484,6 +593,12 @@ static u8 parse_get_precedence(u32 token_kind){
     case TOKEN_OPEN_BRACKET:
     case TOKEN_MEMBER:
         return 16;
+    case TOKEN_INCREMENT:
+    case TOKEN_DECREMENT:
+        return 15;
+    case TOKEN_NOT:
+    case TOKEN_BIT_COMPLEMENT:
+        return 14;
     case TOKEN_MULTIPLY:
     case TOKEN_DIVIDE:
     case TOKEN_MOD:
@@ -504,6 +619,8 @@ static u8 parse_get_precedence(u32 token_kind){
         return 8;
     case TOKEN_BIT_AND:
         return 7;
+    case TOKEN_BIT_XOR:
+        return 6;
     case TOKEN_BIT_OR:
         return 5;
     case TOKEN_AND:
@@ -558,7 +675,7 @@ static Expression parse_rhs(u32 operator_precedence){
     u8 next_precedence = parse_get_precedence(next_operator);
 
     if(!(next_precedence + is_right_associative(next_operator) < operator_precedence)){
-        rhs = parse_secondary_expression(operator_precedence + 1, rhs);
+        rhs = parse_operator_expression(operator_precedence + 1, rhs);
         if(had_parse_error) return rhs;
     }
 
@@ -653,77 +770,6 @@ static Expression parse_unary_postfix(Expression expression){
         .kind = expression_kind,
         .line = expression.line,
         .ops = value,
-    };
-}
-
-static Expression parse_array_index(Expression array, u24 line_number){
-    // Skip over '[' operator
-    parse_i++;
-
-    Expression index = parse_expression();
-    if(had_parse_error) return array;
-
-    if(!eat_token(TOKEN_CLOSE_BRACKET)){
-        printf("\nerror on line %d: Expected ']' after index expression\n", current_line());
-        instead_got();
-        stop_parsing();
-        return array;
-    }
-
-    u32 a = add_expression(array);
-    if(a >= EXPRESSIONS_CAPACITY){
-        stop_parsing();
-        return array;
-    }
-
-    u32 b = add_expression(index);
-    if(b >= EXPRESSIONS_CAPACITY){
-        stop_parsing();
-        return array;
-    }
-
-    u32 ops = add_operands2(a, b);
-    if(ops >= OPERANDS_CAPACITY){
-        stop_parsing();
-        return array;
-    }
-
-    return (Expression){
-        .kind = EXPRESSION_INDEX,
-        .line = line_number,
-        .ops = ops,
-    };
-}
-
-static Expression parse_member_expression(Expression subject_expression, u24 line_number){
-    // Skip over '.' operator
-    parse_i++;
-
-    u32 subject = add_expression(subject_expression);
-    if(subject >= EXPRESSIONS_CAPACITY){
-        stop_parsing();
-        return subject_expression;
-    }
-
-    if(!is_token(TOKEN_WORD)){
-        printf("\nerror on line %d: Expected member name after '.'\n", u24_unpack(line_number));
-        instead_got();
-        stop_parsing();
-        return subject_expression;
-    }
-
-    u32 member_name = eat_word();
-
-    u32 ops = add_operands2(subject, member_name);
-    if(ops >= OPERANDS_CAPACITY){
-        stop_parsing();
-        return subject_expression;
-    }
-
-    return (Expression){
-        .kind = EXPRESSION_MEMBER,
-        .line = line_number,
-        .ops = ops,
     };
 }
 
@@ -829,7 +875,7 @@ static Expression parse_operator_assign(Expression lhs, TokenKind operator, u24 
     };
 }
 
-static Expression parse_secondary_expression(u8 precedence, Expression lhs){
+static Expression parse_operator_expression(u8 precedence, Expression lhs){
     while(true){
         if(parse_i >= num_tokens){
             return lhs;
@@ -865,16 +911,6 @@ static Expression parse_secondary_expression(u8 precedence, Expression lhs){
         case TOKEN_BIT_XOR:
             lhs = parse_math(lhs, operator, line_number, next_precedence);
             break;
-        case TOKEN_OPEN_BRACKET:
-            lhs = parse_array_index(lhs, line_number);
-            break;
-        case TOKEN_MEMBER:
-            lhs = parse_member_expression(lhs, line_number);
-            break;
-        case TOKEN_INCREMENT:
-        case TOKEN_DECREMENT:
-            lhs = parse_unary_postfix(lhs);
-            break;
         case TOKEN_TERNARY:
             lhs = parse_ternary(lhs, line_number);
             break;
@@ -904,6 +940,6 @@ Expression parse_expression(){
     Expression primary = parse_primary_expression();
     if(had_parse_error) return primary;
 
-    return parse_secondary_expression(0, primary);
+    return parse_operator_expression(0, primary);
 }
 

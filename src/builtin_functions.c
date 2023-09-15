@@ -37,6 +37,7 @@ static ErrorCode add_put_function(){
         .begin = argument,
         .num_stmts = 2,
         .is_recursive = false,
+        .line = u24_pack(0),
     };
 
     if(add_function(function) >= FUNCTIONS_CAPACITY) return 1;
@@ -76,6 +77,7 @@ static ErrorCode add_printu1_function(){
         .begin = argument,
         .num_stmts = 2,
         .is_recursive = false,
+        .line = u24_pack(0),
     };
 
     if(add_function(function) >= FUNCTIONS_CAPACITY) return 1;
@@ -115,6 +117,7 @@ static ErrorCode add_printu8_function(){
         .begin = argument,
         .num_stmts = 2,
         .is_recursive = false,
+        .line = u24_pack(0),
     };
 
     if(add_function(function) >= FUNCTIONS_CAPACITY) return 1;
@@ -142,12 +145,12 @@ static ErrorCode add_get_function(){
         .begin = implementation,
         .num_stmts = 1,
         .is_recursive = false,
+        .line = u24_pack(0),
     };
 
     if(add_function(function) >= FUNCTIONS_CAPACITY) return 1;
     return 0;
 }
-
 
 ErrorCode add_builtin_functions(){
     if(add_put_function()) return 1;

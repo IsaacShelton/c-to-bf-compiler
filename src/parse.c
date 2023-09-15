@@ -30,7 +30,7 @@ static u32 parse_function_body(Function function){
     return (u32) had_parse_error;
 }
 
-ErrorCode parse_function(u32 symbol_name, u32 symbol_type){
+ErrorCode parse_function(u32 symbol_name, u32 symbol_type, u24 line_number){
     if(!eat_token(TOKEN_OPEN)){
         printf("error on line %d: Expected '(' after function name\n", current_line());
         instead_got();
@@ -87,13 +87,14 @@ ErrorCode parse_function(u32 symbol_name, u32 symbol_type){
         return 1;
     }
 
-    Function function = {
+    Function function = (Function){
         .name = symbol_name,
         .arity = num_statements - begin,
         .begin = begin,
         .num_stmts = 0,
         .return_type = symbol_type,
         .is_recursive = true, // assume recursive until we prove otherwise
+        .line = line_number,
     };
 
     if(parse_function_body(function)){
@@ -124,6 +125,8 @@ u32 parse(){
     if(add_builtin_functions()) return 1;
 
     while(parse_i < num_tokens){
+        u24 line_number = tokens[parse_i].line;
+
         if(eat_token(TOKEN_TYPEDEF)){
             if(parse_typedef()) return 1;
             continue;
@@ -153,7 +156,7 @@ u32 parse(){
             if(global >= GLOBALS_CAPACITY) return 1;
         } else {
             // Function
-            if(parse_function(symbol_name, symbol_type)){
+            if(parse_function(symbol_name, symbol_type, line_number)){
                 return 1;
             }
         }

@@ -30,9 +30,9 @@ int main(void){
     */
 
     if(parse()) return 1;
+    if(compute_typedef_sizes()) return 1;
     if(infer()) return 1;
     if(mark_recursive_functions()) return 1;
-    if(compute_typedef_sizes()) return 1;
 
     /*
     for(u32 i = 0; i < num_typedefs; i++){

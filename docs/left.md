@@ -1,7 +1,6 @@
 
 # Features and bugs left
 
-- enums
 - `u16`
 - `u32`
 - `u24`

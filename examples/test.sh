@@ -69,6 +69,8 @@ set -ex
 "$self/../peck" "$self/switch_simple.peck"
 "$self/../peck" "$self/switch_variables.peck"
 "$self/../peck" "$self/ternary.peck"
+"$self/../peck" "$self/u16_access.peck"
+"$self/../peck" "$self/u16_from_literal.peck"
 "$self/../peck" "$self/variable_usage_simple.peck"
 "$self/../peck" "$self/while.peck"
 "$self/../peck" "$self/while_break.peck"

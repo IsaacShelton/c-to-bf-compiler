@@ -5,6 +5,9 @@
 #include "../include/type.h"
 #include "../include/builtin_types.h"
 #include "../include/builtin_types.h"
+#include "../include/variable_find.h"
+#include "../include/emit_context.h"
+#include "../include/type_print.h"
 
 ExpressionKind expression_get_preferred_int_kind_or_none(u32 expression_index){
     Expression expression = expressions[expression_index];
@@ -20,7 +23,6 @@ ExpressionKind expression_get_preferred_int_kind_or_none(u32 expression_index){
     case EXPRESSION_IMPLEMENT_PRINTU8:
     case EXPRESSION_IMPLEMENT_GET:
     case EXPRESSION_INT:
-    case EXPRESSION_VARIABLE:
     case EXPRESSION_INDEX:
     case EXPRESSION_NO_RESULT_INCREMENT:
     case EXPRESSION_NO_RESULT_DECREMENT:
@@ -42,6 +44,22 @@ ExpressionKind expression_get_preferred_int_kind_or_none(u32 expression_index){
     case EXPRESSION_STRUCT_INITIALIZER:
     case EXPRESSION_FIELD_INITIALIZER:
     case EXPRESSION_ENUM_VARIANT:
+        break;
+    case EXPRESSION_VARIABLE: {
+            Variable variable = variable_find(expression.ops);
+
+            if(variable.defined){
+                if(variable.type == u8_type){
+                    return EXPRESSION_U8;
+                } else if(variable.type == u16_type){
+                    return EXPRESSION_U16;
+                } else if(variable.type == u24_type){
+                    return EXPRESSION_U24;
+                } else if(variable.type == u32_type){
+                    return EXPRESSION_U32;
+                }
+            }
+        }
         break;
     case EXPRESSION_U1:
     case EXPRESSION_U8:
@@ -126,6 +144,12 @@ static ExpressionKind function_argument_preferred_int_kind(u32 function_begin, u
 
     if(argument_type == u8_type){
         return EXPRESSION_U8;
+    } else if(argument_type == u16_type){
+        return EXPRESSION_U16;
+    } else if(argument_type == u24_type){
+        return EXPRESSION_U24;
+    } else if(argument_type == u32_type){
+        return EXPRESSION_U32;
     }
 
     return EXPRESSION_NONE;

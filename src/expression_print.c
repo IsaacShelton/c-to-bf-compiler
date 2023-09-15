@@ -68,6 +68,15 @@ u0 expression_print(Expression expression){
     case EXPRESSION_U8:
         printf("%du8", expression.ops);
         break;
+    case EXPRESSION_U16:
+        printf("%du16", expression.ops);
+        break;
+    case EXPRESSION_U24:
+        printf("%du24", expression.ops);
+        break;
+    case EXPRESSION_U32:
+        printf("%du32", expression.ops);
+        break;
     case EXPRESSION_VARIABLE:
         print_aux_cstr(expression.ops);
         break;
@@ -122,7 +131,9 @@ u0 expression_print(Expression expression){
     case EXPRESSION_NOT:
     case EXPRESSION_BIT_COMPLEMENT:
         expression_print_operator(expression.kind);
+        printf("(");
         expression_print(expressions[expression.ops]);
+        printf(")");
         break;
     case EXPRESSION_PRE_INCREMENT:
         printf("++");

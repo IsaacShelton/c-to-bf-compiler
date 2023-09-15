@@ -163,7 +163,7 @@ static u32 expression_emit_call(Expression expression){
     Function function = functions[function_index];
 
     if(function.arity != arity){
-        printf("\nerror: ");
+        printf("\nerror on line %d: ", u24_unpack(expression.line));
         if(arity < function.arity){
             printf("Not enough");
         } else {
@@ -176,7 +176,7 @@ static u32 expression_emit_call(Expression expression){
     }
 
     // Make room for return value
-    u32 return_size = type_sizeof_or_max(function.return_type);
+    u32 return_size = type_sizeof_or_max(function.return_type, function.line);
     if(return_size == -1) return TYPES_CAPACITY;
 
     for(u32 i = 0; i < return_size; i++){
@@ -188,10 +188,12 @@ static u32 expression_emit_call(Expression expression){
 
     // Push Arguments
     for(u32 i = 0; i < arity; i++){
-        u32 type = expression_emit(expressions[operands[expression.ops + 2 + i]]);
+        Expression argument = expressions[operands[expression.ops + 2 + i]];
+
+        u32 type = expression_emit(argument);
         if(type == TYPES_CAPACITY) return TYPES_CAPACITY;
 
-        u32 type_size = type_sizeof_or_max(type);
+        u32 type_size = type_sizeof_or_max(type, argument.line);
         if(type_size == -1) return TYPES_CAPACITY;
 
         // Ensure type matches expected type
@@ -306,12 +308,22 @@ static Destination destination_member(Destination destination, u32 target_field_
     }
 
     if(!is_struct_type){
-        printf("\nerror on line %d: Cannot get '", u24_unpack(line_on_error));
-        print_aux_cstr(target_field_name);
-        printf("' of non-struct type '");
-        type_print(type);
-        printf("'\n");
-        return (Destination) { .type = TYPES_CAPACITY };
+        if(destination.type == u16_type && aux[target_field_name] == '_' && aux[target_field_name + 1] == '0' && aux[target_field_name + 2] == '\0'){
+            destination.type = u8_type;
+            destination.tape_location += 0;
+            return destination;
+        } else if(destination.type == u16_type && aux[target_field_name] == '_' && aux[target_field_name + 1] == '1' && aux[target_field_name + 2] == '\0'){
+            destination.type = u8_type;
+            destination.tape_location += 1;
+            return destination;
+        } else {
+            printf("\nerror on line %d: Cannot get '", u24_unpack(line_on_error));
+            print_aux_cstr(target_field_name);
+            printf("' of non-struct type '");
+            type_print(type);
+            printf("'\n");
+            return (Destination) { .type = TYPES_CAPACITY };
+        }
     }
 
     // Result destination type is invalid unless we find the member
@@ -329,7 +341,7 @@ static Destination destination_member(Destination destination, u32 target_field_
             break;
         }
 
-        u32 field_size = type_sizeof_or_max(field_type);
+        u32 field_size = type_sizeof_or_max(field_type, expression.line);
         if(field_size == -1) return (Destination){ .type = TYPES_CAPACITY };
 
         destination.tape_location += field_size;
@@ -396,7 +408,7 @@ static Destination expression_get_destination(Expression expression, u32 tape_an
         if(index_type == u8_type){
             // u8 indexing
 
-            u32 item_size = type_sizeof_or_max(item_type);
+            u32 item_size = type_sizeof_or_max(item_type, array_expression.line);
             if(item_size == -1) return (Destination) { .type = TYPES_CAPACITY };
 
             if(item_size != 1){
@@ -436,7 +448,10 @@ static Destination expression_get_destination(Expression expression, u32 tape_an
 
         return destination_member(destination, operands[expression.ops + 1], expression.line);
     } else {
-        printf("\nerror on line %d: Cannot assign value to that destination\n", u24_unpack(expression.line));
+        printf("\nerror on line %d: Cannot get destination for expression `", u24_unpack(expression.line));
+        expression_print(expression);
+        printf("`\n");
+
         return (Destination){ .type = TYPES_CAPACITY };
     }
 }
@@ -455,7 +470,7 @@ static u32 write_destination(u32 new_value_type, Destination destination, u24 er
         new_value_type = destination.type;
     }
 
-    u32 type_size = type_sizeof_or_max(new_value_type);
+    u32 type_size = type_sizeof_or_max(new_value_type, error_line_number);
     if(type_size == -1) return TYPES_CAPACITY;
 
     // Point to last cell of new-value/index combination
@@ -501,7 +516,7 @@ u32 expression_emit_variable(Expression expression){
         return TYPES_CAPACITY;
     }
 
-    u32 size = type_sizeof_or_max(variable.type);
+    u32 size = type_sizeof_or_max(variable.type, expression.line);
     if(size == -1) return TYPES_CAPACITY;
 
     if(variable.location.kind == VARIABLE_LOCATION_IMMUTABLE){
@@ -926,7 +941,7 @@ static u32 read_destination(Destination destination, u24 line_on_error){
         return TYPES_CAPACITY;
     }
 
-    u32 item_type_size = type_sizeof_or_max(destination.type);
+    u32 item_type_size = type_sizeof_or_max(destination.type, line_on_error);
     if(item_type_size == -1) return TYPES_CAPACITY;
 
     if(destination.offset_size == 0){
@@ -1119,7 +1134,7 @@ static u32 expression_emit_ternary(Expression expression){
     u32 result_size;
 
     if(result_type < TYPES_CAPACITY){
-        result_size = type_sizeof_or_max(result_type);
+        result_size = type_sizeof_or_max(result_type, expression.line);
         if(result_size == -1) return TYPES_CAPACITY;
     } else {
         printf("\nerror on line %d: Could not determine result size for ternary expression\n", u24_unpack(expression.line));
@@ -1240,7 +1255,7 @@ static u32 expression_emit_return(Expression expression){
         value_type = return_type;
     }
 
-    u32 return_type_size = type_sizeof_or_max(return_type);
+    u32 return_type_size = type_sizeof_or_max(return_type, expression.line);
     if(return_type_size == -1) return TYPES_CAPACITY;
 
     u32 return_value_location = emit_context.function_cell_index - return_type_size;
@@ -1286,7 +1301,7 @@ static u32 expression_emit_continue(Expression expression){
 }
 
 static u32 expression_emit_sizeof_type_u8(Expression expression){
-    u32 size = type_sizeof_or_max(expression.ops);
+    u32 size = type_sizeof_or_max(expression.ops, expression.line);
 
     if(size > 255){
         printf("\nerror on line %d: Cannot get size of '", u24_unpack(expression.line));
@@ -1307,7 +1322,7 @@ static u32 expression_emit_sizeof_value_u8(Expression expression){
         return TYPES_CAPACITY;
     }
 
-    u32 size = type_sizeof_or_max(expression_type);
+    u32 size = type_sizeof_or_max(expression_type, expression.line);
 
     if(size > 255){
         printf("\nerror on line %d: Cannot get size of '", u24_unpack(expression.line));
@@ -1373,7 +1388,7 @@ static u32 expression_emit_array_initializer(Expression expression){
 static u32 expression_emit_struct_initializer(Expression expression){
     u32 type = operands[expression.ops];
 
-    u32 type_size = type_sizeof_or_max(type);
+    u32 type_size = type_sizeof_or_max(type, expression.line);
     if(type_size == -1) return TYPES_CAPACITY;
 
     // Allocate space for result
@@ -1424,7 +1439,7 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_SWITCH:
         break;
     case EXPRESSION_DECLARE: {
-            u32 variable_size = type_sizeof_or_max(operands[expression.ops]);
+            u32 variable_size = type_sizeof_or_max(operands[expression.ops], expression.line);
             if(variable_size == -1){
                 printf("    In variable declaration on line %d\n", u24_unpack(expression.line));
                 return TYPES_CAPACITY;

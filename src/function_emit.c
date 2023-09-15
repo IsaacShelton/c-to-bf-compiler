@@ -848,7 +848,7 @@ static ErrorCode emit_switch(Expression expression){
         return 1;
     }
 
-    u32 condition_type_size = type_sizeof_or_max(condition_type);
+    u32 condition_type_size = type_sizeof_or_max(condition_type, expression.line);
     if(condition_type_size == -1) return 1;
 
     emit_context.switch_value_type = condition_type;

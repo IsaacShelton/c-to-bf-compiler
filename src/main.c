@@ -17,6 +17,7 @@
 #include "../include/infer.h"
 #include "../include/mark_recursive_functions.h"
 #include "../include/compute_typedef_sizes.h"
+#include "../include/prelex.h"
 
 int main(void){
     if(lex()) return 1;
@@ -27,6 +28,10 @@ int main(void){
         printf("\n");
     }
     printf("\n");
+    */
+
+    /*
+    print_lexed_construction();
     */
 
     if(parse()) return 1;

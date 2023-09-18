@@ -1,0 +1,11 @@
+
+u0 main(){
+    u16 value = 1234;
+
+    print("-");
+    printu16(value);
+    print(" = ");
+    printu16(-value);
+    print("\n");
+}
+

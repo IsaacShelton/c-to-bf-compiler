@@ -1,0 +1,16 @@
+
+u0 main(){
+    u16 a = 1234;
+    u16 b = 4321;
+
+    print("   ");
+    printu16bin(a);
+    print("\n");
+    print(" ^ ");
+    printu16bin(b);
+    print("\n");
+    print(" = ");
+    printu16bin(a ^ b);
+    print("\n");
+}
+

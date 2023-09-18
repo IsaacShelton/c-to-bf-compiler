@@ -1,0 +1,25 @@
+
+u0 main(){
+    u16 value = 65535;
+
+    for(u8 i = 0; i < 17; i++){
+        printu16(value);
+        print(" << ");
+        printu8(i);
+        print(" = ");
+        printu16(value << (u16) i);
+        print("\n");
+    }
+
+    value = 1;
+
+    for(u8 i = 0; i < 17; i++){
+        printu16(value);
+        print(" << ");
+        printu8(i);
+        print(" = ");
+        printu16(value << (u16) i);
+        print("\n");
+    }
+}
+

@@ -1,0 +1,23 @@
+
+u0 main(){
+    u16 a = 123;
+    u16 b = 321;
+
+    printu16(a);
+    print(" == ");
+    printu16(b);
+    print(" = ");
+    printu1(a == b);
+    print("\n");
+
+    a = 404;
+    b = 404;
+
+    printu16(a);
+    print(" == ");
+    printu16(b);
+    print(" = ");
+    printu1(a == b);
+    print("\n");
+}
+

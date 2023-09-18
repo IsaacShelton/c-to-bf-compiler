@@ -1,0 +1,21 @@
+
+u0 main(){
+    printu16(64533);
+    print("\n");
+
+    printu16(1234);
+    print("\n");
+
+    printu16(732);
+    print("\n");
+
+    printu16(13);
+    print("\n");
+
+    printu16(7);
+    print("\n");
+
+    printu16(0);
+    print("\n");
+}
+

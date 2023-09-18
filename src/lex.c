@@ -13,6 +13,7 @@
 #include "../include/lex_character_literal.h"
 #include "../include/lex_line_comment.h"
 #include "../include/lex_multiline_comment.h"
+#include "../include/standard_library.h"
 
 typedef struct {
     u8 c;
@@ -321,6 +322,8 @@ LexedToken lex_main(){
 
 u32 lex(){
     lex_line_number = 1;
+
+    inject_standard_library();
 
     u8 c = get();
 

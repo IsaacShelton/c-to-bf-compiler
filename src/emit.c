@@ -4,6 +4,7 @@
 #include "../include/emit.h"
 #include "../include/storage.h"
 #include "../include/emit_context.h"
+#include "../include/function_emit.h"
 
 u0 dupe_cell(){
     // a ?
@@ -22,6 +23,31 @@ u0 dupe_cell(){
     // (nothing to do)
 
     emit_context.current_cell_index++;
+}
+
+u0 dupe_cell_offset(u32 offset){
+    // a ?
+    //   ^
+
+    // Zero next two cells, and go to target read cell
+    printf("[-]>[-]%d<", offset + 1);
+
+    // Dupe into next available cell
+    printf("[%d>+>+%d<-]", offset, offset + 1);
+
+    // Move second copy back into original
+    printf("%d>[%d<+%d>-]", offset + 1, offset + 1, offset + 1);
+
+    // Remain pointing to next available cell
+    // (nothing to do)
+
+    emit_context.current_cell_index++;
+}
+
+u0 dupe_cells(u32 amount){
+    for(u32 i = 0; i < amount; i++){
+        dupe_cell_offset(amount);
+    }
 }
 
 u0 emit_print_aux_cstr(u32 string){
@@ -693,6 +719,49 @@ u0 emit_additive_u8(u1 is_plus){
     emit_context.current_cell_index--;
 }
 
+u0 emit_stdlib_function_call(u8 function_name[16], u32 return_size, u32 params_size){
+    // Make room for return value
+    for(u32 i = 0; i < return_size; i++){
+        printf("[-]>");
+    }
+    emit_context.current_cell_index += return_size;
+
+    // Move parameters over to make room for return value
+    printf("<");
+    printf("%d<", return_size);
+
+    for(u32 i = 0; i < params_size; i++){
+        printf("[-%d>+%d<]", return_size, return_size);
+        printf("<");
+    }
+
+    printf("%d>", 1 + return_size + params_size);
+
+    u32 start_function_cell_index = emit_context.current_cell_index - params_size;
+
+    u32 prev_num_aux = num_aux;
+    u32 name = aux_cstr_alloc(function_name);
+    u32 function_index = find_function(name);
+    num_aux = prev_num_aux;
+    
+    if(function_index >= FUNCTIONS_CAPACITY){
+        fprintf(stderr, "Failed to emit_stdlib_function_call, could not find function\n");
+        return;
+    }
+
+    if(function_emit(function_index, start_function_cell_index, emit_context.current_cell_index)){
+        fprintf(stderr, "Failed to emit_stdlib_function_call\n");
+    }
+}
+
+u0 emit_additive_u16(u1 is_plus){
+    if(is_plus){
+        emit_stdlib_function_call((u8*) "u16_add", 2, 4);
+    } else {
+        emit_stdlib_function_call((u8*) "u16_sub", 2, 4);
+    }
+}
+
 u0 emit_multiply_u8(){
     // a b ?
     //     ^
@@ -738,6 +807,10 @@ u0 emit_multiply_u8(){
     emit_context.current_cell_index--;
 }
 
+u0 emit_multiply_u16(){
+    emit_stdlib_function_call((u8*) "u16_mul", 2, 4);
+}
+
 u0 emit_divmod_u8(){
     // n d ?
     //     ^
@@ -765,6 +838,10 @@ u0 emit_divide_u8(){
     printf("3>[3<+3>-]2<");
 }
 
+u0 emit_divide_u16(){
+    emit_stdlib_function_call((u8*) "u16_div", 2, 4);
+}
+
 u0 emit_mod_u8(){
     // a b ?
     //     ^
@@ -773,6 +850,10 @@ u0 emit_mod_u8(){
 
     // Go to n%d cell and move n%d to result cell
     printf("2>[2<+2>-]<");
+}
+
+u0 emit_mod_u16(){
+    emit_stdlib_function_call((u8*) "u16_mod", 2, 4);
 }
 
 u0 emit_lshift_u8(){
@@ -807,6 +888,14 @@ u0 emit_lshift_u8(){
     printf("]");
 
     emit_context.current_cell_index--;
+}
+
+u0 emit_lshift_u16(){
+    // Convert u16 amount to u8 amount
+    printf("<");
+    emit_context.current_cell_index--;
+
+    emit_stdlib_function_call((u8*) "u16_sll", 2, 3);
 }
 
 u0 emit_rshift_u8(){
@@ -882,6 +971,14 @@ u0 emit_rshift_u8(){
     emit_context.current_cell_index--;
 }
 
+u0 emit_rshift_u16(){
+    // Convert u16 amount to u8 amount
+    printf("<");
+    emit_context.current_cell_index--;
+
+    emit_stdlib_function_call((u8*) "u16_srl", 2, 3);
+}
+
 u0 emit_eq_u8(){
     // a b ?
     //     ^
@@ -913,6 +1010,10 @@ u0 emit_eq_u8(){
     emit_context.current_cell_index--;
 }
 
+u0 emit_eq_u16(){
+    emit_stdlib_function_call((u8*) "u16_eq", 1, 4);
+}
+
 u0 emit_neq_u8(){
     // a b ?
     //     ^
@@ -938,6 +1039,10 @@ u0 emit_neq_u8(){
     emit_context.current_cell_index--;
 }
 
+u0 emit_neq_u16(){
+    emit_stdlib_function_call((u8*) "u16_eq", 1, 4);
+    emit_not_u1();
+}
 
 u0 emit_lt_u8(){
     // a b ?
@@ -998,6 +1103,10 @@ u0 emit_lt_u8(){
     printf("<");
 
     emit_context.current_cell_index--;
+}
+
+u0 emit_lt_u16(){
+    emit_stdlib_function_call((u8*) "u16_lt", 1, 4);
 }
 
 u0 emit_gt_u8(){
@@ -1064,6 +1173,10 @@ u0 emit_gt_u8(){
     emit_context.current_cell_index--;
 }
 
+u0 emit_gt_u16(){
+    emit_stdlib_function_call((u8*) "u16_gt", 1, 4);
+}
+
 u0 emit_lte_u8(){
     // a b ?
     //     ^
@@ -1120,6 +1233,10 @@ u0 emit_lte_u8(){
     printf("<");
 
     emit_context.current_cell_index--;
+}
+
+u0 emit_lte_u16(){
+    emit_stdlib_function_call((u8*) "u16_lte", 1, 4);
 }
 
 u0 emit_gte_u8(){
@@ -1181,6 +1298,10 @@ u0 emit_gte_u8(){
     printf("<");
 
     emit_context.current_cell_index--;
+}
+
+u0 emit_gte_u16(){
+    emit_stdlib_function_call((u8*) "u16_gte", 1, 4);
 }
 
 static u0 emit_binary_bitwise_operator_pre(){
@@ -1260,6 +1381,10 @@ u0 emit_bit_and_u8(){
     emit_binary_bitwise_operator_post();
 }
 
+u0 emit_bit_and_u16(){
+    emit_stdlib_function_call((u8*) "u16_bit_and", 2, 4);
+}
+
 u0 emit_bit_or_u8(){
     // a b ?
     //     ^
@@ -1269,6 +1394,10 @@ u0 emit_bit_or_u8(){
     emit_binary_bitwise_operator_post();
 }
 
+u0 emit_bit_or_u16(){
+    emit_stdlib_function_call((u8*) "u16_bit_or", 2, 4);
+}
+
 u0 emit_bit_xor_u8(){
     // a b ?
     //     ^
@@ -1276,6 +1405,10 @@ u0 emit_bit_xor_u8(){
     emit_binary_bitwise_operator_pre();
     printf("[>-<-]>[[-]<<+>>]");
     emit_binary_bitwise_operator_post();
+}
+
+u0 emit_bit_xor_u16(){
+    emit_stdlib_function_call((u8*) "u16_bit_xor", 2, 4);
 }
 
 u0 emit_not_u1(){
@@ -1296,10 +1429,25 @@ u0 emit_negate_u8(){
     printf("<-[>+<-]>+[<->-]");
 }
 
+u0 emit_negate_u16(){
+    // Add u16 value of 0 before value
+    printf("[-]>[-]<");
+    printf("<<[>>+<<-]>[>>+<<-]");
+    printf("3>");
+    emit_context.current_cell_index += 2;
+
+    // Subtract
+    emit_stdlib_function_call((u8*) "u16_sub", 2, 4);
+}
+
 u0 emit_bit_complement_u8(){
     // a ?
     //   ^
 
     printf("<[>+<-]>+[<->-]");
+}
+
+u0 emit_bit_complement_u16(){
+    emit_stdlib_function_call((u8*) "u16_bit_neg", 2, 2);
 }
 

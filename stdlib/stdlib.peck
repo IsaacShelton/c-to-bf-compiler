@@ -1,0 +1,280 @@
+
+u16 u16_add_u8s(u8 a, u8 b){
+    u16 result;
+    u8 lower = a + b;
+    result._0 = lower;
+    result._1 = (u8) (lower < a || lower < b); // overflow bit
+    return result;
+}
+
+u16 u16_add(u16 a, u16 b){
+    u16 result = u16_add_u8s(a._0, b._0);
+    result._1 += a._1 + b._1;
+    return result;
+}
+
+u16 u16_sub(u16 a, u16 b){
+    u16 negative_b = u16_add(u16_bit_neg(b), 1);
+    return u16_add(a, negative_b);
+}
+
+u16 u16_bit_and(u16 a, u16 b){
+    u16 result;
+    result._1 = a._1 & b._1;
+    result._0 = a._0 & b._0;
+    return result;
+}
+
+u16 u16_bit_or(u16 a, u16 b){
+    u16 result;
+    result._1 = a._1 | b._1;
+    result._0 = a._0 | b._0;
+    return result;
+}
+
+u16 u16_bit_xor(u16 a, u16 b){
+    u16 result;
+    result._1 = a._1 ^ b._1;
+    result._0 = a._0 ^ b._0;
+    return result;
+}
+
+u16 u16_bit_neg(u16 value){
+    value._0 = ~value._0;
+    value._1 = ~value._1;
+    return value;
+}
+
+u16 u16_sll(u16 value, u8 amount){
+    u16 result;
+
+    // Assumes 8-bit cells and wrapping of course
+    if(amount < 8){
+        // 0..=7
+        u8 between = (value._0 >> (8 - amount)); // Ok, as wrap around will work
+        result._1 = (value._1 << amount) + between;
+        result._0 = value._0 << amount;
+    } else if(amount < 16){
+        // 8..=15
+        u8 count = amount - 8;
+        result._1 = value._0 << count;
+        result._0 = 0;
+    } else {
+        result._1 = 0;
+        result._0 = 0;
+    }
+
+    return result;
+}
+
+u16 u16_srl(u16 value, u8 amount){
+    u16 result;
+
+    if(amount < 8){
+        u8 between = (value._1 << (8 - amount)); // Ok, as wrap around will work
+        result._1 = value._1 >> amount;
+        result._0 = (value._0 >> amount) + between;
+    } else if(amount < 16){
+        u8 count = amount - 8;
+        result._1 = 0;
+        result._0 = value._1 >> count;
+    } else {
+        result._1 = 0;
+        result._0 = 0;
+    }
+
+    return result;
+}
+
+u16 u16_mul(u16 a, u16 b){
+    u1 a_bits[16];
+    for(u8 i = 0; i < 8; i++){
+        a_bits[16 - (8 + i) - 1] = (u1)( (a._1 >> i) & 1 );
+    }
+
+    for(u8 i = 0; i < 8; i++){
+        a_bits[16 - i - 1] = (u1)( (a._0 >> i) & 1 );
+    }
+
+    u16 r = 0;
+
+    for(u8 i = 0; i < 16; i++){
+        if(a_bits[i]){
+            r = u16_add(r, u16_sll(b, 15 - i));
+        }
+    }
+
+    return r;
+}
+
+u1 u16_eq(u16 a, u16 b){
+    return a._0 == b._0 && a._1 == b._1;
+}
+
+u16 u16_div(u16 a, u16 b){
+    u16 r = 0;
+
+    if(u16_eq(b, 0)){
+        r = 0;
+        a = 0;
+    }
+
+    if(u16_eq(b, 1)){
+        r = a;
+        a = 0;
+    }
+
+    u16 limits[12];
+    u16 multipliers[12];
+
+    limits[0] = 3;
+    multipliers[0] = 16384;
+
+    limits[1] = 7;
+    multipliers[1] = 8192;
+
+    limits[2] = 15;
+    multipliers[2] = 4096;
+
+    limits[3] = 31;
+    multipliers[3] = 2048;
+
+    limits[4] = 63;
+    multipliers[4] = 1024;
+
+    limits[5] = 127;
+    multipliers[5] = 512;
+
+    limits[6] = 255;
+    multipliers[6] = 256;
+
+    limits[7] = 511;
+    multipliers[7] = 128;
+
+    limits[8] = 1023;
+    multipliers[8] = 64;
+
+    limits[9] = 2047;
+    multipliers[9] = 32;
+
+    limits[10] = 4095;
+    multipliers[10] = 16;
+
+    limits[11] = 8191;
+    multipliers[11] = 8;
+
+    for(u8 i = 0; i < 12; i++){
+        if(u16_lte(b, limits[i])){
+            u16 multiplier = multipliers[i];
+            u16 scaled = u16_mul(multiplier, b);
+
+            if(u16_gte(a, scaled)){
+                a = u16_sub(a, scaled);
+                r = u16_add(r, multiplier);
+            }
+        }
+    }
+
+    while(u16_gte(a, b)){
+        a = u16_sub(a, b);
+        r = u16_add(r, 1);
+    }
+
+    return r;
+}
+
+u16 u16_mod(u16 a, u16 b){
+    return u16_sub(a, u16_mul(u16_div(a, b), b));
+}
+
+u1 u16_gt(u16 a, u16 b){
+    return a._1 > b._1 || (a._1 == b._1 && a._0 > b._0);
+}
+
+u1 u16_gte(u16 a, u16 b){
+    return a._1 > b._1 || (a._1 == b._1 && a._0 >= b._0);
+}
+
+u1 u16_lt(u16 a, u16 b){
+    return !u16_gte(a, b);
+}
+
+u1 u16_lte(u16 a, u16 b){
+    return !u16_gt(a, b);
+}
+
+u0 printhexdigit(u8 digit){
+    if(digit < 10){
+        put('0' + digit);
+    } else {
+        put('A' + (digit - 10));
+    }
+}
+
+u0 printu8hex(u8 value){
+    printhexdigit((value / 16) % 16);
+    printhexdigit(value % 16);
+}
+
+u0 printu16(u16 value){
+    u8 digits[5];
+
+    for(u8 i = 4; i != 255; i--){
+        u16 divided = u16_div(value, 10);
+        u16 modded = u16_sub(value, u16_mul(divided, 10));
+        digits[i] = modded._0;
+        value = divided;
+    }
+
+    u8 first = 0;
+
+    while(first < sizeof digits - 1 && digits[first] == 0){
+        first++;
+    }
+
+    for(u8 i = first; i < sizeof digits; i++){
+        put('0' + digits[i]);
+    }
+}
+
+u0 printu16hex(u16 value){
+    printu8hex(value._1);
+    printu8hex(value._0);
+}
+
+u0 printu8bin(u8 value){
+    u8 digits[8];
+
+    for(u8 i = 0; i < sizeof digits; i++){
+        digits[i] = '0';
+    }
+
+    u8 powers[8];
+    powers[0] = 127;
+    powers[1] = 63;
+    powers[2] = 31;
+    powers[3] = 15;
+    powers[4] = 7;
+    powers[5] = 3;
+    powers[6] = 1;
+    powers[7] = 0;
+
+    for(u8 i = 0; i != sizeof digits; i++){
+        u8 power = powers[i];
+        if(value > power){
+            value -= power + 1;
+            digits[i]++;
+        }
+    }
+
+    for(u8 i = 0; i != sizeof digits; i++){
+        put(digits[i]);
+    }
+}
+
+u0 printu16bin(u16 value){
+    printu8bin(value._1);
+    put(' ');
+    printu8bin(value._0);
+}
+

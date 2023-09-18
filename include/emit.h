@@ -6,6 +6,8 @@
 #include "emit_context.h"
 
 u0 dupe_cell();
+u0 dupe_cell_offset(u32 amount);
+u0 dupe_cells(u32 amount);
 u0 emit_print_aux_cstr(u32 string);
 u0 set_cell_to_value(u8 new_value, u8 old_value);
 u0 copy_cell_static(u32 start_index);
@@ -27,25 +29,61 @@ u0 emit_u32(u32 value);
 u0 emit_printu1();
 u0 emit_printu8();
 u0 emit_print_array_value(u32 max_length);
+
 u0 emit_additive_u8(u1 is_plus);
+u0 emit_additive_u16(u1 is_plus);
+
 u0 emit_multiply_u8();
+u0 emit_multiply_u16();
+
 u0 emit_divmod_u8();
+
 u0 emit_divide_u8();
+u0 emit_divide_u16();
+
 u0 emit_mod_u8();
+u0 emit_mod_u16();
+
 u0 emit_lshift_u8();
+u0 emit_lshift_u16();
+
 u0 emit_rshift_u8();
+u0 emit_rshift_u16();
+
 u0 emit_eq_u8();
+u0 emit_eq_u16();
+
 u0 emit_neq_u8();
+u0 emit_neq_u16();
+
 u0 emit_lt_u8();
+u0 emit_lt_u16();
+
 u0 emit_gt_u8();
+u0 emit_gt_u16();
+
 u0 emit_lte_u8();
+u0 emit_lte_u16();
+
 u0 emit_gte_u8();
+u0 emit_gte_u16();
+
 u0 emit_bit_and_u8();
+u0 emit_bit_and_u16();
+
 u0 emit_bit_or_u8();
+u0 emit_bit_or_u16();
+
 u0 emit_bit_xor_u8();
+u0 emit_bit_xor_u16();
+
 u0 emit_not_u1();
+
 u0 emit_negate_u8();
+u0 emit_negate_u16();
+
 u0 emit_bit_complement_u8();
+u0 emit_bit_complement_u16();
 
 #endif // _PECK_EMIT_H
 

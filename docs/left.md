@@ -1,8 +1,6 @@
 
 # Features and bugs left
 
-- `u32`
-- `u24`
 - large dynamic indexing
 - recursion
 - `printf`
@@ -13,4 +11,5 @@
 - `read()` array
 - file directives
 - `memcmp`, `strcmp`, `strlen`, `strcat`, `memset`
+- `u24`
 

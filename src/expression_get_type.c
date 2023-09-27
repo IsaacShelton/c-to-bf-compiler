@@ -37,7 +37,7 @@ u32 expression_get_type_for_string(Expression expression){
     });
 }
 
-u32 expression_get_type_for_variable(Expression expression, u1 print_error){
+u32 expression_get_type_for_variable(Expression expression, ExpressionGetTypeMode mode){
     u32 name = expression.ops;
     Variable variable = variable_find(name);
 
@@ -45,7 +45,7 @@ u32 expression_get_type_for_variable(Expression expression, u1 print_error){
         return variable.type;
     }
 
-    if(print_error){
+    if(mode){
         printf("\nerror on line %d: Variable '", u24_unpack(expression.line));
         print_aux_cstr(name);
         printf("' is not defined\n");
@@ -53,7 +53,7 @@ u32 expression_get_type_for_variable(Expression expression, u1 print_error){
     return TYPES_CAPACITY;
 }
 
-u32 expression_get_type(Expression expression, u1 print_error){
+u32 expression_get_type(Expression expression, ExpressionGetTypeMode mode){
     switch(expression.kind){
     case EXPRESSION_NONE:
     case EXPRESSION_RETURN:
@@ -69,11 +69,12 @@ u32 expression_get_type(Expression expression, u1 print_error){
     case EXPRESSION_SWITCH:
     case EXPRESSION_CASE:
     case EXPRESSION_ARRAY_INITIALIZER:
-    case EXPRESSION_STRUCT_INITIALIZER:
     case EXPRESSION_FIELD_INITIALIZER:
     case EXPRESSION_ENUM_VARIANT:
         break;
 
+    case EXPRESSION_STRUCT_INITIALIZER:
+        return operands[expression.ops];
     case EXPRESSION_DECLARE:
     case EXPRESSION_PRINT_LITERAL:
     case EXPRESSION_PRINT_ARRAY:
@@ -88,6 +89,10 @@ u32 expression_get_type(Expression expression, u1 print_error){
     case EXPRESSION_U1:
         return u1_type;
     case EXPRESSION_INT:
+        if(mode == EXPRESSION_GET_TYPE_MODE_INFER){
+            return TYPES_CAPACITY;
+        }
+        /* fallthrough */
     case EXPRESSION_U8:
         return u8_type;
     case EXPRESSION_U16:
@@ -99,7 +104,7 @@ u32 expression_get_type(Expression expression, u1 print_error){
     case EXPRESSION_ASSIGN:
         return u0_type;
     case EXPRESSION_VARIABLE:
-        return expression_get_type_for_variable(expression, print_error);
+        return expression_get_type_for_variable(expression, mode);
     case EXPRESSION_CAST:
         return operands[expression.ops];
     case EXPRESSION_ADD:
@@ -111,8 +116,12 @@ u32 expression_get_type(Expression expression, u1 print_error){
     case EXPRESSION_RSHIFT:
     case EXPRESSION_BIT_AND:
     case EXPRESSION_BIT_OR:
-    case EXPRESSION_BIT_XOR:
-        return expression_get_type(expressions[operands[expression.ops]], print_error);
+    case EXPRESSION_BIT_XOR: {
+            u32 type = expression_get_type(expressions[operands[expression.ops]], mode);
+            if(type < TYPES_CAPACITY || !(mode & EXPRESSION_GET_TYPE_MODE_INFER)) return type;
+
+            return  expression_get_type(expressions[operands[expression.ops + 1]], mode);
+        }
     case EXPRESSION_EQUALS:
     case EXPRESSION_NOT_EQUALS:
     case EXPRESSION_LESS_THAN:
@@ -123,25 +132,34 @@ u32 expression_get_type(Expression expression, u1 print_error){
     case EXPRESSION_OR:
         return u1_type;
     case EXPRESSION_INDEX: {
-            u32 array_type = expression_get_type(expressions[operands[expression.ops]], print_error);
+            u32 array_type = expression_get_type(expressions[operands[expression.ops]], mode);
             if(array_type >= TYPES_CAPACITY) return array_type;
             return get_item_type(types[array_type], expression.line, false);
         }
     case EXPRESSION_MEMBER: {
-            u32 subject_type_index = expression_get_type(expressions[operands[expression.ops]], print_error);
+            u32 subject_type_index = expression_get_type(expressions[operands[expression.ops]], mode);
             if(subject_type_index >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
             Type subject_type = types[subject_type_index];
-
             if(subject_type.dimensions != 0) return TYPES_CAPACITY;
 
+            u32 field_name = operands[expression.ops + 1];
+
             u32 def_index = find_typedef(subject_type.name);
-            if(def_index >= TYPEDEFS_CAPACITY) return TYPES_CAPACITY;
+            if(def_index >= TYPEDEFS_CAPACITY){
+                if(subject_type_index == u16_type && aux[field_name] == '_' && in_range_inclusive(aux[field_name + 1], '0', '1') && aux[field_name + 2] == '\0'){
+                    return u8_type;
+                } else if(subject_type_index == u32_type && aux[field_name] == '_' && in_range_inclusive(aux[field_name + 1], '0', '3') && aux[field_name + 2] == '\0'){
+                    return u8_type;
+                } else if(subject_type_index == u32_type && aux[field_name] == '_' && in_range_inclusive(aux[field_name + 1], '0', '1') && aux[field_name + 2] == 'u' && aux[field_name + 3] == '1' && aux[field_name + 4] == '6' && aux[field_name + 5] == '\0'){
+                    return u16_type;
+                }
+
+                return TYPES_CAPACITY;
+            }
 
             TypeDef def = typedefs[def_index];
             if(def.kind != TYPEDEF_STRUCT) return TYPES_CAPACITY;
-
-            u32 target_field_name = operands[expression.ops + 1];
 
             for(u32 i = 0; i < def.num_fields; i++){
                 Expression field = expressions[statements[def.begin + i]];
@@ -149,7 +167,7 @@ u32 expression_get_type(Expression expression, u1 print_error){
 
                 u32 field_name = operands[field.ops + 1];
 
-                if(aux_cstr_equals(field_name, target_field_name)){
+                if(aux_cstr_equals(field_name, field_name)){
                     u32 field_type = operands[field.ops];
                     return field_type;
                 }
@@ -164,13 +182,18 @@ u32 expression_get_type(Expression expression, u1 print_error){
     case EXPRESSION_PRE_DECREMENT:
     case EXPRESSION_POST_INCREMENT:
     case EXPRESSION_POST_DECREMENT:
-        return expression_get_type(expressions[expression.ops], print_error);
+        return expression_get_type(expressions[expression.ops], mode);
     case EXPRESSION_TERNARY:
-        return expression_get_type(expressions[operands[expression.ops + 1]], print_error);
+        return expression_get_type(expressions[operands[expression.ops + 1]], mode);
     case EXPRESSION_STRING:
         return expression_get_type_for_string(expression);
     case EXPRESSION_SIZEOF_TYPE:
-        fprintf(stderr, "warning on line %d: assuming result type of sizeof_type to be u8\n", u24_unpack(expression.line));
+        if(mode & EXPRESSION_GET_TYPE_MODE_INFER){
+            return TYPES_CAPACITY;
+        } else {
+            fprintf(stderr, "warning on line %d: assuming result type of sizeof_type to be u8\n", u24_unpack(expression.line));
+        }
+        /* fallthrough */
     case EXPRESSION_SIZEOF_TYPE_U8:
         return u8_type;
     case EXPRESSION_SIZEOF_TYPE_U16:
@@ -180,7 +203,12 @@ u32 expression_get_type(Expression expression, u1 print_error){
     case EXPRESSION_SIZEOF_TYPE_U32:
         return u32_type;
     case EXPRESSION_SIZEOF_VALUE:
-        fprintf(stderr, "warning on line %d: assuming result type of sizeof_value to be u8\n", u24_unpack(expression.line));
+        if(mode & EXPRESSION_GET_TYPE_MODE_INFER){
+            return TYPES_CAPACITY;
+        } else {
+            fprintf(stderr, "warning on line %d: assuming result type of sizeof_value to be u8\n", u24_unpack(expression.line));
+        }
+        /* fallthrough */
     case EXPRESSION_SIZEOF_VALUE_U8:
         return u8_type;
     case EXPRESSION_SIZEOF_VALUE_U16:

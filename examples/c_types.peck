@@ -1,0 +1,25 @@
+
+void main(){
+    bool a = true;
+    char b = 255;
+    short c = 65535;
+    int d = 65535;
+    long e = 4294967295;
+
+    print("bool -> ");
+    printu1(a);
+    print("\n");
+    print("char -> ");
+    printu8(b);
+    print("\n");
+    print("short -> ");
+    printu16(c);
+    print("\n");
+    print("int -> ");
+    printu16(d);
+    print("\n");
+    print("long -> ");
+    printu32(e);
+    print("\n");
+}
+

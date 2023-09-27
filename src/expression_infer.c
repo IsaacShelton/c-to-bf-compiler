@@ -28,18 +28,10 @@ static ExpressionKind type_to_expression_kind(u32 type){
 ExpressionKind expression_get_preferred_int_kind_or_none(u32 expression_index){
     Expression expression = expressions[expression_index];
 
-    switch(expression.kind){
-    case EXPRESSION_INT:
-    case EXPRESSION_SIZEOF_TYPE:
-    case EXPRESSION_SIZEOF_VALUE:
-        return EXPRESSION_NONE;
-    default: {
-            u32 type = expression_get_type(expression, false);
+    u32 type = expression_get_type(expression, EXPRESSION_GET_TYPE_MODE_INFER);
 
-            if(type < TYPES_CAPACITY){
-                return type_to_expression_kind(type);
-            }
-        }
+    if(type < TYPES_CAPACITY){
+        return type_to_expression_kind(type);
     }
     
     return EXPRESSION_NONE;
@@ -189,8 +181,13 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
         expression_infer(operands[expression.ops], EXPRESSION_U1);
         break;
     case EXPRESSION_FOR:
+        // Go to context past pre-statements
+        emit_context.current_statement += operands[expression.ops];
+
         expression_infer(operands[expression.ops + 1], EXPRESSION_U1);
-        break;
+
+        // Return context to before pre-statements
+        emit_context.current_statement -= operands[expression.ops];
     case EXPRESSION_SWITCH:
     case EXPRESSION_CASE:
     case EXPRESSION_MEMBER:

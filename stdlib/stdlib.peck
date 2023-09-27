@@ -89,11 +89,11 @@ u16 u16_srl(u16 value, u8 amount){
 u16 u16_mul(u16 a, u16 b){
     u1 a_bits[16];
     for(u8 i = 0; i < 8; i++){
-        a_bits[16 - (8 + i) - 1] = (u1)( (a._1 >> i) & 1 );
+        a_bits[sizeof a_bits - (8 + i) - 1] = (u1)( (a._1 >> i) & 1 );
     }
 
     for(u8 i = 0; i < 8; i++){
-        a_bits[16 - i - 1] = (u1)( (a._0 >> i) & 1 );
+        a_bits[sizeof a_bits - i - 1] = (u1)( (a._0 >> i) & 1 );
     }
 
     u16 r = 0;
@@ -212,16 +212,38 @@ u0 printhexdigit(u8 digit){
 }
 
 u0 printu8hex(u8 value){
-    printhexdigit((value / 16) % 16);
-    printhexdigit(value % 16);
+    u8 divided = value / 16;
+    printhexdigit(divided % 16);
+    printhexdigit(value - divided * 16);
 }
 
 u0 printu16(u16 value){
     u8 digits[5];
 
-    for(u8 i = 4; i != 255; i--){
+    for(u8 i = sizeof digits - 1; i != 255; i--){
         u16 divided = u16_div(value, 10);
         u16 modded = u16_sub(value, u16_mul(divided, 10));
+        digits[i] = modded._0;
+        value = divided;
+    }
+
+    u8 first = 0;
+
+    while(first < sizeof digits - 1 && digits[first] == 0){
+        first++;
+    }
+
+    for(u8 i = first; i < sizeof digits; i++){
+        put('0' + digits[i]);
+    }
+}
+
+u0 printu32(u32 value){
+    u8 digits[10];
+
+    for(u8 i = sizeof digits - 1; i != 255; i--){
+        u32 divided = u32_div(value, 10);
+        u32 modded = u32_sub(value, u32_mul(divided, 10));
         digits[i] = modded._0;
         value = divided;
     }
@@ -276,5 +298,317 @@ u0 printu16bin(u16 value){
     printu8bin(value._1);
     put(' ');
     printu8bin(value._0);
+}
+
+u32 u32_add_u16s(u16 a, u16 b){
+    u16 x = a + b;
+    u32 r;
+    r._3 = 0;
+    r._2 = (u8) (x < a || x < b);
+    r._1 = x._1;
+    r._0 = x._0;
+    return r;
+}
+
+u32 u32_add(u32 a, u32 b){
+    u32 r = u32_add_u16s(a._0u16, b._0u16);
+    r._1u16 += a._1u16 + b._1u16;
+    return r;
+}
+
+u32 u32_bit_and(u32 a, u32 b){
+    u32 result;
+    result._3 = a._3 & b._3;
+    result._2 = a._2 & b._2;
+    result._1 = a._1 & b._1;
+    result._0 = a._0 & b._0;
+    return result;
+}
+
+u32 u32_bit_or(u32 a, u32 b){
+    u32 result;
+    result._3 = a._3 | b._3;
+    result._2 = a._2 | b._2;
+    result._1 = a._1 | b._1;
+    result._0 = a._0 | b._0;
+    return result;
+}
+
+u32 u32_bit_xor(u32 a, u32 b){
+    u32 result;
+    result._3 = a._3 ^ b._3;
+    result._2 = a._2 ^ b._2;
+    result._1 = a._1 ^ b._1;
+    result._0 = a._0 ^ b._0;
+    return result;
+}
+
+u32 u32_bit_neg(u32 value){
+    value._0 = ~value._0;
+    value._1 = ~value._1;
+    value._2 = ~value._2;
+    value._3 = ~value._3;
+    return value;
+}
+
+u0 printu32hex(u32 value){
+    printu8hex(value._3);
+    printu8hex(value._2);
+    printu8hex(value._1);
+    printu8hex(value._0);
+}
+
+u0 printu32bin(u32 value){
+    printu8bin(value._3);
+    put(' ');
+    printu8bin(value._2);
+    put(' ');
+    printu8bin(value._1);
+    put(' ');
+    printu8bin(value._0);
+}
+
+u32 u32_bit_neg(u32 value){
+    value._0 = ~value._0;
+    value._1 = ~value._1;
+    value._2 = ~value._2;
+    value._3 = ~value._3;
+    return value;
+}
+
+u32 u32_sub(u32 a, u32 b){
+    u32 negative_b = u32_add(u32_bit_neg(b), 1);
+    return u32_add(a, negative_b);
+}
+
+u32 u32_sll(u32 value, u8 amount){
+    u32 result;
+
+    if(amount < 8){
+        // 0..=7
+        u8 between01 = (value._0 >> (8 - amount));
+        u8 between12 = (value._1 >> (8 - amount));
+        u8 between23 = (value._2 >> (8 - amount));
+        result._3 = (value._3 << amount) + between23;
+        result._2 = (value._2 << amount) + between12;
+        result._1 = (value._1 << amount) + between01;
+        result._0 = (value._0 << amount);
+    } else if(amount < 16){
+        // 8..=15
+        u8 between01 = (value._0 >> (16 - amount));
+        u8 between12 = (value._1 >> (16 - amount));
+        result._3 = (value._2 << amount - 8) + between12;
+        result._2 = (value._1 << amount - 8) + between01;
+        result._1 = (value._0 << amount - 8);
+        result._0 = 0;
+    } else if(amount < 24){
+        // 16..=23
+        u8 between01 = (value._0 >> (24 - amount));
+        result._3 = (value._1 << amount - 16) + between01;
+        result._2 = (value._0 << amount - 16);
+        result._1 = 0;
+        result._0 = 0;
+    } else if(amount < 32){
+        // 23..=31
+        result._3 = (value._0 << amount - 24);
+        result._2 = 0;
+        result._1 = 0;
+        result._0 = 0;
+    } else {
+        result = 0;
+    }
+
+    return result;
+}
+
+u32 u32_srl(u32 value, u8 amount){
+    u32 result;
+
+    if(amount < 8){
+        // 0..=7
+        u8 between01 = (value._1 << (8 - amount));
+        u8 between12 = (value._2 << (8 - amount));
+        u8 between23 = (value._3 << (8 - amount));
+        result._3 = (value._3 >> amount);
+        result._2 = (value._2 >> amount) + between23;
+        result._1 = (value._1 >> amount) + between12;
+        result._0 = (value._0 >> amount) + between01;
+    } else if(amount < 16){
+        // 8..=15
+        u8 between01 = (value._2 << (16 - amount));
+        u8 between12 = (value._3 << (16 - amount));
+        result._3 = 0;
+        result._2 = (value._3 >> amount - 8);
+        result._1 = (value._2 >> amount - 8) + between12;
+        result._0 = (value._1 >> amount - 8) + between01;
+    } else if(amount < 24){
+        // 16..=23
+        u8 between01 = (value._3 << (24 - amount));
+        result._3 = 0;
+        result._2 = 0;
+        result._1 = (value._3 >> amount - 16);
+        result._0 = (value._2 >> amount - 16) + between01;
+    } else if(amount < 32){
+        // 23..=31
+        result._3 = 0;
+        result._2 = 0;
+        result._1 = 0;
+        result._0 = (value._3 >> amount - 24);
+    } else {
+        result = 0;
+    }
+
+    return result;
+}
+
+u32 u32_mul(u32 a, u32 b){
+    u1 a_bits[32];
+
+    for(u8 i = 0; i < 8; i++){
+        a_bits[sizeof a_bits - (24 + i) - 1] = (u1)( (a._3 >> i) & 1 );
+    }
+
+    for(u8 i = 0; i < 8; i++){
+        a_bits[sizeof a_bits - (16 + i) - 1] = (u1)( (a._2 >> i) & 1 );
+    }
+
+    for(u8 i = 0; i < 8; i++){
+        a_bits[sizeof a_bits - (8 + i) - 1] = (u1)( (a._1 >> i) & 1 );
+    }
+
+    for(u8 i = 0; i < 8; i++){
+        a_bits[sizeof a_bits - i - 1] = (u1)( (a._0 >> i) & 1 );
+    }
+
+    u32 r = 0;
+
+    for(u8 i = 0; i < sizeof a_bits; i++){
+        if(a_bits[i]){
+            r = u32_add(r, u32_sll(b, 31 - i));
+        }
+    }
+
+    return r;
+}
+
+u1 u32_gt(u32 a, u32 b){
+    return a._1u16 > b._1u16 || (a._1u16 == b._1u16 && a._0u16 > b._0u16);
+}
+
+u1 u32_gte(u32 a, u32 b){
+    return a._1u16 > b._1u16 || (a._1u16 == b._1u16 && a._0u16 >= b._0u16);
+}
+
+u1 u32_lt(u32 a, u32 b){
+    return !u32_gte(a, b);
+}
+
+u1 u32_lte(u32 a, u32 b){
+    return !u32_gt(a, b);
+}
+
+u1 u32_eq(u32 a, u32 b){
+    return a._0u16 == b._0u16 && a._1u16 == b._1u16;
+}
+
+u32 u32_div(u32 a, u32 b){
+    u32 r = 0;
+
+    if(u32_eq(b, 0)){
+        r = 0;
+        a = 0;
+    }
+
+    if(u32_eq(b, 1)){
+        r = a;
+        a = 0;
+    }
+
+    u32 limits[30];
+    u32 multipliers[30];
+
+    limits[0] = 3;
+    multipliers[0] = 1073741824;
+    limits[1] = 7;
+    multipliers[1] = 536870912;
+    limits[2] = 15;
+    multipliers[2] = 268435456;
+    limits[3] = 31;
+    multipliers[3] = 134217728;
+    limits[4] = 63;
+    multipliers[4] = 67108864;
+    limits[5] = 127;
+    multipliers[5] = 33554432;
+    limits[6] = 255;
+    multipliers[6] = 16777216;
+    limits[7] = 511;
+    multipliers[7] = 8388608;
+    limits[8] = 1023;
+    multipliers[8] = 4194304;
+    limits[9] = 2047;
+    multipliers[9] = 2097152;
+    limits[10] = 4095;
+    multipliers[10] = 1048576;
+    limits[11] = 8191;
+    multipliers[11] = 524288;
+    limits[12] = 16383;
+    multipliers[12] = 262144;
+    limits[13] = 32767;
+    multipliers[13] = 131072;
+    limits[14] = 65535;
+    multipliers[14] = 65536;
+    limits[15] = 131071;
+    multipliers[15] = 32768;
+    limits[16] = 262143;
+    multipliers[16] = 16384;
+    limits[17] = 524287;
+    multipliers[17] = 8192;
+    limits[18] = 1048575;
+    multipliers[18] = 4096;
+    limits[19] = 2097151;
+    multipliers[19] = 2048;
+    limits[20] = 4194303;
+    multipliers[20] = 1024;
+    limits[21] = 8388607;
+    multipliers[21] = 512;
+    limits[22] = 16777215;
+    multipliers[22] = 256;
+    limits[23] = 33554431;
+    multipliers[23] = 128;
+    limits[24] = 67108863;
+    multipliers[24] = 64;
+    limits[25] = 134217727;
+    multipliers[25] = 32;
+    limits[26] = 268435455;
+    multipliers[26] = 16;
+    limits[27] = 536870911;
+    multipliers[27] = 8;
+    limits[28] = 1073741823;
+    multipliers[28] = 4;
+    limits[29] = 2147483647;
+    multipliers[29] = 2;
+
+    for(u8 i = 0; i < 30; i++){
+        if(u32_lte(b, limits[i])){
+            u32 multiplier = multipliers[i];
+            u32 scaled = u32_mul(multiplier, b);
+
+            if(u32_gte(a, scaled)){
+                a = u32_sub(a, scaled);
+                r = u32_add(r, multiplier);
+            }
+        }
+    }
+
+    while(u32_gte(a, b)){
+        a = u32_sub(a, b);
+        r = u32_add(r, 1);
+    }
+
+    return r;
+}
+
+u32 u32_mod(u32 a, u32 b){
+    return u32_sub(a, u32_mul(u32_div(a, b), b));
 }
 

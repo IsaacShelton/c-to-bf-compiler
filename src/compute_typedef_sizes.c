@@ -39,9 +39,7 @@ ErrorCode compute_typedef_sizes(){
                 
                 u32 required = find_typedef(type.name);
                 if(required >= TYPEDEFS_CAPACITY){
-                    printf("\nerror on line %d: Type '", u24_unpack(expression.line));
-                    type_print(type);
-                    printf("' does not exist\n");
+                    type_does_not_exist(type, expression.line);
                     return 1;
                 }
 

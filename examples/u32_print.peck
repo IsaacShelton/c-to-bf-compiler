@@ -1,0 +1,7 @@
+
+u0 main(){
+    u32 value = 123456789;
+    printu32(value);
+    print("\n");
+}
+

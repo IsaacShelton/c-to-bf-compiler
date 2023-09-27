@@ -745,12 +745,13 @@ u0 emit_stdlib_function_call(u8 function_name[16], u32 return_size, u32 params_s
     num_aux = prev_num_aux;
     
     if(function_index >= FUNCTIONS_CAPACITY){
-        fprintf(stderr, "Failed to emit_stdlib_function_call, could not find function\n");
+        fprintf(stderr, "Failed to emit standard library function call, could not find function\n");
         return;
     }
 
     if(function_emit(function_index, start_function_cell_index, emit_context.current_cell_index)){
-        fprintf(stderr, "Failed to emit_stdlib_function_call\n");
+        fprintf(stderr, "Failed to emit standard library function call, errors exist inside of function\n");
+        return;
     }
 }
 
@@ -759,6 +760,14 @@ u0 emit_additive_u16(u1 is_plus){
         emit_stdlib_function_call((u8*) "u16_add", 2, 4);
     } else {
         emit_stdlib_function_call((u8*) "u16_sub", 2, 4);
+    }
+}
+
+u0 emit_additive_u32(u1 is_plus){
+    if(is_plus){
+        emit_stdlib_function_call((u8*) "u32_add", 4, 8);
+    } else {
+        emit_stdlib_function_call((u8*) "u32_sub", 4, 8);
     }
 }
 
@@ -811,6 +820,10 @@ u0 emit_multiply_u16(){
     emit_stdlib_function_call((u8*) "u16_mul", 2, 4);
 }
 
+u0 emit_multiply_u32(){
+    emit_stdlib_function_call((u8*) "u32_mul", 4, 8);
+}
+
 u0 emit_divmod_u8(){
     // n d ?
     //     ^
@@ -842,6 +855,10 @@ u0 emit_divide_u16(){
     emit_stdlib_function_call((u8*) "u16_div", 2, 4);
 }
 
+u0 emit_divide_u32(){
+    emit_stdlib_function_call((u8*) "u32_div", 4, 8);
+}
+
 u0 emit_mod_u8(){
     // a b ?
     //     ^
@@ -854,6 +871,10 @@ u0 emit_mod_u8(){
 
 u0 emit_mod_u16(){
     emit_stdlib_function_call((u8*) "u16_mod", 2, 4);
+}
+
+u0 emit_mod_u32(){
+    emit_stdlib_function_call((u8*) "u32_mod", 4, 8);
 }
 
 u0 emit_lshift_u8(){
@@ -896,6 +917,14 @@ u0 emit_lshift_u16(){
     emit_context.current_cell_index--;
 
     emit_stdlib_function_call((u8*) "u16_sll", 2, 3);
+}
+
+u0 emit_lshift_u32(){
+    // Convert u32 amount to u8 amount
+    printf("3<");
+    emit_context.current_cell_index -= 3;
+
+    emit_stdlib_function_call((u8*) "u32_sll", 4, 5);
 }
 
 u0 emit_rshift_u8(){
@@ -979,6 +1008,14 @@ u0 emit_rshift_u16(){
     emit_stdlib_function_call((u8*) "u16_srl", 2, 3);
 }
 
+u0 emit_rshift_u32(){
+    // Convert u32 amount to u8 amount
+    printf("3<");
+    emit_context.current_cell_index -= 3;
+
+    emit_stdlib_function_call((u8*) "u32_srl", 4, 5);
+}
+
 u0 emit_eq_u8(){
     // a b ?
     //     ^
@@ -1014,6 +1051,10 @@ u0 emit_eq_u16(){
     emit_stdlib_function_call((u8*) "u16_eq", 1, 4);
 }
 
+u0 emit_eq_u32(){
+    emit_stdlib_function_call((u8*) "u32_eq", 1, 8);
+}
+
 u0 emit_neq_u8(){
     // a b ?
     //     ^
@@ -1041,6 +1082,11 @@ u0 emit_neq_u8(){
 
 u0 emit_neq_u16(){
     emit_stdlib_function_call((u8*) "u16_eq", 1, 4);
+    emit_not_u1();
+}
+
+u0 emit_neq_u32(){
+    emit_stdlib_function_call((u8*) "u32_eq", 1, 8);
     emit_not_u1();
 }
 
@@ -1107,6 +1153,10 @@ u0 emit_lt_u8(){
 
 u0 emit_lt_u16(){
     emit_stdlib_function_call((u8*) "u16_lt", 1, 4);
+}
+
+u0 emit_lt_u32(){
+    emit_stdlib_function_call((u8*) "u32_lt", 1, 8);
 }
 
 u0 emit_gt_u8(){
@@ -1177,6 +1227,10 @@ u0 emit_gt_u16(){
     emit_stdlib_function_call((u8*) "u16_gt", 1, 4);
 }
 
+u0 emit_gt_u32(){
+    emit_stdlib_function_call((u8*) "u32_gt", 1, 8);
+}
+
 u0 emit_lte_u8(){
     // a b ?
     //     ^
@@ -1237,6 +1291,10 @@ u0 emit_lte_u8(){
 
 u0 emit_lte_u16(){
     emit_stdlib_function_call((u8*) "u16_lte", 1, 4);
+}
+
+u0 emit_lte_u32(){
+    emit_stdlib_function_call((u8*) "u32_lte", 1, 8);
 }
 
 u0 emit_gte_u8(){
@@ -1302,6 +1360,10 @@ u0 emit_gte_u8(){
 
 u0 emit_gte_u16(){
     emit_stdlib_function_call((u8*) "u16_gte", 1, 4);
+}
+
+u0 emit_gte_u32(){
+    emit_stdlib_function_call((u8*) "u32_gte", 1, 8);
 }
 
 static u0 emit_binary_bitwise_operator_pre(){
@@ -1385,6 +1447,10 @@ u0 emit_bit_and_u16(){
     emit_stdlib_function_call((u8*) "u16_bit_and", 2, 4);
 }
 
+u0 emit_bit_and_u32(){
+    emit_stdlib_function_call((u8*) "u32_bit_and", 4, 8);
+}
+
 u0 emit_bit_or_u8(){
     // a b ?
     //     ^
@@ -1398,6 +1464,10 @@ u0 emit_bit_or_u16(){
     emit_stdlib_function_call((u8*) "u16_bit_or", 2, 4);
 }
 
+u0 emit_bit_or_u32(){
+    emit_stdlib_function_call((u8*) "u32_bit_or", 4, 8);
+}
+
 u0 emit_bit_xor_u8(){
     // a b ?
     //     ^
@@ -1409,6 +1479,10 @@ u0 emit_bit_xor_u8(){
 
 u0 emit_bit_xor_u16(){
     emit_stdlib_function_call((u8*) "u16_bit_xor", 2, 4);
+}
+
+u0 emit_bit_xor_u32(){
+    emit_stdlib_function_call((u8*) "u32_bit_xor", 4, 8);
 }
 
 u0 emit_not_u1(){
@@ -1440,6 +1514,19 @@ u0 emit_negate_u16(){
     emit_stdlib_function_call((u8*) "u16_sub", 2, 4);
 }
 
+u0 emit_negate_u32(){
+    // Add u32 value of 0 before value
+
+    printf("[-]>[-]>[-]>[-]7<");
+    printf("[4>+4<-]>[4>+4<-]>[4>+4<-]>[4>+4<-]");
+    printf("5>");
+
+    emit_context.current_cell_index += 4;
+
+    // Subtract
+    emit_stdlib_function_call((u8*) "u32_sub", 4, 8);
+}
+
 u0 emit_bit_complement_u8(){
     // a ?
     //   ^
@@ -1449,5 +1536,9 @@ u0 emit_bit_complement_u8(){
 
 u0 emit_bit_complement_u16(){
     emit_stdlib_function_call((u8*) "u16_bit_neg", 2, 2);
+}
+
+u0 emit_bit_complement_u32(){
+    emit_stdlib_function_call((u8*) "u32_bit_neg", 4, 4);
 }
 

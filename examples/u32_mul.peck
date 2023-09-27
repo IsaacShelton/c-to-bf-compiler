@@ -1,0 +1,13 @@
+
+u0 main(){
+    u32 a = 12345;
+    u32 b = 12345;
+
+    printu32(a);
+    print(" * ");
+    printu32(b);
+    print(" = ");
+    printu32(a * b);
+    print("\n");
+}
+

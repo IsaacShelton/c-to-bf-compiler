@@ -1,0 +1,16 @@
+
+u0 main(){
+    u32 a = 123456789;
+    u32 b = 987654321;
+
+    print("   ");
+    printu32bin(a);
+    print("\n");
+    print(" & ");
+    printu32bin(b);
+    print("\n");
+    print(" = ");
+    printu32bin(a & b);
+    print("\n");
+}
+

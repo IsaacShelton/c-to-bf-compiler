@@ -21,9 +21,7 @@ u32 type_sizeof_or_max(u32 type_index, u24 line_on_error){
     } else {
         u32 found_typedef = find_typedef(name);
         if(found_typedef >= TYPEDEFS_CAPACITY){
-            printf("\nerror on line %d: Type '", u24_unpack(line_on_error));
-            type_print(types[type_index]);
-            printf("' does not exist\n");
+            type_does_not_exist(types[type_index], line_on_error);
             return -1;
         }
 

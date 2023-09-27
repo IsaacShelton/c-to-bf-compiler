@@ -1,0 +1,11 @@
+
+u0 main(){
+    u32 value = 12345678;
+
+    print("-");
+    printu32(value);
+    print(" = ");
+    printu32(-value);
+    print("\n");
+}
+

@@ -1,0 +1,21 @@
+
+u0 main(){
+    u32 a = 512;
+    u32 b = 2;
+    printu32(a);
+    print(" / ");
+    printu32(b);
+    print(" = ");
+    printu32(a / b);
+    print("\n");
+
+    a = 2048;
+    b = 100;
+    printu32(a);
+    print(" / ");
+    printu32(b);
+    print(" = ");
+    printu32(a / b);
+    print("\n");
+}
+

@@ -1,0 +1,25 @@
+
+u0 main(){
+    u32 value = 123456789;
+
+    for(u8 i = 0; i < 32; i++){
+        printu32(value);
+        print(" >> ");
+        printu8(i);
+        print(" = ");
+        printu32(value >> (u32) i);
+        print("\n");
+    }
+
+    value = 4294967295;
+
+    for(u8 i = 0; i < 32; i++){
+        printu32(value);
+        print(" >> ");
+        printu8(i);
+        print(" = ");
+        printu32(value >> (u32) i);
+        print("\n");
+    }
+}
+

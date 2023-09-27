@@ -10,7 +10,7 @@ u0 expression_print(Expression expression){
     case EXPRESSION_RETURN: {
             printf("return");
 
-            u32 return_value_index = operands[expression.ops];
+            u32 return_value_index = expression.ops;
 
             if(return_value_index < EXPRESSIONS_CAPACITY){
                 printf(" ");

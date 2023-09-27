@@ -32,58 +32,75 @@ u0 emit_print_array_value(u32 max_length);
 
 u0 emit_additive_u8(u1 is_plus);
 u0 emit_additive_u16(u1 is_plus);
+u0 emit_additive_u32(u1 is_plus);
 
 u0 emit_multiply_u8();
 u0 emit_multiply_u16();
+u0 emit_multiply_u32();
 
 u0 emit_divmod_u8();
 
 u0 emit_divide_u8();
 u0 emit_divide_u16();
+u0 emit_divide_u32();
 
 u0 emit_mod_u8();
 u0 emit_mod_u16();
+u0 emit_mod_u32();
 
 u0 emit_lshift_u8();
 u0 emit_lshift_u16();
+u0 emit_lshift_u32();
 
 u0 emit_rshift_u8();
 u0 emit_rshift_u16();
+u0 emit_rshift_u32();
 
 u0 emit_eq_u8();
 u0 emit_eq_u16();
+u0 emit_eq_u32();
 
 u0 emit_neq_u8();
 u0 emit_neq_u16();
+u0 emit_neq_u32();
 
 u0 emit_lt_u8();
 u0 emit_lt_u16();
+u0 emit_lt_u32();
 
 u0 emit_gt_u8();
 u0 emit_gt_u16();
+u0 emit_gt_u32();
 
 u0 emit_lte_u8();
 u0 emit_lte_u16();
+u0 emit_lte_u32();
 
 u0 emit_gte_u8();
 u0 emit_gte_u16();
+u0 emit_gte_u32();
 
 u0 emit_bit_and_u8();
 u0 emit_bit_and_u16();
+u0 emit_bit_and_u32();
 
 u0 emit_bit_or_u8();
 u0 emit_bit_or_u16();
+u0 emit_bit_or_u32();
 
 u0 emit_bit_xor_u8();
 u0 emit_bit_xor_u16();
+u0 emit_bit_xor_u32();
 
 u0 emit_not_u1();
 
 u0 emit_negate_u8();
 u0 emit_negate_u16();
+u0 emit_negate_u32();
 
 u0 emit_bit_complement_u8();
 u0 emit_bit_complement_u16();
+u0 emit_bit_complement_u32();
 
 #endif // _PECK_EMIT_H
 

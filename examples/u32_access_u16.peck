@@ -1,0 +1,17 @@
+
+u0 main(){
+    u32 value = 123456789;
+
+    print("Full u32 value is: ");
+    printu32hex(value);
+    print("\n");
+
+    print("Upper half of u32: ");
+    printu16hex(value._1u16);
+    print("\n");
+
+    print("Lower half of u32: ");
+    printu16hex(value._0u16);
+    print("\n");
+}
+

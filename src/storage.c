@@ -258,6 +258,15 @@ u1 aux_cstr_equals(u32 a, u32 b){
     return false;
 }
 
+u1 aux_cstr_equals_string(u32 a, u8 string[32]){
+    for(u32 i = 0; i < 32 && aux[a + i] == string[i]; i++){
+        if(aux[a + i] == '\0'){
+            return true;
+        }
+    }
+    return false;
+}
+
 u1 aux_cstr_equals_print(u32 a){
     return a + 5 < AUX_CAPACITY
         && aux[a    ] == 'p'
@@ -332,6 +341,60 @@ u1 aux_cstr_equals_u32(u32 a){
         && aux[a + 3] == '\0';
 }
 
+u1 aux_cstr_equals_void(u32 a){
+    return a + 4 < AUX_CAPACITY
+        && aux[a    ] == 'v'
+        && aux[a + 1] == 'o'
+        && aux[a + 2] == 'i'
+        && aux[a + 3] == 'd'
+        && aux[a + 4] == '\0';
+}
+
+u1 aux_cstr_equals_bool(u32 a){
+    return a + 4 < AUX_CAPACITY
+        && aux[a    ] == 'b'
+        && aux[a + 1] == 'o'
+        && aux[a + 2] == 'o'
+        && aux[a + 3] == 'l'
+        && aux[a + 4] == '\0';
+}
+
+u1 aux_cstr_equals_char(u32 a){
+    return a + 4 < AUX_CAPACITY
+        && aux[a    ] == 'c'
+        && aux[a + 1] == 'h'
+        && aux[a + 2] == 'a'
+        && aux[a + 3] == 'r'
+        && aux[a + 4] == '\0';
+}
+
+u1 aux_cstr_equals_short(u32 a){
+    return a + 5 < AUX_CAPACITY
+        && aux[a    ] == 's'
+        && aux[a + 1] == 'h'
+        && aux[a + 2] == 'o'
+        && aux[a + 3] == 'r'
+        && aux[a + 4] == 't'
+        && aux[a + 5] == '\0';
+}
+
+u1 aux_cstr_equals_int(u32 a){
+    return a + 3 < AUX_CAPACITY
+        && aux[a    ] == 'i'
+        && aux[a + 1] == 'n'
+        && aux[a + 2] == 't'
+        && aux[a + 3] == '\0';
+}
+
+u1 aux_cstr_equals_long(u32 a){
+    return a + 4 < AUX_CAPACITY
+        && aux[a    ] == 'l'
+        && aux[a + 1] == 'o'
+        && aux[a + 2] == 'n'
+        && aux[a + 3] == 'g'
+        && aux[a + 4] == '\0';
+}
+
 u0 print_aux_cstr(u32 index){
     for(u32 i = index; aux[i]; i++){
         putchar(aux[i]);
@@ -371,5 +434,9 @@ u32 find_enum_from_type(u32 type_index){
     }
 
     return TYPEDEFS_CAPACITY;
+}
+
+u1 in_range_inclusive(u8 value, u8 min_inclusive, u8 max_inclusive){
+    return value >= min_inclusive && value <= max_inclusive;
 }
 

@@ -71,6 +71,7 @@ u32 add_typedef(TypeDef def);
 u32 find_typedef(u32 name);
 u32 aux_cstr_alloc(u8 null_terminated_name[16]);
 u1 aux_cstr_equals(u32 a, u32 b);
+u1 aux_cstr_equals_string(u32 a, u8 string[32]);
 u1 aux_cstr_equals_print(u32 a);
 u1 aux_cstr_equals_main(u32 a);
 u1 aux_cstr_equals_u1(u32 a);
@@ -78,10 +79,17 @@ u1 aux_cstr_equals_u0(u32 a);
 u1 aux_cstr_equals_u8(u32 a);
 u1 aux_cstr_equals_u16(u32 a);
 u1 aux_cstr_equals_u32(u32 a);
+u1 aux_cstr_equals_void(u32 a);
+u1 aux_cstr_equals_bool(u32 a);
+u1 aux_cstr_equals_char(u32 a);
+u1 aux_cstr_equals_short(u32 a);
+u1 aux_cstr_equals_int(u32 a);
+u1 aux_cstr_equals_long(u32 a);
 u32 aux_cstr_len(u32 str);
 u0 print_aux_cstr(u32 index);
 u0 print_aux_cstr_escaped(u32 index);
 u32 find_enum_from_type(u32 type_index);
+u1 in_range_inclusive(u8 value, u8 min_inclusive, u8 max_inclusive);
 
 #endif // _PECK_STORAGE_H
 

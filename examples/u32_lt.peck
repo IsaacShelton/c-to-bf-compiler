@@ -1,0 +1,33 @@
+
+u0 main(){
+    u32 a = 123456789;
+    u32 b = 987654321;
+
+    printu32(a);
+    print(" < ");
+    printu32(b);
+    print(" = ");
+    printu1(a < b);
+    print("\n");
+
+    a = 404040404;
+    b = 404040404;
+
+    printu32(a);
+    print(" < ");
+    printu32(b);
+    print(" = ");
+    printu1(a < b);
+    print("\n");
+
+    a = 987654321;
+    b = 123456789;
+
+    printu32(a);
+    print(" < ");
+    printu32(b);
+    print(" = ");
+    printu1(a < b);
+    print("\n");
+}
+

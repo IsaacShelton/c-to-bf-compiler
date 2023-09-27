@@ -1,0 +1,24 @@
+
+u0 main(){
+    u32 value = 123456789;
+
+    print("Bytes of u32 value 123456789");
+    print(" (little endian):\n");
+
+    print("First byte: ");
+    printu8hex(value._0);
+    print("\n");
+
+    print("Second byte: ");
+    printu8hex(value._1);
+    print("\n");
+
+    print("Third byte: ");
+    printu8hex(value._2);
+    print("\n");
+
+    print("Fourth byte: ");
+    printu8hex(value._3);
+    print("\n");
+}
+

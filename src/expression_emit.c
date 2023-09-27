@@ -217,7 +217,7 @@ static u1 is_destination(Expression expression){
     }
 }
 
-static Destination destination_member(Destination destination, u32 target_field_name, u24 line_on_error){
+static Destination destination_member(Destination destination, u32 name, u24 line_on_error){
     if(destination.offset_size > 0){
         printf("\nerror on line %d: Cannot member into destination that already has an offset yet (not supported)\n", u24_unpack(line_on_error));
         return (Destination) { .type = TYPES_CAPACITY };
@@ -251,17 +251,21 @@ static Destination destination_member(Destination destination, u32 target_field_
     }
 
     if(!is_struct_type){
-        if(destination.type == u16_type && aux[target_field_name] == '_' && aux[target_field_name + 1] == '0' && aux[target_field_name + 2] == '\0'){
+        if(destination.type == u16_type && aux[name] == '_' && in_range_inclusive(aux[name + 1], '0', '1') && aux[name + 2] == '\0'){
             destination.type = u8_type;
-            destination.tape_location += 0;
+            destination.tape_location += aux[name + 1] - '0';
             return destination;
-        } else if(destination.type == u16_type && aux[target_field_name] == '_' && aux[target_field_name + 1] == '1' && aux[target_field_name + 2] == '\0'){
+        } else if(destination.type == u32_type && aux[name] == '_' && in_range_inclusive(aux[name + 1], '0', '3') && aux[name + 2] == '\0'){
             destination.type = u8_type;
-            destination.tape_location += 1;
+            destination.tape_location += aux[name + 1] - '0';
+            return destination;
+        } else if(destination.type == u32_type && aux[name] == '_' && in_range_inclusive(aux[name + 1], '0', '1') && aux[name + 2] == 'u' && aux[name + 3] == '1' && aux[name + 4] == '6' && aux[name + 5] == '\0'){
+            destination.type = u16_type;
+            destination.tape_location += 2 * (aux[name + 1] - '0');
             return destination;
         } else {
             printf("\nerror on line %d: Cannot get '", u24_unpack(line_on_error));
-            print_aux_cstr(target_field_name);
+            print_aux_cstr(name);
             printf("' of non-struct type '");
             type_print(type);
             printf("'\n");
@@ -279,7 +283,7 @@ static Destination destination_member(Destination destination, u32 target_field_
         u32 field_name = operands[expression.ops + 1];
         u32 field_type = operands[expression.ops];
 
-        if(aux_cstr_equals(target_field_name, field_name)){
+        if(aux_cstr_equals(field_name, name)){
             destination.type = field_type;
             break;
         }
@@ -501,10 +505,12 @@ u32 expression_emit_cast(Expression expression){
 
     u32 to_type = operands[expression.ops];
 
+    /* Allow self-casting and casting between u1 and u8 */
     if((from_type == u1_type && to_type == u8_type) || from_type == to_type){
         return to_type;
     }
 
+    /* Allow casting to u1 */
     if(to_type == u1_type){
         if(from_type == u8_type){
             emit_u8(0);
@@ -517,11 +523,32 @@ u32 expression_emit_cast(Expression expression){
             emit_neq_u16();
             return to_type;
         }
+
+        if(from_type == u32_type){
+            emit_u32(0);
+            emit_neq_u32();
+            return to_type;
+        }
     }
 
+    /* Allow valid casting from 1 cell to 2 cell types */
     if((from_type == u1_type || from_type == u8_type) && to_type == u16_type){
         printf("[-]>");
         emit_context.current_cell_index++;
+        return to_type;
+    }
+
+    /* Allow valid casting from 2 cell to 4 cell types */
+    if(from_type == u16_type && to_type == u32_type){
+        printf("[-]>[-]>");
+        emit_context.current_cell_index += 2;
+        return to_type;
+    }
+
+    /* Allow valid casting from 1 cell to 4 cell types */
+    if((from_type == u1_type || from_type == u8_type) && to_type == u32_type){
+        printf("[-]>[-]>[-]>");
+        emit_context.current_cell_index += 3;
         return to_type;
     }
 
@@ -617,7 +644,7 @@ static u32 emit_math_u8(ExpressionKind kind, u32 operand_type){
         return operand_type;
     default:
         printf("\nerror: Could not perform unknown math operation for expression kind %d\n", kind);
-        return 1;
+        return TYPES_CAPACITY;
     }
 
     return 0;
@@ -675,7 +702,65 @@ static u32 emit_math_u16(ExpressionKind kind, u32 operand_type){
         return operand_type;
     default:
         printf("\nerror: Could not perform unknown math operation for expression kind %d\n", kind);
-        return 1;
+        return TYPES_CAPACITY;
+    }
+
+    return 0;
+}
+
+static u32 emit_math_u32(ExpressionKind kind, u32 operand_type){
+    switch(kind){
+    case EXPRESSION_ADD:
+        emit_additive_u32(true);
+        return operand_type;
+    case EXPRESSION_SUBTRACT:
+        emit_additive_u32(false);
+        return operand_type;
+    case EXPRESSION_MULTIPLY:
+        emit_multiply_u32();
+        return operand_type;
+    case EXPRESSION_DIVIDE:
+        emit_divide_u32();
+        return operand_type;
+    case EXPRESSION_MOD:
+        emit_mod_u32();
+        return operand_type;
+    case EXPRESSION_EQUALS:
+        emit_eq_u32();
+        return u1_type;
+    case EXPRESSION_NOT_EQUALS:
+        emit_neq_u32();
+        return u1_type;
+    case EXPRESSION_LESS_THAN:
+        emit_lt_u32();
+        return u1_type;
+    case EXPRESSION_GREATER_THAN:
+        emit_gt_u32();
+        return u1_type;
+    case EXPRESSION_LESS_THAN_OR_EQUAL:
+        emit_lte_u32();
+        return u1_type;
+    case EXPRESSION_GREATER_THAN_OR_EQUAL:
+        emit_gte_u32();
+        return u1_type;
+    case EXPRESSION_LSHIFT:
+        emit_lshift_u32();
+        return operand_type;
+    case EXPRESSION_RSHIFT:
+        emit_rshift_u32();
+        return operand_type;
+    case EXPRESSION_BIT_AND:
+        emit_bit_and_u32();
+        return operand_type;
+    case EXPRESSION_BIT_OR:
+        emit_bit_or_u32();
+        return operand_type;
+    case EXPRESSION_BIT_XOR:
+        emit_bit_xor_u32();
+        return operand_type;
+    default:
+        printf("\nerror: Could not perform unknown math operation for expression kind %d\n", kind);
+        return TYPES_CAPACITY;
     }
 
     return 0;
@@ -699,6 +784,9 @@ u32 expression_emit_unary(Expression expression){
         } else if(type == u16_type){
             emit_negate_u16();
             return type;
+        } else if(type == u32_type){
+            emit_negate_u32();
+            return type;
         }
         break;
     case EXPRESSION_BIT_COMPLEMENT:
@@ -707,6 +795,9 @@ u32 expression_emit_unary(Expression expression){
             return type;
         } else if(type == u16_type){
             emit_bit_complement_u16();
+            return type;
+        } else if(type == u32_type){
+            emit_bit_complement_u32();
             return type;
         }
         break;
@@ -724,6 +815,12 @@ u32 expression_emit_unary(Expression expression){
             dupe_cells(2);
             write_destination_expression(u16_type, expressions[expression.ops], expression.line);
             return type;
+        } else if(type == u32_type){
+            emit_u32(1);
+            emit_additive_u32(expression.kind == EXPRESSION_PRE_INCREMENT);
+            dupe_cells(4);
+            write_destination_expression(u32_type, expressions[expression.ops], expression.line);
+            return type;
         }
         break;
     case EXPRESSION_POST_INCREMENT:
@@ -740,6 +837,12 @@ u32 expression_emit_unary(Expression expression){
             emit_additive_u16(expression.kind == EXPRESSION_POST_INCREMENT);
             write_destination_expression(u16_type, expressions[expression.ops], expression.line);
             return type;
+        } else if(type == u32_type){
+            dupe_cells(4);
+            emit_u32(1);
+            emit_additive_u32(expression.kind == EXPRESSION_POST_INCREMENT);
+            write_destination_expression(u32_type, expressions[expression.ops], expression.line);
+            return type;
         }
         break;
     case EXPRESSION_NO_RESULT_INCREMENT:
@@ -753,6 +856,11 @@ u32 expression_emit_unary(Expression expression){
             emit_u16(1);
             emit_additive_u16(expression.kind == EXPRESSION_NO_RESULT_INCREMENT);
             write_destination_expression(u16_type, expressions[expression.ops], expression.line);
+            return u0_type;
+        } else if(type == u32_type){
+            emit_u32(1);
+            emit_additive_u32(expression.kind == EXPRESSION_NO_RESULT_INCREMENT);
+            write_destination_expression(u32_type, expressions[expression.ops], expression.line);
             return u0_type;
         }
         break;
@@ -795,6 +903,10 @@ static u32 expression_emit_math(Expression expression){
 
     if(a_type == u16_type){
         return emit_math_u16(expression.kind, a_type);
+    }
+
+    if(a_type == u32_type){
+        return emit_math_u32(expression.kind, a_type);
     }
 
     // Allow bitwise operations on u1 types
@@ -1016,7 +1128,7 @@ static u32 expression_emit_ternary(Expression expression){
     u32 when_true = operands[expression.ops + 1];
     u32 when_false = operands[expression.ops + 2];
 
-    u32 result_type = expression_get_type(expressions[when_true], true);
+    u32 result_type = expression_get_type(expressions[when_true], EXPRESSION_GET_TYPE_MODE_PRINT_ERROR);
     u32 result_size;
 
     if(result_type < TYPES_CAPACITY){
@@ -1201,7 +1313,7 @@ static u32 expression_emit_sizeof_type_u8(Expression expression){
 }
 
 static u32 expression_emit_sizeof_value_u8(Expression expression){
-    u32 expression_type = expression_get_type(expressions[expression.ops], true);
+    u32 expression_type = expression_get_type(expressions[expression.ops], EXPRESSION_GET_TYPE_MODE_PRINT_ERROR);
 
     if(expression_type > TYPES_CAPACITY){
         printf("\nerror on line %d: Could not determine size of expression, perhaps you have undeclared variables?", u24_unpack(expression.line));

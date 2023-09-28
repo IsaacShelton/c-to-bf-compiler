@@ -298,6 +298,109 @@ static Destination destination_member(Destination destination, u32 name, u24 lin
     return destination;
 }
 
+static Destination destination_index(
+    Destination array_destination,
+    u32 index_expression_index,
+    u24 line_on_error
+){
+    // Ensure not on stack
+    if(array_destination.on_stack){
+        printf("\nerror on line %d: Cannot index into destination on the stack yet (not supported)\n", u24_unpack(line_on_error));
+        return (Destination) { .type = TYPES_CAPACITY };
+    }
+    
+    // Get type of new index
+    Expression index_expression = expressions[index_expression_index];
+    u32 index_type = expression_get_type(index_expression, EXPRESSION_GET_TYPE_MODE_NONE);
+
+    if(index_type >= TYPES_CAPACITY){
+        printf("\nerror on line %d: Could not predict type used for index\n", u24_unpack(line_on_error));
+        return (Destination) { .type = TYPES_CAPACITY };
+    }
+
+    // Get size of new index
+    u32 index_type_size = 0;
+
+    if(index_type == u8_type || index_type == u16_type){
+        index_type_size = type_sizeof_or_max(index_type, u24_pack(0));
+        if(index_type_size >= TYPES_CAPACITY) return (Destination){ .type = TYPES_CAPACITY };
+    } else {
+        printf("\nerror on line %d: Cannot use index of type '", u24_unpack(index_expression.line));
+        type_print(types[index_type]);
+        printf("'\n");
+        return (Destination) { .type = TYPES_CAPACITY };
+    }
+
+    // Get array item destination type
+    u32 item_type = get_item_type(types[array_destination.type], line_on_error, true);
+    if(item_type >= TYPES_CAPACITY) return (Destination) { .type = TYPES_CAPACITY };
+
+    // Get size of array item destination type
+    u32 item_size = type_sizeof_or_max(item_type, line_on_error);
+    if(item_size == -1) return (Destination) { .type = TYPES_CAPACITY };
+
+    // Determine target offset size
+    u8 offset_size = index_type_size >= array_destination.offset_size
+        ? index_type_size
+        : array_destination.offset_size;
+
+    // If we're going to need to multiply, increase
+    // the offset size by 1 if we support it
+    u8 max_offset_size = 2;
+    if(item_size != 1 && offset_size < max_offset_size){
+        offset_size++;
+    }
+
+    // Pad original index
+    while(array_destination.offset_size < offset_size){
+        printf("[-]>");
+        array_destination.offset_size++;
+        emit_context.current_cell_index++;
+    }
+
+    // Emit index
+    u32 actual_index_type = expression_emit(index_expression);
+    if(actual_index_type >= TYPES_CAPACITY) return (Destination) { .type = TYPES_CAPACITY };
+
+    // Pad new index
+    while(index_type_size < offset_size){
+        printf("[-]>");
+        index_type_size++;
+        emit_context.current_cell_index++;
+    }
+
+    // Perform appropriate operation for offset size
+    if(offset_size == 1){
+        // Multiply index by item size (unless item size is 1)
+        if(item_size != 1){
+            emit_u8(item_size);
+            emit_multiply_u8();
+        }
+
+        emit_additive_u8(true);
+    } else if(offset_size == 2){
+        // Multiply index by item size (unless item size is 1)
+        if(item_size != 1){
+            emit_u16(item_size);
+            emit_multiply_u16();
+        }
+
+        emit_additive_u16(true);
+    } else {
+        printf("\nerror on line %d: Cannot perform indexing for offset size ", u24_unpack(index_expression.line));
+        printf("%d\n", offset_size);
+        printf("\n");
+        return (Destination) { .type = TYPES_CAPACITY };
+    }
+
+    return (Destination) {
+        .tape_location = array_destination.tape_location,
+        .on_stack = false,
+        .type = item_type,
+        .offset_size = offset_size,
+    };
+}
+
 static Destination expression_get_destination(Expression expression, u32 tape_anchor){
     // Creates a u32 value on the tape with the mutable location for an expression.
     // If result is `on_stack`, then the u32 offset will be relative to the stack pointer,
@@ -334,65 +437,20 @@ static Destination expression_get_destination(Expression expression, u32 tape_an
             .offset_size = 0,
         };
     } else if(expression.kind == EXPRESSION_INDEX){
-        // Calculate index
-        Expression index_expression = expressions[operands[expression.ops + 1]];
-        u32 index_type = expression_emit(index_expression);
-        if(index_type >= TYPES_CAPACITY) return (Destination) { .type = TYPES_CAPACITY };
-
-        // Calculate array destination
-        Expression array_expression = expressions[operands[expression.ops]];
-        Destination array_destination = expression_get_destination(array_expression, tape_anchor);
-        if(array_destination.type >= TYPES_CAPACITY) return (Destination) { .type = TYPES_CAPACITY };
-
-        if(array_destination.on_stack){
-            printf("\nerror on line %d: Cannot index into destination on the stack yet (not supported)\n", u24_unpack(expression.line));
-            return (Destination) { .type = TYPES_CAPACITY };
-        }
-
-        u32 item_type = get_item_type(types[array_destination.type], array_expression.line, true);
-        if(item_type >= TYPES_CAPACITY) return (Destination) { .type = TYPES_CAPACITY };
-
-        if(index_type == u8_type){
-            // u8 indexing
-
-            u32 item_size = type_sizeof_or_max(item_type, array_expression.line);
-            if(item_size == -1) return (Destination) { .type = TYPES_CAPACITY };
-
-            if(item_size != 1){
-                emit_u8(item_size);
-                emit_multiply_u8();
-            }
-
-            if(array_destination.offset_size > 0){
-                if(array_destination.offset_size == 1 && index_type == u8_type){
-                    emit_additive_u8(true);
-                    fprintf(stderr, "warning on line %d: combining two u8 indicies\n", u24_unpack(expression.line));
-                } else {
-                    printf("\nerror on line %d: Cannot index into destination that already has an offset yet (not supported)\n", u24_unpack(expression.line));
-                    return (Destination) { .type = TYPES_CAPACITY };
-                }
-            }
-            
-            return (Destination) {
-                .tape_location = array_destination.tape_location,
-                .on_stack = false,
-                .type = item_type,
-                .offset_size = 1,
-            };
-        } else {
-            printf("\nerror on line %d: Cannot use index of type '", u24_unpack(expression.line));
-            type_print(types[index_type]);
-            printf("'\n");
-            return (Destination) { .type = TYPES_CAPACITY };
-        }
-
-        return (Destination){ .type = TYPES_CAPACITY };
-    } else if(expression.kind == EXPRESSION_MEMBER){
-        // Calculate subject destination
+        // Emit subject destination
         Expression subject_expression = expressions[operands[expression.ops]];
         Destination destination = expression_get_destination(subject_expression, tape_anchor);
         if(destination.type >= TYPES_CAPACITY) return (Destination) { .type = TYPES_CAPACITY };
 
+        // Emit destination modification
+        return destination_index(destination, operands[expression.ops + 1], expression.line);
+    } else if(expression.kind == EXPRESSION_MEMBER){
+        // Emit subject destination
+        Expression subject_expression = expressions[operands[expression.ops]];
+        Destination destination = expression_get_destination(subject_expression, tape_anchor);
+        if(destination.type >= TYPES_CAPACITY) return (Destination) { .type = TYPES_CAPACITY };
+
+        // Emit destination modification
         return destination_member(destination, operands[expression.ops + 1], expression.line);
     } else {
         printf("\nerror on line %d: Cannot get destination for expression `", u24_unpack(expression.line));
@@ -429,6 +487,9 @@ static u32 write_destination(u32 new_value_type, Destination destination, u24 er
         return u0_type;
     } else if(destination.offset_size == 1){
         move_cells_dynamic_u8(destination.tape_location, type_size);
+        return u0_type;
+    } else if(destination.offset_size == 2){
+        move_cells_dynamic_u16(destination.tape_location, type_size);
         return u0_type;
     } else {
         printf("\nerror on line %d: Cannot assign to destination with u%d offset\n", u24_unpack(error_line_number), 8*destination.offset_size);
@@ -1091,6 +1152,10 @@ static u32 read_destination(Destination destination, u24 line_on_error){
         // u8 indexing
         copy_cells_dynamic_u8(destination.tape_location, item_type_size);
         return destination.type;
+    } else if(destination.offset_size == 2){
+        // u16 indexing
+        copy_cells_dynamic_u16(destination.tape_location, item_type_size);
+        return destination.type;
     } else {
         printf("\nerror on line %d: Cannot use index of type 'u%d'\n", u24_unpack(line_on_error), destination.offset_size * 8);
         return TYPES_CAPACITY;
@@ -1298,39 +1363,59 @@ static u32 expression_emit_continue(Expression expression){
     return u0_type;
 }
 
-static u32 expression_emit_sizeof_type_u8(Expression expression){
-    u32 size = type_sizeof_or_max(expression.ops, expression.line);
+static u32 emit_sizeof_size(u32 type_index, u8 integer_cells, u24 line_on_error){
+    u32 size = type_sizeof_or_max(type_index, line_on_error);
+    if(size == -1) return TYPES_CAPACITY;
 
-    if(size > 255){
-        printf("\nerror on line %d: Cannot get size of '", u24_unpack(expression.line));
-        type_print(types[expression.ops]);
-        printf("' as 'u8', because its size exceeds 255 (is %d)\n", size);
+    u32 max_values[5] = {
+        0,
+        255,
+        65535,
+        16777215,
+        4294967295,
+    };
+
+    if(!in_range_inclusive(integer_cells, 1, 4) || size > max_values[integer_cells]){
+        printf("\nerror on line %d: Cannot emit size of '", u24_unpack(line_on_error));
+        type_print(types[type_index]);
+        printf("' as 'u%d' (maximum size exceeded)\n", integer_cells * 8);
         return TYPES_CAPACITY;
     }
 
-    emit_u8(size);
-    return u8_type;
+    switch(integer_cells){
+    case 1:
+        emit_u8(size);
+        return u8_type;
+    case 2:
+        emit_u16(size);
+        return u16_type;
+    case 3:
+        emit_u24(u24_pack(size));
+        return u24_type;
+    case 4:
+        emit_u32(size);
+        return u32_type;
+    }
+
+    printf("\nerror on line %d: Cannot emit size of '", u24_unpack(line_on_error));
+    type_print(types[type_index]);
+    printf("' as 'u%d' (maximum size exceeded)\n", integer_cells * 8);
+    return TYPES_CAPACITY;
 }
 
-static u32 expression_emit_sizeof_value_u8(Expression expression){
+static u32 expression_emit_sizeof_type(Expression expression, u8 integer_cells){
+    return emit_sizeof_size(expression.ops, integer_cells, expression.line);
+}
+
+static u32 expression_emit_sizeof_value(Expression expression, u8 integer_cells){
     u32 expression_type = expression_get_type(expressions[expression.ops], EXPRESSION_GET_TYPE_MODE_PRINT_ERROR);
 
-    if(expression_type > TYPES_CAPACITY){
+    if(expression_type >= TYPES_CAPACITY){
         printf("\nerror on line %d: Could not determine size of expression, perhaps you have undeclared variables?", u24_unpack(expression.line));
         return TYPES_CAPACITY;
     }
 
-    u32 size = type_sizeof_or_max(expression_type, expression.line);
-
-    if(size > 255){
-        printf("\nerror on line %d: Cannot get size of '", u24_unpack(expression.line));
-        type_print(types[expression.ops]);
-        printf("' as 'u8', because its size exceeds 255 (is %d)\n", size);
-        return TYPES_CAPACITY;
-    }
-
-    emit_u8(size);
-    return u8_type;
+    return emit_sizeof_size(expression_type, integer_cells, expression.line);
 }
 
 static u32 expression_emit_array_initializer(Expression expression){
@@ -1570,14 +1655,31 @@ u32 expression_emit(Expression expression){
         return expression_emit_continue(expression);
     case EXPRESSION_SIZEOF_TYPE:
     case EXPRESSION_SIZEOF_TYPE_U8:
-        return expression_emit_sizeof_type_u8(expression);
+        return expression_emit_sizeof_type(expression, 1);
+    case EXPRESSION_SIZEOF_TYPE_U16:
+        return expression_emit_sizeof_type(expression, 2);
+    case EXPRESSION_SIZEOF_TYPE_U24:
+        return expression_emit_sizeof_type(expression, 3);
+    case EXPRESSION_SIZEOF_TYPE_U32:
+        return expression_emit_sizeof_type(expression, 4);
     case EXPRESSION_SIZEOF_VALUE:
     case EXPRESSION_SIZEOF_VALUE_U8:
-        return expression_emit_sizeof_value_u8(expression);
+        return expression_emit_sizeof_value(expression, 1);
+    case EXPRESSION_SIZEOF_VALUE_U16:
+        return expression_emit_sizeof_value(expression, 2);
+    case EXPRESSION_SIZEOF_VALUE_U24:
+        return expression_emit_sizeof_value(expression, 3);
+    case EXPRESSION_SIZEOF_VALUE_U32:
+        return expression_emit_sizeof_value(expression, 4);
     case EXPRESSION_ARRAY_INITIALIZER:
         return expression_emit_array_initializer(expression);
     case EXPRESSION_STRUCT_INITIALIZER:
         return expression_emit_struct_initializer(expression);
+    case EXPRESSION_CASE:
+    case EXPRESSION_FIELD_INITIALIZER:
+    case EXPRESSION_ENUM_VARIANT:
+        printf("\nerror: Invalid expression kind %d during expression_emit\n", expression.kind);
+        return TYPES_CAPACITY;
     }
 
     printf("\nerror: Unknown expression kind %d during expression_emit\n", expression.kind);

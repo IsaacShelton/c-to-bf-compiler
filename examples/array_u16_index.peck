@@ -1,0 +1,17 @@
+
+u0 main(){
+    u8 values[65535];
+
+    for(u16 i = 0; i < sizeof values; i++){
+        print("assigning to ");
+        printu16hex(i);
+        print("\n");
+        values[i] = i._0;
+    }
+
+    for(u16 i = 0; i < sizeof values; i++){
+        printu8hex(values[i]);
+        print("\n");
+    }
+}
+

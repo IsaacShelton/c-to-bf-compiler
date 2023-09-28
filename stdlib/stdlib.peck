@@ -124,8 +124,8 @@ u16 u16_div(u16 a, u16 b){
         a = 0;
     }
 
-    u16 limits[12];
-    u16 multipliers[12];
+    u16 limits[14];
+    u16 multipliers[14];
 
     limits[0] = 3;
     multipliers[0] = 16384;
@@ -163,7 +163,13 @@ u16 u16_div(u16 a, u16 b){
     limits[11] = 8191;
     multipliers[11] = 8;
 
-    for(u8 i = 0; i < 12; i++){
+    limits[12] = 16383;
+    multipliers[12] = 4;
+
+    limits[13] = 32768;
+    multipliers[13] = 2;
+
+    for(u8 i = 0; i < 14; i++){
         if(u16_lte(b, limits[i])){
             u16 multiplier = multipliers[i];
             u16 scaled = u16_mul(multiplier, b);

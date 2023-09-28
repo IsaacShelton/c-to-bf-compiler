@@ -10,14 +10,24 @@ u0 dupe_cell_offset(u32 amount);
 u0 dupe_cells(u32 amount);
 u0 emit_print_aux_cstr(u32 string);
 u0 set_cell_to_value(u8 new_value, u8 old_value);
+
 u0 copy_cell_static(u32 start_index);
 u0 copy_cells_static(u32 start_index, u32 size);
+
 u0 copy_cell_dynamic_u8(u32 start_index);
+u0 copy_cell_dynamic_u16(u32 start_index);
 u0 copy_cells_dynamic_u8(u32 start_index, u32 size);
+u0 copy_cells_dynamic_u16(u32 start_index, u32 size);
+
 u0 move_cell_static(u32 destination_index);
 u0 move_cells_static(u32 destination_index, u32 size, u1 destructive);
+
 u0 move_cell_dynamic_u8(u32 destination_start_index);
+u0 move_cell_dynamic_u16(u32 destination_start_index);
+
 u0 move_cells_dynamic_u8(u32 destination_start_index, u32 size);
+u0 move_cells_dynamic_u16(u32 destination_index, u32 size);
+
 u0 print_cells_static(u32 start_index, u32 max_length);
 
 u0 emit_u1(u1 value);

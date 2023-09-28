@@ -183,6 +183,27 @@ u0 copy_cell_dynamic_u8_maintain(u32 start_index){
     emit_swap_u8();
 }
 
+u0 copy_cell_dynamic_u16_maintain(u32 start_index){
+    // minor_index major_index
+    //                         ^
+
+    // value1 minor_index major_index 
+    //                                ^
+
+    dupe_cells(2);
+    copy_cell_dynamic_u16(start_index);
+
+    // minor_index major_index value1
+    //                                ^
+
+    // Move value to be before duplicated index
+    printf("[-]<[>+<-]<[<+>-]<[<+>-]3>[3<+3>-]");
+
+    // value1 minor_index major_index 
+    //                                ^
+}
+
+
 u0 copy_cells_dynamic_u8(u32 start_index, u32 size){
     // u8_dynamic_index
     //                  ^
@@ -197,6 +218,22 @@ u0 copy_cells_dynamic_u8(u32 start_index, u32 size){
     }
 
     copy_cell_dynamic_u8(start_index + size - 1);
+}
+
+u0 copy_cells_dynamic_u16(u32 start_index, u32 size){
+    // minor_index major_index
+    //                         ^
+
+    // value1 value2 value3 valueN
+    //                             ^
+
+    if(size == 0) return;
+
+    for(u32 i = 0; i < size - 1; i++){
+        copy_cell_dynamic_u16_maintain(start_index + i);
+    }
+
+    copy_cell_dynamic_u16(start_index + size - 1);
 }
 
 u0 copy_cell_dynamic_u8(u32 start_index){
@@ -308,6 +345,271 @@ u0 copy_cell_dynamic_u8(u32 start_index){
     printf("]");
 
     emit_context.current_cell_index++;
+}
+
+u0 copy_cell_dynamic_u16(u32 start_index){
+    if(start_index >= emit_context.current_cell_index){
+        printf("\nwarning: copy_cell_dynamic_u16 failed, can only copy backwards\n");
+        return;
+    }
+
+    // minor_index major_index
+    //                         ^
+
+    // value
+    //       ^
+    
+    
+    /*
+    EXAMPLE:
+        # Memory (array of 20 cells)
+		++++++++++ +>
+        ++++++++++ ++>
+        ++++++++++ +++>
+        ++++++++++ ++++>
+        ++++++++++ +++++>
+        ++++++++++ ++++++>
+        ++++++++++ +++++++>
+        ++++++++++ ++++++++>
+        ++++++++++ +++++++++>
+        ++++++++++ ++++++++++>
+        ++++++++++ ++++++++++ +>
+        ++++++++++ ++++++++++ ++>
+        ++++++++++ ++++++++++ +++>
+        ++++++++++ ++++++++++ ++++>
+        ++++++++++ ++++++++++ +++++>
+        ++++++++++ ++++++++++ ++++++>
+        ++++++++++ ++++++++++ +++++++>
+        ++++++++++ ++++++++++ ++++++++>
+        ++++++++++ ++++++++++ +++++++++>
+        ++++++++++ ++++++++++ ++++++++++>
+
+
+		# Minor index
+        [-]++++>
+        # Major index
+        [-]+>
+        <
+
+        # Corrupt forward memory
+        >+>+>+>+>+>+>+>+>+
+        >+>+>+>+>+>+>+>+>+
+        >+>+>+>+>+>+>+>+>+
+        >+>+>+>+>+>+>+>+>+
+        <<<<<<<<<
+        <<<<<<<<<
+        <<<<<<<<<
+        <<<<<<<<<
+        
+        # Create copy of index
+        >[-]>[-]>[-]>[-]
+        <<<<
+        [>>+>>+<<<<-]
+        <
+        [>>+>>+<<<<-]
+        >>>>
+        [<<<<+>>>>-]
+        >
+        [<<<<+>>>>-]
+        
+        # Go to major index of first index pair
+        <<<<
+        
+        [
+        	-
+            
+            # Go to minor index of first pair
+            <
+            
+            # Copy forward
+            >>>>>>>>>>
+            [-]>[-]>[-]>[-]>
+            <<<<<<<<<<
+            <[>>>>>>>>>>+<<<<<<<<<<-]
+            <[>>>>>>>>>>+<<<<<<<<<<-]
+            <[>>>>>>>>>>+<<<<<<<<<<-]
+            <[>>>>>>>>>>+<<<<<<<<<<-]
+            >
+            >>>>>>>>>>
+        ]
+        
+        # Go to minor index
+        <
+        
+        # Go forward by minor index
+        [
+        	-
+            >>>>[-]
+            <[>+<-]
+            <[>+<-]
+            <[>+<-]
+            <[>+<-]
+            >
+        ]
+        
+        # Move data to make two copies
+        <<<<<<<<<<
+        <<<<<<<<<<
+        [
+        	>>>>>>>>>>
+            >>>>>>>>>>
+            +>+<
+            <<<<<<<<<<
+            <<<<<<<<<<
+            -
+        ]
+        >>>>>>>>>>
+        >>>>>>>>>>
+        
+        >
+        
+        # Move second data copy back
+        [
+        	<
+        	<<<<<<<<<<
+            <<<<<<<<<<
+            +
+            >>>>>>>>>>
+            >>>>>>>>>>
+            >
+            -
+        ]
+        
+        # Go to minor index
+        >
+        
+        # Go backwards by minor index
+        [
+        	-
+            <<
+            [<+>-]>
+            >
+            [<+>-]>
+            [<+>-]
+            <<
+        ]
+        
+        # Go to major index
+        >
+        
+        # Go backwards by 256 (10 in example) times minor index
+        [
+        	-
+        	[<<<<<<<<<<+>>>>>>>>>>-]
+            <<<
+            [<<<<<<<<<<+>>>>>>>>>>-]
+            >>>
+            <<<<<<<<<<
+        ]
+        
+        # Point to next cell
+        <<
+        */
+
+    // Go to 'index' cell
+    printf("<");
+    emit_context.current_cell_index--;
+
+    u32 back_offset = emit_context.current_cell_index - start_index - 1;
+
+    // Create copy of index
+    printf(">[-]>[-]>[-]>[-]");
+    printf("<<<<");
+    printf("[>>+>>+<<<<-]");
+    printf("<");
+    printf("[>>+>>+<<<<-]");
+    printf(">>>>");
+    printf("[<<<<+>>>>-]");
+    printf(">");
+    printf("[<<<<+>>>>-]");
+    
+    // Go to major index of first index pair
+    printf("<<<<");
+    
+    printf("[");
+        printf("-");
+        
+        // Go to minor index of first pair
+        printf("<");
+        
+        // Copy forward
+        printf("256>");
+        printf("[-]>[-]>[-]>[-]>");
+        printf("256<");
+        printf("<[256>+256<-]");
+        printf("<[256>+256<-]");
+        printf("<[256>+256<-]");
+        printf("<[256>+256<-]");
+        printf(">");
+        printf("256>");
+    printf("]");
+    
+    // Go to minor index
+    printf("<");
+    
+    // Go forward by minor index
+    printf("[");
+        printf("-");
+        printf(">>>>[-]");
+        printf("<[>+<-]");
+        printf("<[>+<-]");
+        printf("<[>+<-]");
+        printf("<[>+<-]");
+        printf(">");
+    printf("]");
+    
+    // Move data to make two copies
+    printf("%d<", back_offset);
+    printf("[");
+        printf("%d>", back_offset);
+        printf("+>+<");
+        printf("%d<", back_offset);
+        printf("-");
+    printf("]");
+    printf("%d>", back_offset);
+    
+    printf(">");
+    
+    // Move second data copy back
+    printf("[");
+        printf("<");
+        printf("%d<", back_offset);
+        printf("+");
+        printf("%d>", back_offset);
+        printf(">");
+        printf("-");
+    printf("]");
+    
+    // Go to minor index
+    printf(">");
+    
+    printf("[");
+        printf("-");
+        printf("<<");
+        printf("[<+>-]>");
+        printf(">");
+        printf("[<+>-]>");
+        printf("[<+>-]");
+        printf("<<");
+    printf("]");
+    
+    // Go to major index
+    printf(">");
+    
+    // Go backwards by 256 times minor index
+    printf("[");
+        printf("-");
+        printf("[256<+256>-]");
+        printf("<<<");
+        printf("[256<+256>-]");
+        printf(">>>");
+        printf("256<");
+    printf("]");
+    
+    // Point to next cell
+    printf("<<");
+
+    // No further changes to `emit_context.current_cell_index`
 }
 
 u0 move_cell_static(u32 destination_index){
@@ -455,6 +757,289 @@ u0 move_cell_dynamic_u8(u32 destination_start_index){
     emit_context.current_cell_index--;
 }
 
+u0 move_cell_dynamic_u16(u32 destination_start_index){
+    if(destination_start_index >= emit_context.current_cell_index){
+        printf("\nwarning: move_cell_dynamic_u16 failed, can only move backwards\n");
+        return;
+    }
+
+    u32 back_offset = emit_context.current_cell_index - destination_start_index - 2;
+
+    // value index_minor index_major
+    //                        ^
+
+    // index_minor index_major
+    //      ^
+
+    /* Example:
+        # Garble memory
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+
+ 		>>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>> # Memory (array of 50 cells)
+        +++++++++++++> # Value (value that we want to write to the array)
+        [-]+++++>[-]++++> # Index little endian
+        
+        # Initialize moving window memory
+        [-]>[-]>[-]>[-]>[-]>[-]>[-]<<<<<<
+        
+        # Go to minor index
+        << 
+        
+         # Create three copies of index
+        [>>+>>+>>+<<<<<<-]
+        >[>>+>>+>>+<<<<<<-]
+        
+        # Move data here
+        <<[>>+<<-]
+        
+        # Move third copy here
+        >>>>>>>>
+        [<<<<<<<+>>>>>>>-]
+        <
+        [<<<<<<<+>>>>>>>-]
+        
+        # Point to major index
+        <<<
+        
+        [ # While non zero major index
+        - # Decrement index
+            # Move forward
+            <
+            >>>>>>>>>>
+            <
+            [-]>[-]>[-]>[-]>[-]> # Zero destination
+            >
+            <
+            <<<<<<<<<<
+            <[>>>>>>>>>>+<<<<<<<<<<-]
+            <[>>>>>>>>>>+<<<<<<<<<<-]
+            <[>>>>>>>>>>+<<<<<<<<<<-]
+            <[>>>>>>>>>>+<<<<<<<<<<-]
+            <[>>>>>>>>>>+<<<<<<<<<<-]
+            >>>>>>>>>>
+            >>
+        ]
+        
+        # Go to minor cell
+        <
+       
+        [ # While non zero major index
+        - # Decrement index
+            # Move three index values forward
+            <
+            >>>>>
+            [-]> # Zero destination
+            <
+            <[>+<-]
+            <[>+<-]
+            <[>+<-]
+            <[>+<-]
+            <[>+<-]
+            >
+            >
+        ]
+        
+        <
+        
+        # Move into place
+        << # Account for duped index offset
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        [-]
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >> # Account for duped index offset
+        [
+        << # Account for duped index offset
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        +
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >> # Account for duped index offset
+        -
+        ]
+        
+        # Copy second copy of index to index position
+        >>>
+        [<<<+>>>-]
+        >
+        [<<<+>>>-]
+        <<<
+        
+        # Go to minor index
+        <
+        
+        [-
+        	[<+>-]
+            >
+            [<+>-]
+            <<
+        ]
+        
+        # Go to major index
+        >
+        
+        [-
+        	[
+            <<<<<<<<<<+>>>>>>>>>>-
+            ]
+            <<<<<<<<<<
+        ]
+        
+        # To back to zeroed minor index
+        <
+        
+        # Point to next available cell (left over duped index which can be used again)
+        <<
+    */
+
+    // Initialize moving window memory
+    printf(">[-]>[-]>[-]>[-]>[-]>[-]>[-]");
+    printf("6<");
+    
+    // Go to minor index
+    printf("<<");
+    
+    // Create three copies of index
+    printf("[>>+>>+>>+6<-]");
+    printf(">");
+    printf("[>>+>>+>>+6<-]");
+    
+    // Go to data cell
+    printf("<<");
+
+    // Move data cell to third cell
+    printf("[>>+<<-]");
+    
+    // Move third copy of index to first two cells
+    printf("8>");
+    printf("[7<+7>-]");
+    printf("<");
+    printf("[7<+7>-]");
+    
+    // Point to major index
+    printf("3<");
+
+    // While non zero major index
+    printf("[");
+        // Decrement index
+        printf("-");
+
+        // Move forward
+        printf("<");
+        printf("256>");
+        printf("<");
+        printf("[-]>[-]>[-]>[-]>[-]>"); // Zero destination
+        printf("256<");
+        printf("<[256>+256<-]");
+        printf("<[256>+256<-]");
+        printf("<[256>+256<-]");
+        printf("<[256>+256<-]");
+        printf("<[256>+256<-]");
+        printf("256>");
+        printf(">>");
+    printf("]");
+    
+    // Go to minor cell
+    printf("<");
+   
+    // While non zero major index
+    printf("[");
+
+        // Decrement index
+        printf("-");
+
+        // Move three index values forward
+        printf("4>");
+        printf("[-]"); // Zero destination
+        printf("<[>+<-]");
+        printf("<[>+<-]");
+        printf("<[>+<-]");
+        printf("<[>+<-]");
+        printf("<[>+<-]");
+        printf(">>");
+    printf("]");
+    
+    // Go to data cell
+    printf("<");
+    
+    // Move into place
+    printf("%d<[-]%d>[%d<+%d>-]", 2 + back_offset, 2 + back_offset, 2 + back_offset, 2 + back_offset); // Account for duped index offset
+    
+    // Copy second copy of index to index position
+    printf("3>");
+    printf("[3<+3>-]");
+    printf(">");
+    printf("[3<+3>-]");
+    printf("3<");
+    
+    // Go to minor index
+    printf("<");
+    
+    // Go backwards by minor index
+    printf("[");
+        printf("-");
+        printf("[<+>-]");
+        printf(">");
+        printf("[<+>-]");
+        printf("<<");
+    printf("]");
+    
+    // Go to major index
+    printf(">");
+    
+    // Go backwards by 256 times major index
+    printf("[");
+        printf("-");
+        printf("[256<+256>-]");
+        printf("256<");
+    printf("]");
+    
+    // To back to zeroed minor index
+    printf("<");
+    
+    // Point to next available cell (left over duped index which can be used again)
+    printf("<<");
+
+    emit_context.current_cell_index -= 2;
+}
+
 u0 move_cells_dynamic_u8(u32 destination_index, u32 size){
     // value1 value2 value3 index
     //                        ^
@@ -464,6 +1049,23 @@ u0 move_cells_dynamic_u8(u32 destination_index, u32 size){
 
     for(u32 i = 0; i < size; i++){
         move_cell_dynamic_u8(destination_index + size - 1 - i);
+    }
+}
+
+u0 move_cells_dynamic_u16(u32 destination_index, u32 size){
+    // value1 value2 value3 minor_index major_index
+    //                                       ^
+
+    // minor_index major_index
+    //      ^
+
+    for(u32 i = 0; i < size; i++){
+        move_cell_dynamic_u16(destination_index + size - 1 - i);
+
+        if(i + 1 != size){
+            printf(">");
+            emit_context.current_cell_index++;
+        }
     }
 }
 

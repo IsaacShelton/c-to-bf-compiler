@@ -10,6 +10,7 @@ set -ex
 "$self/../peck" "$self/array_assignment_extend.peck"
 "$self/../peck" "$self/array_initializer.peck"
 "$self/../peck" "$self/array_pass_extend.peck"
+"$self/../peck" "$self/array_u16_index.peck"
 "$self/../peck" "$self/bitwise_and_or_xor.peck"
 "$self/../peck" "$self/bitwise_complement.peck"
 "$self/../peck" "$self/c_types.peck"

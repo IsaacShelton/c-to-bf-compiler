@@ -347,7 +347,7 @@ static Destination destination_index(
     // If we're going to need to multiply, increase
     // the offset size by 1 if we support it
     u8 max_offset_size = 2;
-    if(item_size != 1 && offset_size < max_offset_size){
+    if((item_size != 1 || array_destination.offset_size != 0) && offset_size < max_offset_size){
         offset_size++;
     }
 
@@ -384,7 +384,6 @@ static Destination destination_index(
             emit_u16(item_size);
             emit_multiply_u16();
         }
-
         emit_additive_u16(true);
     } else {
         printf("\nerror on line %d: Cannot perform indexing for offset size ", u24_unpack(index_expression.line));
@@ -643,6 +642,15 @@ u32 expression_emit_cast(Expression expression){
         } else if(from_type == u32_type && def.computed_size == 4){
             return to_type;
         }
+    }
+
+    if(to_type == u0_type){
+        u32 size = type_sizeof_or_max(from_type, expression.line);
+        if(size == -1) return TYPES_CAPACITY;
+
+        printf("%d<", size);
+        emit_context.current_cell_index -= size;
+        return to_type;
     }
 
     printf("\nerror on line %d: Cannot cast '", u24_unpack(expression.line));

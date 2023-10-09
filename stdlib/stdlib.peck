@@ -127,50 +127,50 @@ u16 u16_div(u16 a, u16 b){
     u16 limits[14];
     u16 multipliers[14];
 
-    limits[0] = 3;
+    limits[0] = 4;
     multipliers[0] = 16384;
 
-    limits[1] = 7;
+    limits[1] = 8;
     multipliers[1] = 8192;
 
-    limits[2] = 15;
+    limits[2] = 16;
     multipliers[2] = 4096;
 
-    limits[3] = 31;
+    limits[3] = 32;
     multipliers[3] = 2048;
 
-    limits[4] = 63;
+    limits[4] = 64;
     multipliers[4] = 1024;
 
-    limits[5] = 127;
+    limits[5] = 128;
     multipliers[5] = 512;
 
-    limits[6] = 255;
+    limits[6] = 256;
     multipliers[6] = 256;
 
-    limits[7] = 511;
+    limits[7] = 512;
     multipliers[7] = 128;
 
-    limits[8] = 1023;
+    limits[8] = 1024;
     multipliers[8] = 64;
 
-    limits[9] = 2047;
+    limits[9] = 2048;
     multipliers[9] = 32;
 
-    limits[10] = 4095;
+    limits[10] = 4096;
     multipliers[10] = 16;
 
-    limits[11] = 8191;
+    limits[11] = 8192;
     multipliers[11] = 8;
 
-    limits[12] = 16383;
+    limits[12] = 16384;
     multipliers[12] = 4;
 
     limits[13] = 32768;
     multipliers[13] = 2;
 
     for(u8 i = 0; i < 14; i++){
-        if(u16_lte(b, limits[i])){
+        if(u16_lt(b, limits[i])){
             u16 multiplier = multipliers[i];
             u16 scaled = u16_mul(multiplier, b);
 
@@ -202,11 +202,11 @@ u1 u16_gte(u16 a, u16 b){
 }
 
 u1 u16_lt(u16 a, u16 b){
-    return !u16_gte(a, b);
+    return a._1 < b._1 || (a._1 == b._1 && a._0 < b._0);
 }
 
 u1 u16_lte(u16 a, u16 b){
-    return !u16_gt(a, b);
+    return a._1 < b._1 || (a._1 == b._1 && a._0 <= b._0);
 }
 
 u0 printhexdigit(u8 digit){
@@ -533,69 +533,69 @@ u32 u32_div(u32 a, u32 b){
     u32 limits[30];
     u32 multipliers[30];
 
-    limits[0] = 3;
+    limits[0] = 4;
     multipliers[0] = 1073741824;
-    limits[1] = 7;
+    limits[1] = 8;
     multipliers[1] = 536870912;
-    limits[2] = 15;
+    limits[2] = 16;
     multipliers[2] = 268435456;
-    limits[3] = 31;
+    limits[3] = 32;
     multipliers[3] = 134217728;
-    limits[4] = 63;
+    limits[4] = 64;
     multipliers[4] = 67108864;
-    limits[5] = 127;
+    limits[5] = 128;
     multipliers[5] = 33554432;
-    limits[6] = 255;
+    limits[6] = 256;
     multipliers[6] = 16777216;
-    limits[7] = 511;
+    limits[7] = 512;
     multipliers[7] = 8388608;
-    limits[8] = 1023;
+    limits[8] = 1024;
     multipliers[8] = 4194304;
-    limits[9] = 2047;
+    limits[9] = 2048;
     multipliers[9] = 2097152;
-    limits[10] = 4095;
+    limits[10] = 4096;
     multipliers[10] = 1048576;
-    limits[11] = 8191;
+    limits[11] = 8192;
     multipliers[11] = 524288;
-    limits[12] = 16383;
+    limits[12] = 16384;
     multipliers[12] = 262144;
-    limits[13] = 32767;
+    limits[13] = 32768;
     multipliers[13] = 131072;
-    limits[14] = 65535;
+    limits[14] = 65536;
     multipliers[14] = 65536;
-    limits[15] = 131071;
+    limits[15] = 131072;
     multipliers[15] = 32768;
-    limits[16] = 262143;
+    limits[16] = 262144;
     multipliers[16] = 16384;
-    limits[17] = 524287;
+    limits[17] = 524288;
     multipliers[17] = 8192;
-    limits[18] = 1048575;
+    limits[18] = 1048576;
     multipliers[18] = 4096;
-    limits[19] = 2097151;
+    limits[19] = 2097152;
     multipliers[19] = 2048;
-    limits[20] = 4194303;
+    limits[20] = 4194304;
     multipliers[20] = 1024;
-    limits[21] = 8388607;
+    limits[21] = 8388608;
     multipliers[21] = 512;
-    limits[22] = 16777215;
+    limits[22] = 16777216;
     multipliers[22] = 256;
-    limits[23] = 33554431;
+    limits[23] = 33554432;
     multipliers[23] = 128;
-    limits[24] = 67108863;
+    limits[24] = 67108864;
     multipliers[24] = 64;
-    limits[25] = 134217727;
+    limits[25] = 134217728;
     multipliers[25] = 32;
-    limits[26] = 268435455;
+    limits[26] = 268435456;
     multipliers[26] = 16;
-    limits[27] = 536870911;
+    limits[27] = 536870912;
     multipliers[27] = 8;
-    limits[28] = 1073741823;
+    limits[28] = 1073741824;
     multipliers[28] = 4;
-    limits[29] = 2147483647;
+    limits[29] = 2147483648;
     multipliers[29] = 2;
 
     for(u8 i = 0; i < 30; i++){
-        if(u32_lte(b, limits[i])){
+        if(u32_lt(b, limits[i])){
             u32 multiplier = multipliers[i];
             u32 scaled = u32_mul(multiplier, b);
 

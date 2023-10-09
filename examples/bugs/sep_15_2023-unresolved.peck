@@ -1,5 +1,9 @@
 
 u0 main(){
+    print("Doing...\n");
+    printu16(10);
+    print("\n");
+
     print("> ");
     printu16(64553);
     print("\n");
@@ -23,6 +27,8 @@ u0 main(){
     print("> ");
     printu16(0);
     print("\n");
+
+    print("Done\n");
 }
 
 u16 u16_add_u8s(u8 a, u8 b){
@@ -293,5 +299,4 @@ u0 printu16hex(u16 value){
     printu8hex(value._1);
     printu8hex(value._0);
 }
-
 

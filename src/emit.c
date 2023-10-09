@@ -197,12 +197,11 @@ u0 copy_cell_dynamic_u16_maintain(u32 start_index){
     //                                ^
 
     // Move value to be before duplicated index
-    printf("[-]<[>+<-]<[<+>-]<[<+>-]3>[3<+3>-]");
+    printf("[-]<[>+<-]<[>+<-]<[>+<-]3>[3<+3>-]");
 
     // value1 minor_index major_index 
     //                                ^
 }
-
 
 u0 copy_cells_dynamic_u8(u32 start_index, u32 size){
     // u8_dynamic_index
@@ -358,7 +357,6 @@ u0 copy_cell_dynamic_u16(u32 start_index){
 
     // value
     //       ^
-    
     
     /*
     EXAMPLE:
@@ -1440,7 +1438,7 @@ u0 emit_divmod_u8(){
     printf("[->[->+>>]>[<<+>>[-<+>]>+>>]5<]>[3>]>[[-<+>]>+>>]5<");
 
     // Consume 'd'
-    emit_context.current_cell_index--;
+    emit_context.current_cell_index -= 2;
 }
 
 u0 emit_divide_u8(){
@@ -1451,6 +1449,7 @@ u0 emit_divide_u8(){
 
     // Go to n/d cell and move n/d to result cell
     printf("3>[3<+3>-]2<");
+    emit_context.current_cell_index++;
 }
 
 u0 emit_divide_u16(){
@@ -1469,6 +1468,7 @@ u0 emit_mod_u8(){
 
     // Go to n%d cell and move n%d to result cell
     printf("2>[2<+2>-]<");
+    emit_context.current_cell_index++;
 }
 
 u0 emit_mod_u16(){

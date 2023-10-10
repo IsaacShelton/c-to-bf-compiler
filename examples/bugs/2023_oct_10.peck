@@ -1,0 +1,43 @@
+
+u0 main(){
+    u8 board[3][3];
+
+    for(u8 i = 0; i < 3; i++){
+        for(u8 j = 0; j < 3; j++){
+            board[i][j] = ' ';
+        }
+    }
+
+    board[2][0] = 'X';
+    board[1][1] = 'X';
+    board[0][2] = 'X';
+
+    print("Result is: ");
+    put(get_winner(board));
+    print("\n");
+}
+
+u8 get_winner(u8 board[3][3]){
+    for(u8 row = 0; row < 3; row++){
+        if(board[0][row] == board[1][row] && board[1][row] == board[2][row] && board[0][row] != ' '){
+            print("Return way 1\n");
+            return board[0][row];
+        }
+    }
+
+    for(u8 col = 0; col < 3; col++){
+        if(board[col][0] == board[col][1] && board[col][1] == board[col][2] && board[col][0] != ' '){
+            print("Return way 2\n");
+            return board[col][0];
+        }
+    }
+
+    if((board[0][0] == board[1][1] && board[1][1] == board[2][2] || board[0][2] == board[1][1] && board[1][1] == board[2][0]) && board[1][1] != ' '){
+        print("Return way 3\n");
+        return board[1][1];
+    }
+
+    print("Return way 4\n");
+    return '_';
+}
+

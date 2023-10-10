@@ -1,0 +1,8 @@
+
+u0 main(){
+    for(u32 i = 0; i < 10000; i++){
+        printu32hex(i + i);
+        print("\n");
+    }
+}
+

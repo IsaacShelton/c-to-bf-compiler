@@ -1,0 +1,117 @@
+
+u0 main(){
+    u1 still_playing = true;
+    u8 board[3][3];
+
+    while(still_playing){
+        u1 gameover = false;
+        u1 x_turn = true;
+        u8 turns_taken = 0;
+
+        for(u8 i = 0; i < 3; i++){
+            for(u8 j = 0; j < 3; j++){
+                board[i][j] = ' ';
+            }
+        }
+
+        do {
+            print_board(board);
+
+            u8 next_move = get_next_move(x_turn, board);
+            board[next_move % 3][next_move / 3] = x_turn ? 'X' : 'O';
+            x_turn = !x_turn;
+            turns_taken++;
+
+            u8 winner = get_winner(board);
+
+            if(winner != ' '){
+                print_board(board);
+                print("Player ");
+                put(winner);
+                print(" won!\n");
+                gameover = true;
+            } else if(turns_taken == 9){
+                print("Tie!\n");
+                gameover = true;
+            }
+        } while(!gameover);
+
+        still_playing = ask_play_again();
+    }
+}
+
+u0 print_board(u8 board[3][3]){
+    print("-----------\n");
+    for(u8 i = 0; i < 3; i++){
+        print("| ");
+        put(board[0][i]);
+        print("  ");
+        put(board[1][i]);
+        print("  ");
+        put(board[2][i]);
+        print(" |\n");
+    }
+    print("-----------\n");
+}
+
+u8 get_next_move(u1 x_turn, u8 board[3][3]){
+    u8 move;
+
+    do {
+        print("Player ");
+        put(x_turn ? 'X' : 'O');
+        print(" turn: ");
+
+        move = read_line_char();
+
+        if(move > '0' && move <= '9'){
+            move = move - '0';
+        } else if(move == 0){
+            // End of input
+            move = 1;
+        } else {
+            move = 0;
+            print("Invalid input\n");
+        }
+    } while (move < 1 || move > 9 || board[(move - 1) % 3][(move - 1) / 3] != ' ');
+
+    return move - 1;
+}
+
+u8 get_winner(u8 board[3][3]){
+    for(u8 row = 0; row < 3; row++){
+        if(board[0][row] == board[1][row] && board[1][row] == board[2][row] && board[0][row] != ' '){
+            return board[0][row];
+        }
+    }
+
+    for(u8 col = 0; col < 3; col++){
+        if(board[col][0] == board[col][1] && board[col][1] == board[col][2] && board[col][0] != ' '){
+            return board[col][0];
+        }
+    }
+
+    if(((board[0][0] == board[1][1] && board[1][1] == board[2][2]) || (board[0][2] == board[1][1] && board[1][1] == board[2][0])) && board[1][1] != ' '){
+        return board[1][1];
+    }
+
+    return ' ';
+}
+
+u1 ask_play_again(){
+    print("Do you want to play again? ");
+    return read_line_char() == 'y';
+}
+
+u8 read_line_char(){
+    u8 answer = get();
+
+    if(answer != '\n'){
+        do {
+            u8 c = get();
+        } while(c != '\n' && c != '\0');
+    }
+
+    return answer;
+}
+

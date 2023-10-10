@@ -1,0 +1,13 @@
+
+u0 main(){
+    u8 array[256];
+
+    for(u8 i = 0; i < 255; i++){
+        for(u8 j = 0; j < 255; j++){
+            array[i] = i;
+        }
+    }
+
+    print("Done\n");
+}
+

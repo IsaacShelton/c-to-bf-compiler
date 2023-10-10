@@ -1,0 +1,33 @@
+
+u0 main(){
+    print("Doing...\n");
+    printu16(10);
+    print("\n");
+
+    print("> ");
+    printu16(64553);
+    print("\n");
+
+    print("> ");
+    printu16(1234);
+    print("\n");
+
+    print("> ");
+    printu16(732);
+    print("\n");
+
+    print("> ");
+    printu16(13);
+    print("\n");
+
+    print("> ");
+    printu16(7);
+    print("\n");
+
+    print("> ");
+    printu16(0);
+    print("\n");
+
+    print("Done\n");
+}
+

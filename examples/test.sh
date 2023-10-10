@@ -71,6 +71,7 @@ set -ex
 "$self/../peck" "$self/switch_simple.peck"
 "$self/../peck" "$self/switch_variables.peck"
 "$self/../peck" "$self/ternary.peck"
+"$self/../peck" "$self/tic_tac_toe.peck"
 "$self/../peck" "$self/u16_access.peck"
 "$self/../peck" "$self/u16_add.peck"
 "$self/../peck" "$self/u16_and.peck"

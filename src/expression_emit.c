@@ -133,6 +133,15 @@ static u32 expression_emit_call(Expression expression){
         return TYPES_CAPACITY;
     }
 
+
+    /*
+        RETURN VALUE SPACE
+        ------------------------ function start index
+        ARGUMENTS
+        EARLY RETURN CELL?
+        LOCAL VARIABLES
+    */
+
     Function function = functions[function_index];
 
     if(function.arity != arity){
@@ -956,7 +965,7 @@ static u32 expression_emit_math(Expression expression){
     if(b_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
     if(a_type != b_type){
-        printf("\nerror: Cannot ");
+        printf("\nerror on line %d: Cannot ", u24_unpack(expression.line));
         expression_print_operation_name(expression.kind);
         printf(" incompatible types '");
         type_print(types[a_type]);
@@ -1688,6 +1697,9 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_ENUM_VARIANT:
         printf("\nerror: Invalid expression kind %d during expression_emit\n", expression.kind);
         return TYPES_CAPACITY;
+    case EXPRESSION_PANICLOOP:
+        printf("[-]+[]");
+        return u0_type;
     }
 
     printf("\nerror: Unknown expression kind %d during expression_emit\n", expression.kind);

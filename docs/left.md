@@ -12,4 +12,6 @@
 - file directives
 - `memcmp`, `strcmp`, `strlen`, `strcat`, `memset`
 - `u24`
+- enums
+- global variables
 

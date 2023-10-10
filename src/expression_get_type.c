@@ -45,7 +45,7 @@ u32 expression_get_type_for_variable(Expression expression, ExpressionGetTypeMod
         return variable.type;
     }
 
-    if(mode){
+    if(mode & EXPRESSION_GET_TYPE_MODE_PRINT_ERROR){
         printf("\nerror on line %d: Variable '", u24_unpack(expression.line));
         print_aux_cstr(name);
         printf("' is not defined\n");
@@ -71,6 +71,7 @@ u32 expression_get_type(Expression expression, ExpressionGetTypeMode mode){
     case EXPRESSION_ARRAY_INITIALIZER:
     case EXPRESSION_FIELD_INITIALIZER:
     case EXPRESSION_ENUM_VARIANT:
+    case EXPRESSION_PANICLOOP:
         break;
 
     case EXPRESSION_STRUCT_INITIALIZER:

@@ -103,6 +103,7 @@ static Container get_parent_container(u32 statement_index){
         case EXPRESSION_STRUCT_INITIALIZER:
         case EXPRESSION_FIELD_INITIALIZER:
         case EXPRESSION_ENUM_VARIANT:
+        case EXPRESSION_PANICLOOP:
             break;
 
         case EXPRESSION_IF:
@@ -299,6 +300,7 @@ u32 find_declaration(u32 start_statement, u32 stop_statement, u32 name){
         case EXPRESSION_STRUCT_INITIALIZER:
         case EXPRESSION_FIELD_INITIALIZER:
         case EXPRESSION_ENUM_VARIANT:
+        case EXPRESSION_PANICLOOP:
             break;
 
         case EXPRESSION_IF:
@@ -401,6 +403,7 @@ static HoneInfo hone_switch_case_or_skip(u32 current_statement, u32 target_state
         case EXPRESSION_STRUCT_INITIALIZER:
         case EXPRESSION_FIELD_INITIALIZER:
         case EXPRESSION_ENUM_VARIANT:
+        case EXPRESSION_PANICLOOP:
             break;
 
         case EXPRESSION_IF:
@@ -524,6 +527,7 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
     case EXPRESSION_STRUCT_INITIALIZER:
     case EXPRESSION_FIELD_INITIALIZER:
     case EXPRESSION_ENUM_VARIANT:
+    case EXPRESSION_PANICLOOP:
         break;
 
     case EXPRESSION_IF: {
@@ -602,7 +606,7 @@ Variable get_variable_location_from_declaration_statement(u32 statement_index){
     for(u32 i = function_begin; i < statement_index; i++){
         Expression expression = expressions[statements[i]];
 
-        if(emit_context.can_function_early_return && i == function_begin + function_arity + 1){
+        if(emit_context.can_function_early_return && i == function_begin + function_arity){
             offset++;
         }
 

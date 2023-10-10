@@ -268,6 +268,10 @@ u0 expression_print(Expression expression){
             printf(",");
         }
         break;
+    case EXPRESSION_PANICLOOP: {
+            printf("panicloop()");
+       }
+       break;
     default:
         printf("<unknown expression>");
     }

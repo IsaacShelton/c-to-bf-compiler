@@ -103,6 +103,7 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
     case EXPRESSION_STRUCT_INITIALIZER:
     case EXPRESSION_FIELD_INITIALIZER:
     case EXPRESSION_ENUM_VARIANT:
+    case EXPRESSION_PANICLOOP:
         break;
 
     case EXPRESSION_ASSIGN:

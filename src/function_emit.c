@@ -1054,6 +1054,7 @@ u1 can_function_early_return(u32 function_index){
         case EXPRESSION_STRUCT_INITIALIZER:
         case EXPRESSION_FIELD_INITIALIZER:
         case EXPRESSION_ENUM_VARIANT:
+        case EXPRESSION_PANICLOOP:
             break;
 
         case EXPRESSION_IF:

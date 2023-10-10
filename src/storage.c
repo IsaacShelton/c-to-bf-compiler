@@ -395,6 +395,20 @@ u1 aux_cstr_equals_long(u32 a){
         && aux[a + 4] == '\0';
 }
 
+u1 aux_cstr_equals_panicloop(u32 a){
+    return a + 9 < AUX_CAPACITY
+        && aux[a    ] == 'p'
+        && aux[a + 1] == 'a'
+        && aux[a + 2] == 'n'
+        && aux[a + 3] == 'i'
+        && aux[a + 4] == 'c'
+        && aux[a + 5] == 'l'
+        && aux[a + 6] == 'o'
+        && aux[a + 7] == 'o'
+        && aux[a + 8] == 'p'
+        && aux[a + 9] == '\0';
+}
+
 u0 print_aux_cstr(u32 index){
     for(u32 i = index; aux[i]; i++){
         putchar(aux[i]);

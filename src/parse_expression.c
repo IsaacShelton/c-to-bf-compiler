@@ -154,6 +154,21 @@ static Expression parse_expression_print(u24 line_number){
     return expression;
 }
 
+static Expression parse_expression_panicloop(u24 line_number){
+    if(!eat_token(TOKEN_CLOSE)){
+        printf("\nerror on line %d: Expected ')' after expression in print statement\n", current_line());
+        instead_got();
+        stop_parsing();
+        return (Expression){0};
+    }
+
+    return (Expression){
+        .kind = EXPRESSION_PANICLOOP,
+        .line = line_number,
+        .ops = 0,
+    };
+}
+
 static Expression parse_expression_call(u32 name, u24 line_number){
     Expression expression = (Expression){
         .kind = EXPRESSION_CALL,
@@ -442,6 +457,10 @@ static Expression parse_primary_base_expression(){
             if(aux_cstr_equals_print(name)){
                 // Print call?
                 return parse_expression_print(line_number);
+            }
+
+            if(aux_cstr_equals_panicloop(name)){
+                return parse_expression_panicloop(line_number);
             }
 
             // Regular call

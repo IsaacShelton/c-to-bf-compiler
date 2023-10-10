@@ -85,6 +85,7 @@ u1 aux_cstr_equals_char(u32 a);
 u1 aux_cstr_equals_short(u32 a);
 u1 aux_cstr_equals_int(u32 a);
 u1 aux_cstr_equals_long(u32 a);
+u1 aux_cstr_equals_panicloop(u32 a);
 u32 aux_cstr_len(u32 str);
 u0 print_aux_cstr(u32 index);
 u0 print_aux_cstr_escaped(u32 index);

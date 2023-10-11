@@ -19,21 +19,23 @@
 #include "../include/compute_typedef_sizes.h"
 #include "../include/prelex.h"
 #include "../include/type_emit.h"
+#include "../include/lex_context.h"
 
 int main(void){
     if(lex()) return 1;
 
-    /*
-    for(u32 i = 0; i < num_tokens; i++){
-        token_print(tokens[i], true);
+    if(lex_peck_print_tokens){
+        for(u32 i = 0; i < num_tokens; i++){
+            token_print(tokens[i], true);
+            printf("\n");
+        }
         printf("\n");
     }
-    printf("\n");
-    */
 
-    /*
-    print_lexed_construction();
-    */
+    if(lex_peck_print_lexed_construction){
+        print_lexed_construction();
+        return 0;
+    }
 
     if(parse()) return 1;
     if(compute_typedef_sizes()) return 1;

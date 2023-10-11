@@ -1,6 +1,8 @@
 
-#include <signal.h>
 #include <stdio.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <string.h>
 #include "../include/emit.h"
 #include "../include/storage.h"
 #include "../include/emit_context.h"
@@ -201,6 +203,46 @@ u0 copy_cell_dynamic_u16_maintain(u32 start_index){
 
     // value1 minor_index major_index 
     //                                ^
+}
+
+u0 copy_cell_dynamic_u24_maintain(u32 start_index){
+    // minor_index major_index major_major_index
+    //                                           ^
+
+    // value1 minor_index major_index major_major_index
+    //                                                  ^
+
+    dupe_cells(3);
+    copy_cell_dynamic_u24(start_index);
+
+    // minor_index major_index major_major_index value1
+    //                                                  ^
+
+    // Move value to be before duplicated index
+    printf("[-]<[>+<-]<[>+<-]<[>+<-]<[>+<-]4>[4<+4>-]");
+
+    // value1 minor_index major_index major_major_index
+    //                                                  ^
+}
+
+u0 copy_cell_dynamic_u32_maintain(u32 start_index){
+    // minor_minor_index minor_major_index major_minor_index major_major_index
+    //                                                                         ^
+
+    // value1 minor_minor_index minor_major_index major_minor_index major_major_index
+    //                                                                                ^
+
+    dupe_cells(4);
+    copy_cell_dynamic_u32(start_index);
+
+    // minor_minor_index minor_major_index major_minor_index major_major_index value1
+    //                                                                                ^
+
+    // Move value to be before duplicated index
+    printf("[-]<[>+<-]<[>+<-]<[>+<-]<[>+<-]<[>+<-]5>[5<+5>-]");
+
+    // value1 minor_minor_index minor_major_index major_minor_index major_major_index
+    //                                                                                ^
 }
 
 u0 copy_cells_dynamic_u8(u32 start_index, u32 size){
@@ -608,6 +650,43 @@ u0 copy_cell_dynamic_u16(u32 start_index){
     printf("<<");
 
     // No further changes to `emit_context.current_cell_index`
+}
+
+u0 copy_cell_dynamic_u24(u32 start_index){
+    if(start_index >= emit_context.current_cell_index){
+        printf("\nwarning: copy_cell_dynamic_u24 failed, can only copy backwards\n");
+        return;
+    }
+    
+    // minor_index major_index major_major_index
+    //                                           ^
+
+    // value
+    //       ^
+    
+    // Extend to u32
+    printf("[-]>");
+    emit_context.current_cell_index++;
+
+    // Perform u32 version
+    copy_cell_dynamic_u32(start_index);
+}
+
+u0 copy_cell_dynamic_u32(u32 start_index){
+    if(start_index >= emit_context.current_cell_index){
+        printf("\nwarning: copy_cell_dynamic_u32 failed, can only copy backwards\n");
+        return;
+    }
+    
+    // minor_minor_index minor_major_index major_minor_index major_major_index
+    //                                                                         ^
+    
+    // value
+    //       ^
+    
+    u32 todo_this_code;
+    fprintf(stderr, "copy_cell_dynamic_u32 is not implemented yet\n");
+    exit(-1);
 }
 
 u0 move_cell_static(u32 destination_index){
@@ -1038,6 +1117,38 @@ u0 move_cell_dynamic_u16(u32 destination_start_index){
     emit_context.current_cell_index -= 2;
 }
 
+u0 move_cell_dynamic_u24(u32 destination_start_index){
+    // value index_minor index_major index_major_major
+    //                                       ^
+
+    // index_minor index_major index_major_major
+    //      ^
+
+    if(destination_start_index >= emit_context.current_cell_index){
+        printf("\nwarning: move_cell_dynamic_u16 failed, can only move backwards\n");
+        return;
+    }
+
+    // Extend to u32
+    printf("[-]>");
+    emit_context.current_cell_index++;
+
+    // Perform u32 version
+    move_cell_dynamic_u32(destination_start_index);
+}
+
+u0 move_cell_dynamic_u32(u32 destination_start_index){
+    // value minor_minor_index minor_major_index major_minor_index major_major_index
+    //                                                                     ^
+
+    // minor_minor_index minor_major_index major_minor_index major_major_index
+    //         ^
+
+    u32 todo_this_code;
+    fprintf(stderr, "move_cell_dynamic_u32 is not implemented yet\n");
+    exit(-1);
+}
+
 u0 move_cells_dynamic_u8(u32 destination_index, u32 size){
     // value1 value2 value3 index
     //                        ^
@@ -1063,6 +1174,40 @@ u0 move_cells_dynamic_u16(u32 destination_index, u32 size){
         if(i + 1 != size){
             printf(">");
             emit_context.current_cell_index++;
+        }
+    }
+}
+
+u0 move_cells_dynamic_u24(u32 destination_index, u32 size){
+    // value1 value2 value3 minor_index major_index major_major_index
+    //                                                      ^
+
+    // minor_index major_index major_major_index
+    //      ^
+
+    for(u32 i = 0; i < size; i++){
+        move_cell_dynamic_u24(destination_index + size - 1 - i);
+
+        if(i + 1 != size){
+            printf("2>");
+            emit_context.current_cell_index += 2;
+        }
+    }
+}
+
+u0 move_cells_dynamic_u32(u32 destination_index, u32 size){
+    // value1 value2 value3 minor_minor_index minor_major_index major_minor_index major_major_index
+    //                                                                                    ^
+
+    // minor_minor_index minor_major_index major_minor_index major_major_index
+    //      ^
+
+    for(u32 i = 0; i < size; i++){
+        move_cell_dynamic_u32(destination_index + size - 1 - i);
+
+        if(i + 1 != size){
+            printf("3>");
+            emit_context.current_cell_index += 3;
         }
     }
 }

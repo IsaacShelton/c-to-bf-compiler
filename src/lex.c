@@ -322,13 +322,30 @@ LexedToken lex_main(){
 
 u32 lex(){
     lex_line_number = 1;
+    u8 c = 0;
 
-    inject_standard_library();
+    // Fill buffer
+    while(code_buffer_length != CODE_BUFFER_CAPACITY){
+        c = get();
 
-    u8 c = get();
+        if(c == 0){
+            break;
+        }
 
-    if(c != 0){
         code_buffer[code_buffer_length++] = c;
+    }
+
+    if(code_buffer_length >= 8 && memcmp(code_buffer, "`stdlib\n", 8) == 0){
+        memmove(code_buffer, &code_buffer[8], code_buffer_length - 8);
+        code_buffer_length -= 8;
+        
+        // Compile as standard libary,
+        // - Don't inject regular standard libary
+        // - Print lexed construction once finished
+        lex_peck_print_lexed_construction = true;
+    } else {
+        // Normal compilation
+        inject_standard_library();
     }
 
     // Lex

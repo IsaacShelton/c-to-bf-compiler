@@ -3,6 +3,7 @@
 
 - large dynamic indexing
 - recursion
+- typedef aliases
 - `printf`
 - `readu8()` 
 - `readu16()` 
@@ -12,6 +13,4 @@
 - file directives
 - `memcmp`, `strcmp`, `strlen`, `strcat`, `memset`
 - `u24`
-- enums
-- global variables
 

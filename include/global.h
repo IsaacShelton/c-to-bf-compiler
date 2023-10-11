@@ -7,6 +7,7 @@
 typedef struct {
     u32 name;
     u32 type;
+    u24 line;
 } Global;
 
 #endif // _PECK_GLOBAL_H

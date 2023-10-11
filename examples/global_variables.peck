@@ -1,0 +1,20 @@
+
+u8 value_a[16];
+u8 value_b[16];
+
+u0 main(){
+    u8 message[16] = "Hi\nBye\n";
+    print(message);
+
+    set_values();
+    print(value_a);
+    print(value_b);
+
+    print(message);
+}
+
+u0 set_values(){
+    value_a = "Hello World\n";
+    value_b = "Bye World\n";
+}
+

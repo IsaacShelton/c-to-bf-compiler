@@ -18,6 +18,7 @@
 #include "../include/mark_recursive_functions.h"
 #include "../include/compute_typedef_sizes.h"
 #include "../include/prelex.h"
+#include "../include/type_emit.h"
 
 int main(void){
     if(lex()) return 1;
@@ -75,7 +76,20 @@ int main(void){
         return 1;
     }
 
+    // Emit globals
+    u32 global_variables_cells = 0;
+    for(u32 i = 0; i < num_globals; i++){
+        u32 size = type_sizeof_or_max(globals[i].type, globals[i].line);
+        if(size == -1) return 1;
+
+        global_variables_cells += size;
+    }
+
+    // Assume that tape starts as zeroed
+    printf("%d>", global_variables_cells);
+
     // Emit main function
-    return function_emit(main_function_index, 0, 0);
+    u32 start_cell_index = global_variables_cells;
+    return function_emit(main_function_index, start_cell_index, start_cell_index);
 }
 

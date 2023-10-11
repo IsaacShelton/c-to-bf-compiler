@@ -667,14 +667,34 @@ Variable variable_find(u32 name){
     }
 
     // Search global
-    // (not implemented yet)
+    u32 global_variable_cell_offset = 0;
+    for(u32 global_i = 0; global_i < num_globals; global_i++){
+        Global global = globals[global_i];
+
+        if(aux_cstr_equals(global.name, name)){
+            return (Variable){
+                .name = name,
+                .type = global.type,
+                .defined = true,
+                .depth = 0,
+                .location = (VariableLocation){
+                    .kind = VARIABLE_LOCATION_ON_TAPE,
+                    .location = global_variable_cell_offset,
+                },
+            };
+        }
+
+        u32 size = type_sizeof_or_max(global.type, global.line);
+        if(size == -1) return (Variable){ .defined = false };
+
+        global_variable_cell_offset += size;
+    }
 
     // Search for enum variant
     for(u32 typedef_i = 0; typedef_i < num_typedefs; typedef_i++){
         TypeDef def = typedefs[typedef_i];
 
         if(def.kind != TYPEDEF_ENUM) continue;
-
 
         for(u32 i = 0; i < def.num_fields; i++){
             Expression variant = expressions[statements[def.begin + i]];

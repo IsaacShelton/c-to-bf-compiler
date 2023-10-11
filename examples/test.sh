@@ -33,6 +33,7 @@ set -ex
 "$self/../peck" "$self/for.peck"
 "$self/../peck" "$self/function_call_simple.peck"
 "$self/../peck" "$self/get.peck"
+"$self/../peck" "$self/global_variables.peck"
 "$self/../peck" "$self/if_else.peck"
 "$self/../peck" "$self/if_else_if.peck"
 "$self/../peck" "$self/if_variable_lookup.peck"

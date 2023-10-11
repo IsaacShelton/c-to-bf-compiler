@@ -136,9 +136,6 @@ u32 parse(){
         Type type = parse_type();
         if(had_parse_error) return 1;
 
-        u32 symbol_type = add_type(type);
-        if(symbol_type >= TYPES_CAPACITY) return 1;
-
         if(!is_token(TOKEN_WORD)){
             printf("error on line %d: Expected function name after type\n", current_line());
             instead_got();
@@ -148,13 +145,29 @@ u32 parse(){
         u32 symbol_name = eat_word();
 
         // Global variable
-        if(eat_token(TOKEN_SEMICOLON)){
+        if(is_token(TOKEN_SEMICOLON) || is_token(TOKEN_OPEN_BRACKET)){
+            type.dimensions = parse_dimensions(dimensions[type.dimensions]);
+            if(type.dimensions >= UNIQUE_DIMENSIONS_CAPACITY) return 1;
+
+            if(!eat_token(TOKEN_SEMICOLON)){
+                printf("error on line %d: Expected ';' after global variable\n", current_line());
+                instead_got();
+                return 1;
+            }
+
+            u32 symbol_type = add_type(type);
+            if(symbol_type >= TYPES_CAPACITY) return 1;
+
             u32 global = add_global((Global){
                 .name = symbol_name,
                 .type = symbol_type,
+                .line = line_number,
             });
             if(global >= GLOBALS_CAPACITY) return 1;
         } else {
+            u32 symbol_type = add_type(type);
+            if(symbol_type >= TYPES_CAPACITY) return 1;
+
             // Function
             if(parse_function(symbol_name, symbol_type, line_number)){
                 return 1;

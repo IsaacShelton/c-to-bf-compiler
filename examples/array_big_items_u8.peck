@@ -1,0 +1,27 @@
+
+u0 main(){
+    u32 items[5];
+
+    items[0] = 1;
+    items[1] = 3;
+    items[2] = 5;
+    items[3] = 7;
+    items[4] = 9;
+
+    u8 i = 0;
+    printu32hex(items[i]);
+    print("\n");
+    i = 1;
+    printu32hex(items[i]);
+    print("\n");
+    i = 2;
+    printu32hex(items[i]);
+    print("\n");
+    i = 3;
+    printu32hex(items[i]);
+    print("\n");
+    i = 4;
+    printu32hex(items[i]);
+    print("\n");
+}
+

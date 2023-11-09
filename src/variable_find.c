@@ -624,13 +624,19 @@ Variable get_variable_location_from_declaration_statement(u32 statement_index){
         }
     }
 
+    VariableLocationKind location_kind = VARIABLE_LOCATION_ON_TAPE;
+
+    if(emit_context.enable_stack && functions[emit_context.function].is_recursive){
+        location_kind = VARIABLE_LOCATION_ON_STACK;
+    }
+
     return (Variable){
         .name = operands[expression.ops + 1],
         .type = operands[expression.ops + 0],
         .defined = true,
         .depth = depth,
         .location = (VariableLocation){
-            .kind = VARIABLE_LOCATION_ON_TAPE,
+            .kind = location_kind,
             .location = emit_context.function_cell_index + offset,
         },
     };

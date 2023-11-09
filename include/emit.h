@@ -25,7 +25,7 @@ u0 copy_cells_dynamic_u24(u32 start_index, u32 size);
 u0 copy_cells_dynamic_u32(u32 start_index, u32 size);
 
 u0 move_cell_static(u32 destination_index);
-u0 move_cells_static(u32 destination_index, u32 size, u1 destructive);
+u0 move_cells_static(u32 destination_index, u32 size);
 
 u0 move_cell_dynamic_u8(u32 destination_start_index);
 u0 move_cell_dynamic_u16(u32 destination_start_index);

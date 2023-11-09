@@ -20,6 +20,10 @@ typedef struct {
     u32 switch_value_type_cached_size;
     u32 switch_start_cell_index;
     u32 fell_through_cell;
+    u1 enable_stack;
+    u32 stack_pointer;
+    u32 stack_begin;
+    u32 stack_driver_position;
 } EmitContext;
 
 EmitContext emit_context;

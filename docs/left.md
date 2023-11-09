@@ -1,7 +1,6 @@
 
 # Features and bugs left
 
-- large dynamic indexing
 - recursion
 - typedef aliases
 - `printf`

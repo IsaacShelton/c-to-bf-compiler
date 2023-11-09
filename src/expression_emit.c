@@ -99,7 +99,7 @@ static ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u32 offset_si
 
             u32 new_offset_position = emit_context.current_cell_index - offset_size + 1 + difference;
 
-            move_cells_static(new_offset_position, offset_size, true);
+            move_cells_static(new_offset_position, offset_size);
         }
 
         // Zero extend array
@@ -330,7 +330,7 @@ static Destination destination_index(
     // Get size of new index
     u32 index_type_size = 0;
 
-    if(index_type == u8_type || index_type == u16_type){
+    if(index_type == u8_type || index_type == u16_type || index_type == u24_type || index_type == u32_type){
         index_type_size = type_sizeof_or_max(index_type, u24_pack(0));
         if(index_type_size >= TYPES_CAPACITY) return (Destination){ .type = TYPES_CAPACITY };
     } else {
@@ -355,16 +355,18 @@ static Destination destination_index(
 
     // If we're going to need to multiply, increase
     // the offset size by 1 if we support it
-    u8 max_offset_size = 2;
+    u8 max_offset_size = 4;
     if((item_size != 1 || array_destination.offset_size != 0) && offset_size < max_offset_size){
         offset_size++;
     }
 
     // Pad original index
-    while(array_destination.offset_size < offset_size){
-        printf("[-]>");
-        array_destination.offset_size++;
-        emit_context.current_cell_index++;
+    if(array_destination.offset_size != 0){
+        while(array_destination.offset_size < offset_size){
+            printf("[-]>");
+            array_destination.offset_size++;
+            emit_context.current_cell_index++;
+        }
     }
 
     // Emit index
@@ -386,14 +388,35 @@ static Destination destination_index(
             emit_multiply_u8();
         }
 
-        emit_additive_u8(true);
+        if(array_destination.offset_size != 0){
+            emit_additive_u8(true);
+        }
     } else if(offset_size == 2){
         // Multiply index by item size (unless item size is 1)
         if(item_size != 1){
             emit_u16(item_size);
             emit_multiply_u16();
         }
-        emit_additive_u16(true);
+
+        if(array_destination.offset_size != 0){
+            emit_additive_u16(true);
+        }
+    } else if(offset_size == 3){
+        fprintf(stderr, "error: u24 indexing not supported yet, exiting...\n");
+
+        u32 todo_this_code;
+        return (Destination) { .type = TYPES_CAPACITY };
+    } else if(offset_size == 4){
+        // Multiply index by item size (unless item size is 1)
+        if(item_size != 1){
+            emit_u32(item_size);
+            emit_multiply_u32();
+        }
+
+        if(array_destination.offset_size != 0){
+            fprintf(stderr, "did the thing\n");
+            emit_additive_u32(true);
+        }
     } else {
         printf("\nerror on line %d: Cannot perform indexing for offset size ", u24_unpack(index_expression.line));
         printf("%d\n", offset_size);
@@ -491,13 +514,19 @@ static u32 write_destination(u32 new_value_type, Destination destination, u24 er
     emit_context.current_cell_index--;
 
     if(destination.offset_size == 0){
-        move_cells_static(destination.tape_location, type_size, true);
+        move_cells_static(destination.tape_location, type_size);
         return u0_type;
     } else if(destination.offset_size == 1){
         move_cells_dynamic_u8(destination.tape_location, type_size);
         return u0_type;
     } else if(destination.offset_size == 2){
         move_cells_dynamic_u16(destination.tape_location, type_size);
+        return u0_type;
+    } else if(destination.offset_size == 3){
+        move_cells_dynamic_u24(destination.tape_location, type_size);
+        return u0_type;
+    } else if(destination.offset_size == 4){
+        move_cells_dynamic_u32(destination.tape_location, type_size);
         return u0_type;
     } else {
         printf("\nerror on line %d: Cannot assign to destination with u%d offset\n", u24_unpack(error_line_number), 8*destination.offset_size);
@@ -1173,6 +1202,14 @@ static u32 read_destination(Destination destination, u24 line_on_error){
         // u16 indexing
         copy_cells_dynamic_u16(destination.tape_location, item_type_size);
         return destination.type;
+    } else if(destination.offset_size == 3){
+        // u24 indexing
+        copy_cells_dynamic_u24(destination.tape_location, item_type_size);
+        return destination.type;
+    } else if(destination.offset_size == 4){
+        // u32 indexing
+        copy_cells_dynamic_u32(destination.tape_location, item_type_size);
+        return destination.type;
     } else {
         printf("\nerror on line %d: Cannot use index of type 'u%d'\n", u24_unpack(line_on_error), destination.offset_size * 8);
         return TYPES_CAPACITY;
@@ -1345,7 +1382,7 @@ static u32 expression_emit_return(Expression expression){
     emit_context.current_cell_index--;
 
     // Move data value into return value location
-    move_cells_static(return_value_location, return_type_size, true);
+    move_cells_static(return_value_location, return_type_size);
 
     // Unmark 'incomplete' cell if function can early return
     if(emit_context.can_function_early_return){

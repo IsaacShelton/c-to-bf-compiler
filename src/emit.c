@@ -277,6 +277,38 @@ u0 copy_cells_dynamic_u16(u32 start_index, u32 size){
     copy_cell_dynamic_u16(start_index + size - 1);
 }
 
+u0 copy_cells_dynamic_u24(u32 start_index, u32 size){
+    // minor_index major_index major_major_index
+    //                                           ^
+
+    // value1 value2 value3 valueN
+    //                             ^
+
+    if(size == 0) return;
+
+    for(u32 i = 0; i < size - 1; i++){
+        copy_cell_dynamic_u24_maintain(start_index + i);
+    }
+
+    copy_cell_dynamic_u24(start_index + size - 1);
+}
+
+u0 copy_cells_dynamic_u32(u32 start_index, u32 size){
+    // mm_index mM_index Mm_index MM_index
+    //                                     ^
+
+    // value1 value2 value3 valueN
+    //                             ^
+
+    if(size == 0) return;
+
+    for(u32 i = 0; i < size - 1; i++){
+        copy_cell_dynamic_u32_maintain(start_index + i);
+    }
+
+    copy_cell_dynamic_u32(start_index + size - 1);
+}
+
 u0 copy_cell_dynamic_u8(u32 start_index){
     if(start_index >= emit_context.current_cell_index){
         printf("\nwarning: copy_cell_dynamic_u8 failed, can only copy backwards\n");
@@ -346,7 +378,6 @@ u0 copy_cell_dynamic_u8(u32 start_index){
           <
         ]
     */
-
 
     printf(">[-]>[-]<<"); // Initialize moving window memory
 
@@ -683,10 +714,493 @@ u0 copy_cell_dynamic_u32(u32 start_index){
     
     // value
     //       ^
-    
-    u32 todo_this_code;
-    fprintf(stderr, "copy_cell_dynamic_u32 is not implemented yet\n");
-    exit(-1);
+
+    /*
+        EXAMPLE:
+        
+        # Memory (array of 40 cells)
+        ++++++++++ +>
+        ++++++++++ ++>
+        ++++++++++ +++>
+        ++++++++++ ++++>
+        ++++++++++ +++++>
+        ++++++++++ ++++++>
+        ++++++++++ +++++++>
+        ++++++++++ ++++++++>
+        ++++++++++ +++++++++>
+        ++++++++++ ++++++++++>
+        ++++++++++ ++++++++++ +>
+        ++++++++++ ++++++++++ ++>
+        ++++++++++ ++++++++++ +++>
+        ++++++++++ ++++++++++ ++++>
+        ++++++++++ ++++++++++ +++++>
+        ++++++++++ ++++++++++ ++++++>
+        ++++++++++ ++++++++++ +++++++>
+        ++++++++++ ++++++++++ ++++++++>
+        ++++++++++ ++++++++++ +++++++++>
+        ++++++++++ ++++++++++ ++++++++++>
+        ++++++++++ ++++++++++ ++++++++++ +>
+        ++++++++++ ++++++++++ ++++++++++ ++>
+        ++++++++++ ++++++++++ ++++++++++ +++>
+        ++++++++++ ++++++++++ ++++++++++ ++++>
+        ++++++++++ ++++++++++ ++++++++++ +++++>
+        ++++++++++ ++++++++++ ++++++++++ ++++++>
+        ++++++++++ ++++++++++ ++++++++++ +++++++>
+        ++++++++++ ++++++++++ ++++++++++ ++++++++>
+        ++++++++++ ++++++++++ ++++++++++ +++++++++>
+        ++++++++++ ++++++++++ ++++++++++ ++++++++++>
+        ++++++++++ ++++++++++ ++++++++++ ++++++++++ +>
+        ++++++++++ ++++++++++ ++++++++++ ++++++++++ ++>
+        ++++++++++ ++++++++++ ++++++++++ ++++++++++ +++>
+        ++++++++++ ++++++++++ ++++++++++ ++++++++++ ++++>
+        +++++>
+        ++++++++++ ++++++++++ ++++++++++ ++++++++++ ++++++>
+        ++++++++++ ++++++++++ ++++++++++ ++++++++++ +++++++>
+        ++++++++++ ++++++++++ ++++++++++ ++++++++++ ++++++++>
+        ++++++++++ ++++++++++ ++++++++++ ++++++++++ +++++++++>
+        ++++++++++ ++++++++++ ++++++++++ ++++++++++ ++++++++++>
+
+        # minor minor index
+        [-]++++>
+        # minor major index
+        [-]+>
+        # major minor index
+        [-]+>
+        # major major index
+        [-]+>
+        <
+
+        # Corrupt forward memory
+        >+>+>+>+>+>+>+>+>+
+        >+>+>+>+>+>+>+>+>+
+        >+>+>+>+>+>+>+>+>+
+        >+>+>+>+>+>+>+>+>+
+        >+>+>+>+>+>+>+>+>+
+        >+>+>+>+>+>+>+>+>+
+        >+>+>+>+>+>+>+>+>+
+        >+>+>+>+>+>+>+>+>+
+        >+>+>+>+>+>+>+>+>+
+        >+>+>+>+>+>+>+>+>+
+        >+>+>+>+>+>+>+>+>+
+        >+>+>+>+>+>+>+>+>+
+        <<<<<<<<<
+        <<<<<<<<<
+        <<<<<<<<<
+        <<<<<<<<<
+        <<<<<<<<<
+        <<<<<<<<<
+        <<<<<<<<<
+        <<<<<<<<<
+        <<<<<<<<<
+        <<<<<<<<<
+        <<<<<<<<<
+        <<<<<<<<<
+
+        # Create copy of index
+        >[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>
+        <<<<<<<< <<<<
+
+        [>>>>+>>>>+<<<<<<<<-]>
+        [>>>>+>>>>+<<<<<<<<-]>
+        [>>>>+>>>>+<<<<<<<<-]>
+        [>>>>+>>>>+<<<<<<<<-]>
+        >>>>
+        [<<<<<<<<+>>>>>>>>-]>
+        [<<<<<<<<+>>>>>>>>-]>
+        [<<<<<<<<+>>>>>>>>-]>
+        [<<<<<<<<+>>>>>>>>-]>
+        <<<<<<<<<<<<
+
+        # Go to major major index
+        >>>
+
+        [
+          -
+          <<<
+          
+          >>>>>>>>>>
+          [-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>
+          <<<<<<<<
+          <<<<<<<<<<
+          
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          <<<<<<<<
+          >>>>>>>>>>
+          >>>
+        ]
+
+        # Go to major minor index
+        <
+
+        [
+          -
+          <<
+          
+          >>>>>>>>>>
+          [-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>
+          <<<<<<<<
+          <<<<<<<<<<
+          
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          <<<<<<<<
+          >>>>>>>>>>
+          >>
+        ]
+
+        # Go to minor major index
+        <
+
+        [
+          -
+          <
+          
+          >>>>>>>>>>
+          [-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>
+          <<<<<<<<
+          <<<<<<<<<<
+          
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          [>>>>>>>>>>+<<<<<<<<<<-]>
+          <<<<<<<<
+          >>>>>>>>>>
+          >
+        ]
+
+        # Go to minor minor index
+        <
+
+        [
+          -
+          >>>>>>>>[-]
+          <[>+<-]
+          <[>+<-]
+          <[>+<-]
+          <[>+<-]
+          <[>+<-]
+          <[>+<-]
+          <[>+<-]
+          <[>+<-]
+          >
+        ]
+
+        # Move dupe from location
+        <<<<<<<<<< <<<<<<<<<< <<<<<<<<<< <<<<<<<<<<
+        [
+        -
+        >>>>>>>>>> >>>>>>>>>> >>>>>>>>>> >>>>>>>>>>
+        +>+<
+        <<<<<<<<<< <<<<<<<<<< <<<<<<<<<< <<<<<<<<<<
+        ]
+        >>>>>>>>>> >>>>>>>>>> >>>>>>>>>> >>>>>>>>>>
+
+        # Go to second copy
+        >
+
+        # Move second copy back to original location
+        [
+          -<
+          <<<<<<<<<< <<<<<<<<<< <<<<<<<<<< <<<<<<<<<<
+          +>
+          >>>>>>>>>> >>>>>>>>>> >>>>>>>>>> >>>>>>>>>>
+        ]
+
+        # Go to index copy
+        >>>
+
+
+        [<<<+>>>-]>
+        [<<<+>>>-]>
+        [<<<+>>>-]>
+        [<<<+>>>-]>
+        <<<<<<<
+
+        # Reverse minor minor index
+        [
+          -
+          <
+          [<+>-]>
+          [<+>-]>
+          [<+>-]>
+          [<+>-]>
+          [<+>-]>
+          <<<<<
+        ]
+
+        # Go to minor major index
+        >
+
+        # Reverse minor major index
+        [
+          -
+          <<
+          [<<<<<<<<<<+>>>>>>>>>>-]>
+          >
+          [<<<<<<<<<<+>>>>>>>>>>-]>
+          [<<<<<<<<<<+>>>>>>>>>>-]>
+          [<<<<<<<<<<+>>>>>>>>>>-]>
+          <<<<<
+          <<<<<<<<<<
+          >>
+        ]
+
+        # Go to major minor index
+        >
+
+        # Reverse major minor index
+        [
+          -
+          <<<
+          [<<<<<<<<<<+>>>>>>>>>>-]>
+          >
+          >
+          [<<<<<<<<<<+>>>>>>>>>>-]>
+          [<<<<<<<<<<+>>>>>>>>>>-]>
+          <<<<<
+          <<<<<<<<<<
+          >>>
+        ]
+
+        # Go to major major index
+        >
+
+        # Reverse major major index
+        [
+          -
+          <<<<
+          [<<<<<<<<<<+>>>>>>>>>>-]>
+          >
+          >
+          >
+          [<<<<<<<<<<+>>>>>>>>>>-]>
+          <<<<<
+          <<<<<<<<<<
+          >>>>
+        ]
+
+        <<<
+    */
+
+    u32 back_offset = emit_context.current_cell_index - start_index - 4;
+
+    // Create copy of index
+    printf("[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>");
+    printf("12<");
+
+    printf("[4>+4>+8<-]>");
+    printf("[4>+4>+8<-]>");
+    printf("[4>+4>+8<-]>");
+    printf("[4>+4>+8<-]>");
+    printf("4>");
+    printf("[8<+8>-]>");
+    printf("[8<+8>-]>");
+    printf("[8<+8>-]>");
+    printf("[8<+8>-]>");
+    printf("12<");
+
+    // Go to major major index
+    printf("3>");
+
+    printf("[");
+      printf("-");
+      printf("3<");
+      
+      printf("16777216>");
+      printf("[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>");
+      printf("8<");
+      printf("16777216<");
+      
+      printf("[16777216>+16777216<-]>");
+      printf("[16777216>+16777216<-]>");
+      printf("[16777216>+16777216<-]>");
+      printf("[16777216>+16777216<-]>");
+      printf("[16777216>+16777216<-]>");
+      printf("[16777216>+16777216<-]>");
+      printf("[16777216>+16777216<-]>");
+      printf("[16777216>+16777216<-]>");
+      printf("8<");
+      printf("16777216>");
+      printf("3>");
+    printf("]");
+
+    // Go to major minor index
+    printf("<");
+
+    printf("[");
+      printf("-");
+      printf("2<");
+      
+      printf("65536>");
+      printf("[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>");
+      printf("8<");
+      printf("65536<");
+      
+      printf("[65536>+65536<-]>");
+      printf("[65536>+65536<-]>");
+      printf("[65536>+65536<-]>");
+      printf("[65536>+65536<-]>");
+      printf("[65536>+65536<-]>");
+      printf("[65536>+65536<-]>");
+      printf("[65536>+65536<-]>");
+      printf("[65536>+65536<-]>");
+      printf("8<");
+      printf("65536>");
+      printf("2>");
+    printf("]");
+
+    // Go to minor major index
+    printf("<");
+
+    printf("[");
+      printf("-");
+      printf("<");
+      
+      printf("256>");
+      printf("[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>");
+      printf("8<");
+      printf("256<");
+      
+      printf("[256>+256<-]>");
+      printf("[256>+256<-]>");
+      printf("[256>+256<-]>");
+      printf("[256>+256<-]>");
+      printf("[256>+256<-]>");
+      printf("[256>+256<-]>");
+      printf("[256>+256<-]>");
+      printf("[256>+256<-]>");
+      printf("8<");
+      printf("256>");
+      printf(">");
+    printf("]");
+
+    // Go to minor minor index
+    printf("<");
+
+    printf("[");
+      printf("-");
+      printf(">>>>>>>>[-]");
+      printf("<[>+<-]");
+      printf("<[>+<-]");
+      printf("<[>+<-]");
+      printf("<[>+<-]");
+      printf("<[>+<-]");
+      printf("<[>+<-]");
+      printf("<[>+<-]");
+      printf("<[>+<-]");
+      printf(">");
+    printf("]");
+
+    // Move dupe from location
+    printf("%d<", back_offset);
+    printf("[");
+        printf("-");
+        printf("%d>", back_offset);
+        printf("+>+<");
+        printf("%d<", back_offset);
+    printf("]");
+    printf("%d>", back_offset);
+
+    // Go to second copy
+    printf(">");
+
+    // Move second copy back to original location
+    printf("[");
+      printf("-<");
+      printf("%d<", back_offset);
+      printf("+>");
+      printf("%d>", back_offset);
+    printf("]");
+
+    // Go to index copy
+    printf("3>");
+
+    printf("[3<+3>-]>");
+    printf("[3<+3>-]>");
+    printf("[3<+3>-]>");
+    printf("[3<+3>-]>");
+    printf("7<");
+
+    // Reverse minor minor index
+    printf("[");
+      printf("-");
+      printf("<");
+      printf("[<+>-]>");
+      printf("[<+>-]>");
+      printf("[<+>-]>");
+      printf("[<+>-]>");
+      printf("[<+>-]>");
+      printf("5<");
+    printf("]");
+
+    // Go to minor major index
+    printf(">");
+
+    // Reverse minor major index
+    printf("[");
+      printf("-");
+      printf("2<");
+      printf("[256<+256>-]>");
+      printf(">");
+      printf("[256<+256>-]>");
+      printf("[256<+256>-]>");
+      printf("[256<+256>-]>");
+      printf("5<");
+      printf("256<");
+      printf("2>");
+    printf("]");
+
+    // Go to major minor index
+    printf(">");
+
+    // Reverse major minor index
+    printf("[");
+      printf("-");
+      printf("3<");
+      printf("[65536<+65536>-]>");
+      printf("2>");
+      printf("[65536<+65536>-]>");
+      printf("[65536<+65536>-]>");
+      printf("5<");
+      printf("65536<");
+      printf("3>");
+    printf("]");
+
+    // Go to major major index
+    printf(">");
+
+    // Reverse major major index
+    printf("[");
+      printf("-");
+      printf("4<");
+      printf("[16777216<+16777216>-]>");
+      printf("3>");
+      printf("[16777216<+16777216>-]>");
+      printf("5<");
+      printf("16777216<");
+      printf("4>");
+    printf("]");
+
+    printf("3<");
+    emit_context.current_cell_index -= 3;
 }
 
 u0 move_cell_static(u32 destination_index){
@@ -728,7 +1242,7 @@ u0 move_cell_static(u32 destination_index){
     printf("]");
 }
 
-u0 move_cells_static(u32 destination_index, u32 size, u1 destructive){
+u0 move_cells_static(u32 destination_index, u32 size){
     // data1 data2 data3 data4
     //                     ^
 
@@ -1144,9 +1658,563 @@ u0 move_cell_dynamic_u32(u32 destination_start_index){
     // minor_minor_index minor_major_index major_minor_index major_major_index
     //         ^
 
-    u32 todo_this_code;
-    fprintf(stderr, "move_cell_dynamic_u32 is not implemented yet\n");
-    exit(-1);
+    u32 back_offset = emit_context.current_cell_index - destination_start_index;
+
+    /*
+        EXAMPLE:
+        
+        # Garble
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+        +>+>+>+>+>+>+>+>+>+>
+
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+
+        # Memory (array of 100 cells)
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+
+
+        [-]+++++++++++++> # Value (value that we want to write to the array)
+        [-]++++>[-]+++>[-]++>[-]+> # Index little endian
+
+        # From layout (value) (index)
+        # Setup with layout (index) (value) (index copy) (index copy)
+
+        [-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>
+        <<<<<<<<<<<<
+
+        [-]<<<<<[>>>>>+<<<<<-]
+        >[<+>-]
+        >[<+>-]
+        >[<+>-]
+        >[<+>-]
+        >[<+>-]
+
+        <<<<<
+        [>>>>>+>>>>+>>>>+<<<<<<<<<<<<<-]
+        >[>>>>>+>>>>+>>>>+<<<<<<<<<<<<<-]
+        >[>>>>>+>>>>+>>>>+<<<<<<<<<<<<<-]
+        >[>>>>>+>>>>+>>>>+<<<<<<<<<<<<<-]
+
+        >>>>>>>>>>>>>
+        [<<<<<<<<<<<<<+>>>>>>>>>>>>>-]
+        <[<<<<<<<<<<<<<+>>>>>>>>>>>>>-]
+        <[<<<<<<<<<<<<<+>>>>>>>>>>>>>-]
+        <[<<<<<<<<<<<<<+>>>>>>>>>>>>>-]
+
+        <<<<<<<<<
+
+        # Point to major major index
+        >>>>
+        # (value) mm mM Mm MM mmcopy mMcopy Mmcopy MMcopy
+        #                  ^
+
+        # While major major index
+        [
+          -          # Decrement
+          <<<<       # Go to start of moving block
+          
+          # Prezero forward moving block destination
+          >>>>>>>>>>
+          [-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>
+          <<<<<<<<<
+          <<<<<<<<<<
+          
+          # Copy forward  
+          [>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          
+          <<<<<<<<< # Size of block
+          >>>>>>>>>>
+          >>>>>
+        ]
+
+        # Go to major minor index
+        <
+
+        # While major minor index
+        [
+          -         # Decrement
+          <<<       # Go to start of moving block
+          
+          # Prezero forward moving block destination
+          >>>>>>>>>>
+          [-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>
+          <<<<<<<<<
+          <<<<<<<<<<
+          
+          # Copy forward  
+          [>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          
+          <<<<<<<<< # Size of block
+          >>>>>>>>>>
+          >>>>
+        ]
+
+
+        # Go to minor major index
+        <
+
+        # While minor major index
+        [
+          -        # Decrement
+          <<       # Go to start of moving block
+          
+          # Prezero forward moving block destination
+          >>>>>>>>>>
+          [-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>
+          <<<<<<<<<
+          <<<<<<<<<<
+          
+          # Copy forward  
+          [>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          >[>>>>>>>>>>+<<<<<<<<<<-]
+          
+          <<<<<<<<< # Size of block
+          >>>>>>>>>>
+          >>>
+        ]
+
+        # Go to minor minor index
+        <
+
+        # (value) mm 00 00 00 mmcopy mMcopy Mmcopy MMcopy
+        #         ^
+
+        # While minor minor index
+        [
+          -
+          # Go to next empty cell
+          >>>>>>>>
+          
+          # Zero
+          [-]
+          
+          # Copy right
+          <[>+<-]
+          <[>+<-]
+          <[>+<-]
+          <[>+<-]
+          <<<
+          <[>+<-]
+          <[>+<-]
+          
+          # Go to minor minor index
+          >>
+        ]
+
+        <
+        # Offset plus 4 for dupliated index
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<<<<<<<
+        <<<<
+        [-]
+        >>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        >>>>>>>>>>
+        # Move
+        [
+          <<<<<<<<<<
+          <<<<<<<<<<
+          <<<<<<<<<<
+          <<<<<<<<<<
+          <<<<<<<<<<
+          <<<<<<<<<<
+          <<<<<<<<<<
+          <<<<<<<<<<
+          <<<<<<<<<<
+          <<<<<<<<<<
+          <<<<
+          +
+          >>>>
+          >>>>>>>>>>
+          >>>>>>>>>>
+          >>>>>>>>>>
+          >>>>>>>>>>
+          >>>>>>>>>>
+          >>>>>>>>>>
+          >>>>>>>>>>
+          >>>>>>>>>>
+          >>>>>>>>>>
+          >>>>>>>>>>
+          -
+        ]
+
+        # Copy index backward
+        >>>>>
+        [<<<<<+>>>>>-]
+        >[<<<<<+>>>>>-]
+        >[<<<<<+>>>>>-]
+        >[<<<<<+>>>>>-]
+        <<<<<<<<
+
+        # Reverse minor minor index
+
+        [
+          -
+          <[-]
+          >[<+>-]
+          >[<+>-]
+          >[<+>-]
+          >[<+>-]
+          <<<<
+        ]
+
+        # 00 mM Mm MM
+        # ^
+
+        >
+
+        # Reverse minor major index
+        # 00 mM Mm MM
+        #    ^
+        [
+          -
+          [<<<<<<<<<<+>>>>>>>>>>-]
+          >[<<<<<<<<<<+>>>>>>>>>>-]
+          >[<<<<<<<<<<+>>>>>>>>>>-]
+          <<
+          <<<<<<<<<<
+        ]
+
+        # Go to major minor index
+        >
+
+        # Reverse minor major index
+        # 00 00 Mm MM
+        #       ^
+        [
+          -
+          [<<<<<<<<<<+>>>>>>>>>>-]
+          >[<<<<<<<<<<+>>>>>>>>>>-]
+          <
+          <<<<<<<<<<
+        ]
+
+        # Go to major major index
+        >
+
+        # Reverse major major index
+        # 00 00 00 MM
+        #          ^
+        [
+          -
+          [<<<<<<<<<<+>>>>>>>>>>-]
+          <<<<<<<<<<
+        ]
+
+        # Point to first cell of preserved index
+        <<<<<<<
+    */
+
+    // value minor_minor_index minor_major_index major_minor_index major_major_index
+    //                                                                     ^
+
+    // From layout (value) (index)
+    // Setup with layout (index) (value) (index copy) (index copy)
+
+    printf("[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>");
+    printf("12<");
+
+    printf(">");
+    printf("[-]5<[5>+5<-]");
+    printf(">[<+>-]");
+    printf(">[<+>-]");
+    printf(">[<+>-]");
+    printf(">[<+>-]");
+    printf(">[<+>-]");
+
+    printf("5<");
+    printf("[5>+4>+4>+13<-]");
+    printf(">[5>+4>+4>+13<-]");
+    printf(">[5>+4>+4>+13<-]");
+    printf(">[5>+4>+4>+13<-]");
+
+    printf("13>");
+    printf("[13<+13>-]");
+    printf("<[13<+13>-]");
+    printf("<[13<+13>-]");
+    printf("<[13<+13>-]");
+
+    printf("9<");
+
+    // Point to major major index
+    printf("4>");
+    // (value) mm mM Mm MM mmcopy mMcopy Mmcopy MMcopy
+    //                  ^
+
+    // While major major index
+    printf("[");
+      printf("-");        // Decrement
+      printf("4<");       // Go to start of moving block
+      
+      // Prezero forward moving block destination
+      printf("16777216>");
+      printf("[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>");
+      printf("9<");
+      printf("16777216<");
+      
+      // Copy forward  
+      printf("[16777216>+16777216<-]");
+      printf(">[16777216>+16777216<-]");
+      printf(">[16777216>+16777216<-]");
+      printf(">[16777216>+16777216<-]");
+      printf(">[16777216>+16777216<-]");
+      printf(">[16777216>+16777216<-]");
+      printf(">[16777216>+16777216<-]");
+      printf(">[16777216>+16777216<-]");
+      printf(">[16777216>+16777216<-]");
+
+      printf("9<"); // Size of block
+      printf("16777216>");
+      printf("5<");
+    printf("]");
+
+    // Go to major minor index
+    printf("<");
+
+    // While major minor index
+    printf("[");
+      printf("-");    // Decrement
+      printf("3<");   // Go to start of moving block
+      
+      // Prezero forward moving block destination
+      printf("65536>");
+      printf("[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>");
+      printf("9<");
+      printf("65536<");
+      
+      // Copy forward  
+      printf("[65536>+<-]");
+      printf(">[65536>+65536<-]");
+      printf(">[65536>+65536<-]");
+      printf(">[65536>+65536<-]");
+      printf(">[65536>+65536<-]");
+      printf(">[65536>+65536<-]");
+      printf(">[65536>+65536<-]");
+      printf(">[65536>+65536<-]");
+      printf(">[65536>+65536<-]");
+      
+      printf("9<"); // Size of block
+      printf("65536>");
+      printf("4>");
+    printf("]");
+
+    // Go to minor major index
+    printf("<");
+
+    // While minor major index
+    printf("[");
+      printf("-");    // Decrement
+      printf("<<");   // Go to start of moving block
+      
+      // Prezero forward moving block destination
+      printf("256>");
+      printf("[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>");
+      printf("9<");
+      printf("256<");
+      
+      // Copy forward  
+      printf("[256>+256<-]");
+      printf(">[256>+256<-]");
+      printf(">[256>+256<-]");
+      printf(">[256>+256<-]");
+      printf(">[256>+256<-]");
+      printf(">[256>+256<-]");
+      printf(">[256>+256<-]");
+      printf(">[256>+256<-]");
+      printf(">[256>+256<-]");
+      
+      printf("9<"); // Size of block
+      printf("256>");
+      printf("3>");
+    printf("]");
+
+    // Go to minor minor index
+    printf("<");
+
+    // (value) mm 00 00 00 mmcopy mMcopy Mmcopy MMcopy
+    //         ^
+
+    // While minor minor index
+    printf("[");
+      printf("-");
+      // Go to next empty cell
+      printf("8>");
+      
+      // Zero
+      printf("[-]");
+      
+      // Copy right
+      printf("<[>+<-]");
+      printf("<[>+<-]");
+      printf("<[>+<-]");
+      printf("<[>+<-]");
+      printf("3<");
+      printf("<[>+<-]");
+      printf("<[>+<-]");
+      
+      // Go to minor minor index
+      printf("2>");
+    printf("]");
+
+    printf("<");
+    printf("%d<", back_offset);
+    printf("[-]");
+    printf("%d>", back_offset);
+
+    // Move
+    printf("[");
+      printf("%d<", back_offset);
+      printf("+");
+      printf("%d>", back_offset);
+      printf("-");
+    printf("]");
+
+    // Copy index backward
+    printf("5>");
+    printf("[5<+5>-]");
+    printf(">[5<+5>-]");
+    printf(">[5<+5>-]");
+    printf(">[5<+5>-]");
+    printf("8<");
+
+    // Reverse minor minor index
+
+    printf("[");
+      printf("-");
+      printf("<[-]");
+      printf(">[<+>-]");
+      printf(">[<+>-]");
+      printf(">[<+>-]");
+      printf(">[<+>-]");
+      printf("4<");
+    printf("]");
+
+    // 00 mM Mm MM
+    // ^
+
+    printf(">");
+
+    // Reverse minor major index
+    // 00 mM Mm MM
+    //    ^
+    printf("[");
+      printf("-");
+      printf("[256<+256>-]");
+      printf(">[256<+256>-]");
+      printf(">[256<+256>-]");
+      printf("2<");
+      printf("256<");
+    printf("]");
+
+    // Go to major minor index
+    printf(">");
+
+    // Reverse minor major index
+    // 00 00 Mm MM
+    //       ^
+    printf("[");
+      printf("-");
+      printf("[65536<+65536>-]");
+      printf(">[65536<+65536>-]");
+      printf("<");
+      printf("65536<");
+    printf("]");
+
+    // Go to major major index
+    printf(">");
+
+    // Reverse major major index
+    // 00 00 00 MM
+    //          ^
+    printf("[");
+      printf("-");
+      printf("[16777216<+16777216>-]");
+      printf("16777216<");
+    printf("]");
+
+    // Point to first cell of preserved index
+    printf("7<");
+
+    emit_context.current_cell_index -= 4;
 }
 
 u0 move_cells_dynamic_u8(u32 destination_index, u32 size){

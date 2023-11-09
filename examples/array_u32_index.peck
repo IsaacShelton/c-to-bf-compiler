@@ -1,0 +1,23 @@
+
+u0 main(){
+    u8 values[10];
+
+    for(u32 i = 0; i < sizeof values; i++){
+        if(i == 0){
+            values[i] = 100;
+        } else {
+            values[i] = 10 * i._0;
+        }
+    }
+
+    for(u32 i = 0; i < sizeof values; i++){
+        print("Value ");
+        printu32(i);
+        print(" = ");
+        printu8(values[i]);
+        print("\n");
+    }
+
+    print("Done\n");
+}
+

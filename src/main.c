@@ -20,6 +20,8 @@
 #include "../include/prelex.h"
 #include "../include/type_emit.h"
 #include "../include/lex_context.h"
+#include "../include/emit_context.h"
+#include "../include/stack_driver.h"
 
 int main(void){
     if(lex()) return 1;
@@ -74,6 +76,8 @@ int main(void){
     }
 
     if(functions[main_function_index].is_recursive){
+        emit_context.enable_stack = true;
+
         printf("\nerror: Recursion not yet supported\n");
         return 1;
     }
@@ -87,11 +91,34 @@ int main(void){
         global_variables_cells += size;
     }
 
+    // Emit stack and stack pointer
+    // Stack size + size of stack pointer
+    u32 stack_size = DEFAULT_STACK_SIZE;
+    u32 stack_storage = emit_context.enable_stack ? stack_size + 4 : 0;
+
     // Assume that tape starts as zeroed
-    printf("%d>", global_variables_cells);
+    printf("%d>", global_variables_cells + stack_storage);
+
+    u32 start_cell_index = global_variables_cells + stack_storage;
+
+    // Position stack and stack pointer
+    emit_context.stack_pointer = global_variables_cells + stack_size;
+    emit_context.stack_begin = global_variables_cells;
+    emit_context.current_cell_index = start_cell_index;
+
+    if(emit_context.enable_stack){
+        emit_stack_driver_pre();
+    }
 
     // Emit main function
-    u32 start_cell_index = global_variables_cells;
-    return function_emit(main_function_index, start_cell_index, start_cell_index);
+    if(function_emit(main_function_index, start_cell_index, start_cell_index)){
+        return 1;
+    }
+
+    if(emit_context.enable_stack){
+        emit_stack_driver_post();
+    }
+
+    return 0;
 }
 

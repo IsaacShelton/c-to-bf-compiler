@@ -1990,10 +1990,10 @@ u0 move_cell_dynamic_u32(u32 destination_start_index){
     // From layout (value) (index)
     // Setup with layout (index) (value) (index copy) (index copy)
 
-    printf("[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>");
+    printf(">[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>[-]>");
     printf("12<");
 
-    printf(">");
+    //printf(">");
     printf("[-]5<[5>+5<-]");
     printf(">[<+>-]");
     printf(">[<+>-]");

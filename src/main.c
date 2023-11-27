@@ -75,11 +75,9 @@ int main(void){
         return 1;
     }
 
+    // Determine if recursion necessary
     if(functions[main_function_index].is_recursive){
         emit_context.enable_stack = true;
-
-        printf("\nerror: Recursion not yet supported\n");
-        return 1;
     }
 
     // Emit globals
@@ -110,9 +108,11 @@ int main(void){
         emit_stack_driver_pre();
     }
 
-    // Emit main function
-    if(function_emit(main_function_index, start_cell_index, start_cell_index)){
-        return 1;
+    if(!emit_context.enable_stack){
+        // Emit main function
+        if(function_emit(main_function_index, start_cell_index, start_cell_index)){
+            return 1;
+        }
     }
 
     if(emit_context.enable_stack){

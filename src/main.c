@@ -89,36 +89,26 @@ int main(void){
         global_variables_cells += size;
     }
 
-    // Emit stack and stack pointer
-    // Stack size + size of stack pointer
-    u32 stack_size = DEFAULT_STACK_SIZE;
-    u32 stack_storage = emit_context.enable_stack ? stack_size + 4 : 0;
+    // Calculate stack footprint
+    u32 stack_footprint = emit_context.enable_stack ? DEFAULT_STACK_SIZE : 0;
 
-    // Assume that tape starts as zeroed
-    printf("%d>", global_variables_cells + stack_storage);
-
-    u32 start_cell_index = global_variables_cells + stack_storage;
-
-    // Position stack and stack pointer
-    emit_context.stack_pointer = global_variables_cells + stack_size;
+    // Allocate global variables and stack memory
+    printf("%d>", global_variables_cells + stack_footprint);
     emit_context.stack_begin = global_variables_cells;
+
+    // Calculate starting cell index
+    u32 start_cell_index = global_variables_cells + stack_footprint;
     emit_context.current_cell_index = start_cell_index;
 
-    if(emit_context.enable_stack){
-        emit_stack_driver_pre();
-    }
-
+    // If stack is disabled, just emit the `main` function
     if(!emit_context.enable_stack){
-        // Emit main function
-        if(function_emit(main_function_index, start_cell_index, start_cell_index)){
-            return 1;
-        }
+        return function_emit(main_function_index, start_cell_index, start_cell_index);
     }
 
-    if(emit_context.enable_stack){
-        emit_stack_driver_post();
-    }
-
+    // Otherwise, continue as normal and use stack
+    emit_stack_driver_pre(main_function_index);
+    emit_recursive_functions();
+    emit_stack_driver_post();
     return 0;
 }
 

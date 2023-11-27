@@ -97,7 +97,7 @@ u32 add_function(Function function){
 }
 
 u32 find_function(u32 name){
-    for(u32 i = 0; i < FUNCTIONS_CAPACITY; i++){
+    for(u32 i = 0; i < num_functions; i++){
         if(aux_cstr_equals(functions[i].name, name)){
             return i;
         }

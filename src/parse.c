@@ -64,11 +64,14 @@ ErrorCode parse_function(u32 symbol_name, u32 symbol_type, u24 line_number){
         u32 ops = add_operands2(parameter_type, parameter_name);
         if(ops >= OPERANDS_CAPACITY) return 1;
 
-        add_statement_from_new((Expression){
+        if(add_statement_from_new((Expression){
             .kind = EXPRESSION_DECLARE,
             .line = line_number,
             .ops = ops,
-        });
+        }) >= STATEMENTS_CAPACITY){
+            stop_parsing();
+            return 1;
+        };
 
         if(!eat_token(TOKEN_NEXT)){
             if(!is_token(TOKEN_CLOSE)){

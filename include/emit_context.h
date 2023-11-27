@@ -24,6 +24,7 @@ typedef struct {
     u32 stack_pointer;
     u32 stack_begin;
     u32 stack_driver_position;
+    u32 next_basicblock_id;
 } EmitContext;
 
 EmitContext emit_context;

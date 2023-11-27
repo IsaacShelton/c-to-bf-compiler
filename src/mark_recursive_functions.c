@@ -28,7 +28,7 @@ ErrorCode mark_recursive_functions(){
 
         u32 function_arrows_begin = num_arrows;
         u32 statements_start = function.begin + function.arity;
-        u32 statements_end = statements_start + function.num_stmts;
+        u32 statements_end = function.begin + function.num_stmts;
         u32 statement_i = statements_start;
 
         // Find all calls made in this function

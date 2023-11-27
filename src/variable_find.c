@@ -626,7 +626,7 @@ Variable get_variable_location_from_declaration_statement(u32 statement_index){
 
     VariableLocationKind location_kind = VARIABLE_LOCATION_ON_TAPE;
 
-    if(emit_context.enable_stack && functions[emit_context.function].is_recursive){
+    if(emit_settings.enable_stack && functions[emit_context.function].is_recursive){
         location_kind = VARIABLE_LOCATION_ON_STACK;
     }
 

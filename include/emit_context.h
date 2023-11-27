@@ -20,14 +20,18 @@ typedef struct {
     u32 switch_value_type_cached_size;
     u32 switch_start_cell_index;
     u32 fell_through_cell;
+} EmitContext;
+
+typedef struct {
     u1 enable_stack;
     u32 stack_pointer;
     u32 stack_begin;
     u32 stack_driver_position;
     u32 next_basicblock_id;
-} EmitContext;
+} EmitSettings;
 
-EmitContext emit_context;
+extern EmitContext emit_context;
+extern EmitSettings emit_settings;
 
 #endif // _PECK_EMIT_CONTEXT_H
 

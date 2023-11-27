@@ -14,6 +14,7 @@ set -ex
 "$self/../peck" "$self/bitwise_and_or_xor.peck"
 "$self/../peck" "$self/bitwise_complement.peck"
 "$self/../peck" "$self/c_types.peck"
+"$self/../peck" "$self/call_self.peck" "$self/call_self.rlebf"
 "$self/../peck" "$self/casts.peck"
 "$self/../peck" "$self/divmod.peck"
 "$self/../peck" "$self/do_while.peck"

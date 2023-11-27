@@ -14,6 +14,7 @@
 #include "../include/parse_dimensions.h"
 #include "../include/expression_print.h"
 #include "../include/expression_get_type.h"
+#include "../include/stack_driver.h"
 
 static u0 print_nth_argument_label(u32 number){
     switch(number){
@@ -133,7 +134,6 @@ static u32 expression_emit_call(Expression expression){
         return TYPES_CAPACITY;
     }
 
-
     /*
         RETURN VALUE SPACE
         ------------------------ function start index
@@ -173,7 +173,7 @@ static u32 expression_emit_call(Expression expression){
         Expression argument = expressions[operands[expression.ops + 2 + i]];
 
         u32 type = expression_emit(argument);
-        if(type == TYPES_CAPACITY) return TYPES_CAPACITY;
+        if(type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
         u32 type_size = type_sizeof_or_max(type, argument.line);
         if(type_size == -1) return TYPES_CAPACITY;
@@ -199,8 +199,14 @@ static u32 expression_emit_call(Expression expression){
         }
     }
 
-    if(function_emit(function_index, start_function_cell_index, emit_context.current_cell_index)){
-        return TYPES_CAPACITY;
+    if(function.is_recursive){
+        emit_stack_driver_push_all();
+        emit_u32(basicblock_id_for_function(function_index));
+        emit_stack_push_n(4);
+    } else {
+        if(function_emit(function_index, start_function_cell_index, emit_context.current_cell_index)){
+            return TYPES_CAPACITY;
+        }
     }
 
     return function.return_type;
@@ -356,8 +362,14 @@ static Destination destination_index(
     // If we're going to need to multiply, increase
     // the offset size by 1 if we support it
     u8 max_offset_size = 4;
-    if((item_size != 1 || array_destination.offset_size != 0) && offset_size < max_offset_size){
+    if(item_size != 1 && array_destination.offset_size != 0 && offset_size < max_offset_size){
         offset_size++;
+    }
+
+    // Automatically upgrade u24 indexing to u32 indexing for now since u24 indexing is not supported yet
+    if(offset_size == 3){
+        u32 todo_this_code_add_u24_indexing_instead;
+        offset_size = 4;
     }
 
     // Pad original index
@@ -403,8 +415,6 @@ static Destination destination_index(
         }
     } else if(offset_size == 3){
         fprintf(stderr, "error: u24 indexing not supported yet, exiting...\n");
-
-        u32 todo_this_code;
         return (Destination) { .type = TYPES_CAPACITY };
     } else if(offset_size == 4){
         // Multiply index by item size (unless item size is 1)
@@ -414,7 +424,6 @@ static Destination destination_index(
         }
 
         if(array_destination.offset_size != 0){
-            fprintf(stderr, "did the thing\n");
             emit_additive_u32(true);
         }
     } else {
@@ -1289,7 +1298,7 @@ static u32 expression_emit_ternary(Expression expression){
     emit_context.current_cell_index -= result_size + 1;
 
     u32 when_true_type = expression_emit(expressions[when_true]);
-    if(when_true_type == TYPES_CAPACITY) return TYPES_CAPACITY;
+    if(when_true_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
     if(when_true_type != result_type){
         printf("\nerror on line %d: Expected true branch of ternary expression to be '", u24_unpack(expression.line));
@@ -1319,7 +1328,7 @@ static u32 expression_emit_ternary(Expression expression){
     emit_context.current_cell_index -= result_size;
 
     u32 when_false_type = expression_emit(expressions[when_false]);
-    if(when_false_type == TYPES_CAPACITY) return TYPES_CAPACITY;
+    if(when_false_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
     if(when_false_type != result_type){
         printf("\nerror on line %d: Expected false branch of ternary expression to be '", u24_unpack(expression.line));

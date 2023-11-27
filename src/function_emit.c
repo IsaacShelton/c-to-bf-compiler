@@ -1242,9 +1242,10 @@ ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 s
         .didnt_break_cell = -1,
         .can_continue = false,
         .didnt_continue_cell = -1,
-        .switch_start_cell_index = -1,
         .switch_value_type = TYPES_CAPACITY,
         .switch_value_type_cached_size = -1,
+        .switch_start_cell_index = -1,
+        .fell_through_cell = -1,
     };
     
     // Allocate 'incomplete' cell if function can return early

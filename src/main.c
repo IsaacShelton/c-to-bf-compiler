@@ -77,7 +77,7 @@ int main(void){
 
     // Determine if recursion necessary
     if(functions[main_function_index].is_recursive){
-        emit_context.enable_stack = true;
+        emit_settings.enable_stack = true;
     }
 
     // Emit globals
@@ -90,24 +90,24 @@ int main(void){
     }
 
     // Calculate stack footprint
-    u32 stack_footprint = emit_context.enable_stack ? DEFAULT_STACK_SIZE : 0;
+    u32 stack_footprint = emit_settings.enable_stack ? DEFAULT_STACK_SIZE : 0;
 
     // Allocate global variables and stack memory
     printf("%d>", global_variables_cells + stack_footprint);
-    emit_context.stack_begin = global_variables_cells;
+    emit_settings.stack_begin = global_variables_cells;
 
     // Calculate starting cell index
     u32 start_cell_index = global_variables_cells + stack_footprint;
     emit_context.current_cell_index = start_cell_index;
 
     // If stack is disabled, just emit the `main` function
-    if(!emit_context.enable_stack){
+    if(!emit_settings.enable_stack){
         return function_emit(main_function_index, start_cell_index, start_cell_index);
     }
 
     // Otherwise, continue as normal and use stack
     emit_stack_driver_pre(main_function_index);
-    emit_recursive_functions();
+    if(emit_recursive_functions()) return 1;
     emit_stack_driver_post();
     return 0;
 }

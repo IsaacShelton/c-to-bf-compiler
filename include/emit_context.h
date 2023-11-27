@@ -28,6 +28,9 @@ typedef struct {
     u32 stack_begin;
     u32 stack_driver_position;
     u32 next_basicblock_id;
+    u1 stack_overflow_checks;
+    u32 stack_overflow_message;
+    u32 stack_size;
 } EmitSettings;
 
 extern EmitContext emit_context;

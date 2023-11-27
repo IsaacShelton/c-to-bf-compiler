@@ -69,7 +69,7 @@ u32 add_operands5(u32 a, u32 b, u32 c, u32 d, u32 e);
 u32 add_global(Global global);
 u32 add_typedef(TypeDef def);
 u32 find_typedef(u32 name);
-u32 aux_cstr_alloc(u8 null_terminated_name[16]);
+u32 aux_cstr_alloc(u8 null_terminated_name[32]);
 u1 aux_cstr_equals(u32 a, u32 b);
 u1 aux_cstr_equals_string(u32 a, u8 string[32]);
 u1 aux_cstr_equals_print(u32 a);

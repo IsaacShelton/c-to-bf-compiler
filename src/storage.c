@@ -228,10 +228,10 @@ u32 find_typedef(u32 name){
     return TYPEDEFS_CAPACITY;
 }
 
-u32 aux_cstr_alloc(u8 null_terminated_name[16]){
+u32 aux_cstr_alloc(u8 null_terminated_name[32]){
     u8 length = 0;
 
-    while(length < 16 && null_terminated_name[length]){
+    while(length < 32 && null_terminated_name[length]){
         length++;
     }
 

@@ -1097,7 +1097,7 @@ u0 copy_cell_dynamic_u32(u32 start_index){
 
     printf("[");
       printf("-");
-      printf(">>>>>>>>[-]");
+      printf("8>[-]");
       printf("<[>+<-]");
       printf("<[>+<-]");
       printf("<[>+<-]");
@@ -2062,7 +2062,7 @@ u0 move_cell_dynamic_u32(u32 destination_start_index){
       printf("65536<");
       
       // Copy forward  
-      printf("[65536>+<-]");
+      printf("[65536>+65536<-]");
       printf(">[65536>+65536<-]");
       printf(">[65536>+65536<-]");
       printf(">[65536>+65536<-]");

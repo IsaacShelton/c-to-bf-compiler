@@ -200,9 +200,20 @@ static u32 expression_emit_call(Expression expression){
     }
 
     if(function.is_recursive){
-        emit_stack_driver_push_all();
+        u32 resume_basicblock_id = emit_settings.next_basicblock_id++;
+        emit_u32(resume_basicblock_id);
+        emit_stack_push_n(4);
+
+        u32 count = emit_stack_driver_push_all();
         emit_u32(basicblock_id_for_function(function_index));
         emit_stack_push_n(4);
+
+        u32 args_size = function_args_size(function);
+        if(args_size == -1) return TYPES_CAPACITY;
+
+        emit_end_basicblock();
+        emit_start_basicblock(resume_basicblock_id);
+        emit_stack_pop_n(count - args_size);
     } else {
         if(function_emit(function_index, start_function_cell_index, emit_context.current_cell_index)){
             return TYPES_CAPACITY;

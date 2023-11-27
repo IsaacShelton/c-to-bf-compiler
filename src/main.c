@@ -89,8 +89,11 @@ int main(void){
         global_variables_cells += size;
     }
 
+    // Set stack size
+    emit_settings.stack_size = DEFAULT_STACK_SIZE;
+
     // Calculate stack footprint
-    u32 stack_footprint = emit_settings.enable_stack ? DEFAULT_STACK_SIZE : 0;
+    u32 stack_footprint = emit_settings.enable_stack ? emit_settings.stack_size : 0;
 
     // Allocate global variables and stack memory
     printf("%d>", global_variables_cells + stack_footprint);

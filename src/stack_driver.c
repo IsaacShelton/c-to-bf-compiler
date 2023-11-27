@@ -5,6 +5,7 @@
 #include "../include/storage.h"
 #include "../include/stack_driver.h"
 #include "../include/function_emit.h"
+#include "../include/type_emit.h"
 
 void emit_stack_pointer(){
     copy_cells_static(emit_settings.stack_pointer, 4);
@@ -17,6 +18,10 @@ void emit_set_stack_pointer(){
 }
 
 void emit_stack_driver_pre(u32 main_function_index){
+    // Enable stack overflow checks
+    emit_settings.stack_overflow_checks = true;
+    emit_settings.stack_overflow_message = aux_cstr_alloc((u8*) "---- STACK OVERFLOW!!! ----\n");
+
     // Create stack pointer
     emit_settings.stack_pointer = emit_context.current_cell_index;
     emit_u32(8);
@@ -120,8 +125,10 @@ void emit_basicblock_post(){
     printf("[-]]");
 }
 
-void emit_stack_driver_push_all(){
-    emit_stack_push_n(emit_context.current_cell_index - emit_settings.stack_driver_position);
+u32 emit_stack_driver_push_all(){
+    u32 count = emit_context.current_cell_index - emit_settings.stack_driver_position;
+    emit_stack_push_n(count);
+    return count;
 }
 
 void emit_stack_driver_pop_all(){
@@ -149,31 +156,49 @@ void emit_stack_push_n(u32 num_cells){
     // data1 data2 data3 data4
     //                         ^
 
-    // Move bytes onto stack
-    emit_stack_pointer();
-    printf("<");
-    emit_context.current_cell_index--;
-    move_cells_dynamic_u32(emit_settings.stack_begin, num_cells);
+    if(num_cells != 0){
+        if(emit_settings.stack_overflow_checks){
+            emit_stack_pointer();
+            emit_u32(num_cells);
+            emit_additive_u32(true);
+            emit_u32(emit_settings.stack_size);
+            emit_gte_u32();
+            printf("<");
+            emit_context.current_cell_index--;
+            printf("[");
+                emit_print_aux_cstr(emit_settings.stack_overflow_message);
+                printf("[-]+[]");
+            printf("]");
+        }
 
-    // Increase stack pointer
-    emit_stack_pointer();
-    emit_u32(num_cells);
-    emit_additive_u32(true);
-    emit_set_stack_pointer();
+        // Move bytes onto stack
+        emit_stack_pointer();
+        printf("<");
+        emit_context.current_cell_index--;
+        move_cells_dynamic_u32(emit_settings.stack_begin, num_cells);
+
+        // Increase stack pointer
+        emit_stack_pointer();
+        emit_u32(num_cells);
+        emit_additive_u32(true);
+        emit_set_stack_pointer();
+    }
 }
 
 void emit_stack_pop_n(u32 num_cells){
-    // Compute `stack_pointer - n`
-    emit_stack_pointer();
-    emit_u32(num_cells);
-    emit_additive_u32(false);
+    if(num_cells != 0){
+        // Compute `stack_pointer - n`
+        emit_stack_pointer();
+        emit_u32(num_cells);
+        emit_additive_u32(false);
 
-    // Set stack pointer to `stack_pointer - num_cells`
-    dupe_cells(4);
-    emit_set_stack_pointer();
+        // Set stack pointer to `stack_pointer - num_cells`
+        dupe_cells(4);
+        emit_set_stack_pointer();
 
-    // Read cells from stack
-    copy_cells_dynamic_u32(emit_settings.stack_begin, num_cells);
+        // Read cells from stack
+        copy_cells_dynamic_u32(emit_settings.stack_begin, num_cells);
+    }
 }
 
 u32 emit_recursive_functions(){
@@ -184,7 +209,7 @@ u32 emit_recursive_functions(){
             continue;
         }
 
-        fprintf(stderr, "Generating recursive function %d\n", (int) function_i);
+        fprintf(stderr, "Generating recursive function %d (basicblock %d)\n", (int) function_i, (int) basicblock_id_for_function(function_i));
         printf("\n");
 
         emit_start_basicblock(basicblock_id_for_function(function_i));
@@ -196,11 +221,20 @@ u32 emit_recursive_functions(){
             */
 
             if(emit_settings.stack_driver_position != emit_context.current_cell_index){
-                printf("\ninternal error on line %d: Failed to generate recursive function as final resting cell index does not match expected stack driver position\n", u24_unpack(function.line));
+                int off_by = (int) emit_context.current_cell_index - (int) emit_settings.stack_driver_position;
+                printf("\ninternal error on line %d: Failed to generate recursive function as final resting cell index does not match expected stack driver position (%d cells off)\n", u24_unpack(function.line), off_by);
                 return 1;
             }
 
-            function_emit(function_i, emit_settings.stack_driver_position, emit_settings.stack_driver_position);
+            u32 return_size = type_sizeof_or_max(function.return_type, function.line);
+            if(return_size == -1) return 1;
+
+            u32 args_size = function_args_size(function);
+            if(args_size == -1) return 1;
+
+            emit_stack_pop_n(return_size + args_size);
+            function_emit(function_i, emit_context.current_cell_index - args_size, emit_context.current_cell_index);
+            emit_stack_push_n(return_size);
         emit_end_basicblock();
     }
 

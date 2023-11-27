@@ -29,5 +29,7 @@ typedef struct {
     u24 line;
 } Function;
 
+u32 function_args_size(Function function);
+
 #endif // _PECK_AST_FUNCTION_H
 

@@ -6,7 +6,7 @@
 
 void emit_stack_driver_pre(u32 entry_basicblock_id);
 void emit_stack_driver_post();
-void emit_stack_driver_push_all();
+u32 emit_stack_driver_push_all();
 void emit_stack_driver_pop_all();
 
 u32 emit_recursive_functions();

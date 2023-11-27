@@ -624,19 +624,13 @@ Variable get_variable_location_from_declaration_statement(u32 statement_index){
         }
     }
 
-    VariableLocationKind location_kind = VARIABLE_LOCATION_ON_TAPE;
-
-    if(emit_settings.enable_stack && functions[emit_context.function].is_recursive){
-        location_kind = VARIABLE_LOCATION_ON_STACK;
-    }
-
     return (Variable){
         .name = operands[expression.ops + 1],
         .type = operands[expression.ops + 0],
         .defined = true,
         .depth = depth,
         .location = (VariableLocation){
-            .kind = location_kind,
+            .kind = VARIABLE_LOCATION_ON_TAPE,
             .location = emit_context.function_cell_index + offset,
         },
     };
@@ -647,11 +641,6 @@ static u32 u32_min2(u32 a, u32 b){
 }
 
 Variable variable_find(u32 name){
-    if(emit_context.in_recursive_function){
-        printf("\nerror: variable_find not yet implemented for recursive functions\n");
-        return (Variable){ .defined = false };
-    }
-
     for(
         Container container = get_parent_container(emit_context.current_statement);
         container.start_statement < STATEMENTS_CAPACITY;

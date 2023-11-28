@@ -157,14 +157,21 @@ static u32 expression_emit_call(Expression expression){
         return TYPES_CAPACITY;
     }
 
-    // Make room for return value
     u32 return_size = type_sizeof_or_max(function.return_type, function.line);
     if(return_size == -1) return TYPES_CAPACITY;
 
-    for(u32 i = 0; i < return_size; i++){
-        printf("[-]>");
+    u32 continuation_basicblock_id;
+
+    if(function.is_recursive){
+        continuation_basicblock_id = emit_settings.next_basicblock_id++;
+        emit_u32(continuation_basicblock_id);
+    } else {
+        // Make room for return value
+        for(u32 i = 0; i < return_size; i++){
+            printf("[-]>");
+        }
+        emit_context.current_cell_index += return_size;
     }
-    emit_context.current_cell_index += return_size;
 
     u32 start_function_cell_index = emit_context.current_cell_index;
 
@@ -200,20 +207,21 @@ static u32 expression_emit_call(Expression expression){
     }
 
     if(function.is_recursive){
-        u32 resume_basicblock_id = emit_settings.next_basicblock_id++;
-        emit_u32(resume_basicblock_id);
-        emit_stack_push_n(4);
-
-        u32 count = emit_stack_driver_push_all();
-        emit_u32(basicblock_id_for_function(function_index));
-        emit_stack_push_n(4);
+        // `stack_pointer += return_size;`
+        emit_stack_pointer();
+        emit_u32(return_size);
+        emit_additive_u32(true);
+        emit_set_stack_pointer();
 
         u32 args_size = function_args_size(function);
-        if(args_size == -1) return TYPES_CAPACITY;
+        u32 continuation_memory_count = emit_stack_driver_push_all() + return_size - args_size - 4;
 
+        emit_u32(basicblock_id_for_function(function_index));
+        emit_stack_push_n(4);
         emit_end_basicblock();
-        emit_start_basicblock(resume_basicblock_id);
-        emit_stack_pop_n(count - args_size);
+
+        emit_start_basicblock(continuation_basicblock_id);
+        emit_stack_pop_n(continuation_memory_count);
     } else {
         if(function_emit(function_index, start_function_cell_index, emit_context.current_cell_index)){
             return TYPES_CAPACITY;
@@ -1395,19 +1403,28 @@ static u32 expression_emit_return(Expression expression){
     u32 return_type_size = type_sizeof_or_max(return_type, expression.line);
     if(return_type_size == -1) return TYPES_CAPACITY;
 
-    u32 return_value_location = emit_context.function_cell_index - return_type_size;
-
     // Point to last cell of data value
     printf("<");
     emit_context.current_cell_index--;
 
-    // Move data value into return value location
-    move_cells_static(return_value_location, return_type_size);
+    if(emit_context.in_recursive_function){
+        emit_stack_pointer();
+        emit_u32(4 + return_type_size);
+        emit_additive_u32(false);
 
-    // Unmark 'incomplete' cell if function can early return
-    if(emit_context.can_function_early_return){
-        u32 offset = emit_context.current_cell_index - emit_context.incomplete_cell;
-        printf("%d<[-]%d>", offset, offset);
+        // Move data value into return value location
+        move_cells_dynamic_u32(emit_settings.stack_begin, return_type_size);
+    } else {
+        u32 return_value_location = emit_context.function_cell_index - return_type_size;
+
+        // Move data value into return value location
+        move_cells_static(return_value_location, return_type_size);
+
+        // Unmark 'incomplete' cell if function can early return
+        if(emit_context.can_function_early_return){
+            u32 offset = emit_context.current_cell_index - emit_context.incomplete_cell;
+            printf("%d<[-]%d>", offset, offset);
+        }
     }
 
     return u0_type;

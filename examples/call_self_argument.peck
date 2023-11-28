@@ -1,9 +1,9 @@
 
-void main(){
+u0 main(){
     descending(255);
 }
 
-void descending(u8 value){
+u0 descending(u8 value){
     printu8(value);
     print("\n");
     descending(value - 1);

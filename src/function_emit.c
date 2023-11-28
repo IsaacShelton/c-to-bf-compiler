@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <assert.h>
 #include "../include/function_emit.h"
 #include "../include/function.h"
 #include "../include/storage.h"
@@ -11,6 +12,7 @@
 #include "../include/emit_context.h"
 #include "../include/emit.h"
 #include "../include/expression_print.h"
+#include "../include/stack_driver.h"
 
 // ============= Inlined function calls =============
 // Have layout like: `global1 global2 unknown1 unknown2 return_value1 return_value2 return_value3 param1 param2 param3 param4 local1 local2`
@@ -143,6 +145,9 @@ static ErrorCode emit_do_while(Expression expression);
 static ErrorCode emit_for(Expression expression);
 static ErrorCode emit_switch(Expression expression);
 static ErrorCode emit_case(Expression expression);
+
+static ErrorCode emit_if_like_stack(Expression expression);
+static ErrorCode emit_if_like_tape(Expression expression);
 
 static u1 can_statement_break_current_level(u32 statement_index);
 static u1 can_statements_break_current_level(u32 start_statement_i, u32 stop_statement_i);
@@ -392,10 +397,81 @@ static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i, u1 allow
     return emit_close_checks_until(closes_needed_waterline);
 }
 
-static ErrorCode emit_if_like(Expression expression){
-    // Emits code for if/if-else statements
-
+static ErrorCode emit_body_scoped(u32 start_statement_i, u32 stop_statement_i, u1 allow_cases){
     u32 starting_cell_index = emit_context.current_cell_index;
+
+    // Emit body
+    if(emit_body(start_statement_i, stop_statement_i, allow_cases)){
+        return 1;
+    }
+
+    // Deallocate locally scoped variables
+    if(emit_context.current_cell_index > starting_cell_index){
+        printf("%d<", emit_context.current_cell_index - starting_cell_index);
+        emit_context.current_cell_index = starting_cell_index;
+    }
+
+    return 0;
+}
+
+
+static ErrorCode emit_if_like(Expression expression){
+    if(emit_context.in_recursive_function){
+        return emit_if_like_stack(expression);
+    } else {
+        return emit_if_like_tape(expression);
+    }
+}
+
+static ErrorCode emit_if_like_stack(Expression expression){
+    // Evaluate condition
+    u32 condition_type = expression_emit(expressions[operands[expression.ops]]);
+    if(condition_type >= TYPES_CAPACITY) return 1;
+
+    if(condition_type != u1_type){
+        printf("\nerror on line %d: Expected 'if' condition to be 'u1', got '", u24_unpack(expression.line));
+        type_print(types[condition_type]);
+        printf("'\n");
+        return 1;
+    }
+
+    u1 has_else = expression.kind == EXPRESSION_IF_ELSE;
+
+    u32 then_block = emit_settings.next_basicblock_id++;
+    u32 else_block = emit_settings.next_basicblock_id++;
+    u32 continuation_block = has_else ? emit_settings.next_basicblock_id++ : else_block;
+
+    u32 pushed = emit_end_basicblock_jump_conditional(then_block, else_block);
+
+    // Then block
+    emit_start_basicblock_landing(then_block, pushed);
+
+    // Emit 'if' body
+    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false)){
+        return 1;
+    }
+
+    emit_end_basicblock_jump_compatible(continuation_block, pushed);
+
+    if(has_else){
+        // Else block
+        emit_start_basicblock_landing(else_block, pushed);
+
+        // Emit 'else' body
+        if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 2] + 1, false)){
+            return 1;
+        }
+
+        emit_end_basicblock_jump_compatible(continuation_block, pushed);
+    }
+
+    // Continuation block
+    emit_start_basicblock_landing(continuation_block, pushed);
+    return 0;
+}
+
+static ErrorCode emit_if_like_tape(Expression expression){
+    // Emits code for if/if-else statements
     
     // Evaluate condition
     u32 condition_type = expression_emit(expressions[operands[expression.ops]]);
@@ -423,14 +499,8 @@ static ErrorCode emit_if_like(Expression expression){
     printf("[");
 
     // Emit 'if' body
-    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false)){
+    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false)){
         return 1;
-    }
-
-    // Deallocate variables
-    if(emit_context.current_cell_index > starting_cell_index){
-        printf("%d<", emit_context.current_cell_index - starting_cell_index);
-        emit_context.current_cell_index = starting_cell_index;
     }
 
     // Go to 'condition' cell
@@ -444,9 +514,6 @@ static ErrorCode emit_if_like(Expression expression){
 
     // Handle else
     if(has_else){
-        // Change starting cell index to 'should_run_else' cell
-        starting_cell_index++;
-
         // Go to 'should_run_else' cell
         printf(">");
         emit_context.current_cell_index++;
@@ -455,14 +522,8 @@ static ErrorCode emit_if_like(Expression expression){
         printf("[");
 
         // Emit 'else' body
-        if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 2] + 1, false)){
+        if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 2] + 1, false)){
             return 1;
-        }
-
-        // Deallocate variables
-        if(emit_context.current_cell_index > starting_cell_index){
-            printf("%d<", emit_context.current_cell_index - starting_cell_index);
-            emit_context.current_cell_index = starting_cell_index;
         }
 
         // End if

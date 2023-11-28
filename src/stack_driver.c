@@ -46,9 +46,18 @@ void emit_stack_driver_pre(u32 main_function_index){
 
     // Debug print new basicblock id
     /*
-    dupe_cells(4);
-    printf("3<");
+    emit_stack_pointer();
     emit_printu8();
+    printf("[-]++++++++++++++++++++++++++++++++.");
+    printf("<");
+    emit_printu8();
+    printf("[-]++++++++++++++++++++++++++++++++.");
+    printf("<");
+    emit_printu8();
+    printf("[-]++++++++++++++++++++++++++++++++.");
+    printf("<");
+    emit_printu8();
+    printf("[-]++++++++++++++++++++++++++++++++.");
     printf("[-]++++++++++.");
     printf("<");
     emit_context.current_cell_index -= 4;
@@ -98,6 +107,98 @@ void emit_start_basicblock(u32 basicblock_id){
 
 void emit_end_basicblock(){
     printf("[-]]");
+}
+
+void emit_start_basicblock_landing(u32 basicblock_id, u32 num_cells_to_pop){
+    emit_start_basicblock(basicblock_id);
+    emit_stack_pop_n(num_cells_to_pop);
+}
+
+u32 emit_jump(u32 target_basicblock_id){
+    u32 pushed = emit_stack_driver_push_all();
+    emit_u32(target_basicblock_id);
+    emit_stack_push_n(4);
+    return pushed;
+}
+
+u32 emit_jump_compatible(u32 target_basicblock_id, u32 expected_pushed_cells){
+    u32 pushed = emit_jump(target_basicblock_id);
+
+    if(pushed != expected_pushed_cells){
+        fprintf(stderr, "emit_jump_compatible - tried to do incompatible jump (%d vs %d)\n", pushed, expected_pushed_cells);
+    }
+
+    return pushed;
+}
+
+u32 emit_end_basicblock_jump(u32 target_basicblock_id){
+    u32 pushed = emit_jump(target_basicblock_id);
+    emit_end_basicblock();
+    return pushed;
+}
+
+void emit_end_basicblock_jump_compatible(u32 target_basicblock_id, u32 expected_pushed_cells){
+    u32 amount = emit_end_basicblock_jump(target_basicblock_id);
+
+    if(amount != expected_pushed_cells){
+        fprintf(stderr, "emit_end_basicblock_jump_compatible - tried to end basicblock via incompatible jump (%d vs %d)\n", amount, expected_pushed_cells);
+    }
+}
+
+u32 emit_end_basicblock_jump_conditional(u32 then_basicblock_id, u32 else_basicblock_id){
+    // condition
+    //           ^
+
+    // Allocate 'should_run_else' cell
+    printf("[-]+");
+
+    // Go to condition cell
+    printf("<");
+    emit_context.current_cell_index--;
+
+    u32 condition_cell = emit_context.current_cell_index;
+
+    // If condition
+    printf("[");
+        u32 pushed = emit_jump(then_basicblock_id);
+
+        // Go back to 'condition' cell
+        printf("%d>", condition_cell - emit_context.current_cell_index);
+        emit_context.current_cell_index = condition_cell;
+
+        // Zero 'should_run_else' cell
+        printf(">[-]<");
+
+    // End if
+    printf("[-]]");
+
+    // Go to 'should_run_else' cell
+    printf(">");
+    emit_context.current_cell_index++;
+
+    u32 else_cell = emit_context.current_cell_index;
+
+    // If 'should_run_else' cell
+    printf("[");
+        printf("<");
+        emit_context.current_cell_index -= 1;
+
+        emit_jump_compatible(else_basicblock_id, pushed);
+
+        // Go back to 'condition' cell
+        printf("%d>", else_cell - emit_context.current_cell_index);
+        emit_context.current_cell_index = else_cell;
+
+    // End if
+    printf("[-]]");
+
+    // Go to stack driver position
+    printf("%d<", emit_context.current_cell_index - emit_settings.stack_driver_position);
+    emit_context.current_cell_index = emit_settings.stack_driver_position;
+
+    // End basicblock
+    emit_end_basicblock();
+    return pushed;
 }
 
 void emit_stack_driver_post(){
@@ -209,35 +310,25 @@ u32 emit_recursive_functions(){
             continue;
         }
 
+        /*
         fprintf(stderr, "Generating recursive function %d (basicblock %d)\n", (int) function_i, (int) basicblock_id_for_function(function_i));
-        printf("\n");
+        */
 
-        emit_start_basicblock(basicblock_id_for_function(function_i));
-            // Debug message
-            /*
-            printf("[-]>[-]>[-]>[-]>[-]>[-]>6<");
-            printf(">++++++++[<+++++++++>-]<.>++++[<+++++++>-]<+.+++++++..+++.>>++++++[<+++++++>-]<++.------------.>++++++[<+++++++++>-]<+.<.+++.------.--------.>>>++++[<++++++++>-]<+.<<");
-            printf("[-]++++++++++.");
-            */
+        if(emit_settings.stack_driver_position != emit_context.current_cell_index){
+            int off_by = (int) emit_context.current_cell_index - (int) emit_settings.stack_driver_position;
+            printf("\ninternal error on line %d: Failed to generate recursive function as final resting cell index does not match expected stack driver position (%d cells off)\n", u24_unpack(function.line), off_by);
+            return 1;
+        }
 
-            if(emit_settings.stack_driver_position != emit_context.current_cell_index){
-                int off_by = (int) emit_context.current_cell_index - (int) emit_settings.stack_driver_position;
-                printf("\ninternal error on line %d: Failed to generate recursive function as final resting cell index does not match expected stack driver position (%d cells off)\n", u24_unpack(function.line), off_by);
+        u32 args_size = function_args_size(function);
+        if(args_size == -1) return 1;
+
+        emit_start_basicblock_landing(basicblock_id_for_function(function_i), args_size);
+            if(function_emit(function_i, emit_settings.stack_driver_position, emit_context.current_cell_index)){
                 return 1;
             }
-
-            u32 return_size = type_sizeof_or_max(function.return_type, function.line);
-            if(return_size == -1) return 1;
-
-            u32 args_size = function_args_size(function);
-            if(args_size == -1) return 1;
-
-            emit_stack_pop_n(return_size + args_size);
-            function_emit(function_i, emit_context.current_cell_index - args_size, emit_context.current_cell_index);
-            emit_stack_push_n(return_size);
         emit_end_basicblock();
     }
 
     return 0;
 }
-

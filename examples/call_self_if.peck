@@ -1,0 +1,22 @@
+
+u0 main(){
+    ascend(0);
+}
+
+u0 ascend(u8 value){
+    printu8(value);
+    print("\n");
+
+    if(value < 5){
+        print("Less than 5\n");
+    } else {
+        print("Greater than or equal to 5\n");
+    }
+
+    if(value < 10){
+        ascend(value + 1);
+    } else {
+        print("Done!\n");
+    }
+}
+

@@ -17,6 +17,7 @@ set -ex
 "$self/../peck" "$self/call_self.peck" "$self/call_self.rlebf"
 "$self/../peck" "$self/call_self_argument.peck" "$self/call_self_argument.rlebf"
 "$self/../peck" "$self/call_self_do_while.peck" "$self/call_self_do_while.rlebf"
+"$self/../peck" "$self/call_self_for.peck" "$self/call_self_for.rlebf"
 "$self/../peck" "$self/call_self_if.peck" "$self/call_self_if.rlebf"
 "$self/../peck" "$self/call_self_while.peck" "$self/call_self_while.rlebf"
 "$self/../peck" "$self/casts.peck"

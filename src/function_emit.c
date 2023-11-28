@@ -152,6 +152,8 @@ static ErrorCode emit_while_stack(Expression expression);
 static ErrorCode emit_while_tape(Expression expression);
 static ErrorCode emit_do_while_stack(Expression expression);
 static ErrorCode emit_do_while_tape(Expression expression);
+static ErrorCode emit_for_stack(Expression expression);
+static ErrorCode emit_for_tape(Expression expression);
 
 static u1 can_statement_break_current_level(u32 statement_index);
 static u1 can_statements_break_current_level(u32 start_statement_i, u32 stop_statement_i);
@@ -811,6 +813,80 @@ static ErrorCode emit_do_while_tape(Expression expression){
 }
 
 static ErrorCode emit_for(Expression expression){
+    if(emit_context.in_recursive_function){
+        return emit_for_stack(expression);
+    } else {
+        return emit_for_tape(expression);
+    }
+}
+
+static ErrorCode emit_for_stack(Expression expression){
+    u32 num_pre = operands[expression.ops];
+    u32 num_post = operands[expression.ops + 2];
+    u32 num_inside = operands[expression.ops + 3];
+
+    u32 pre_start_statement = emit_context.current_statement + 1;
+    u32 post_start_statement = pre_start_statement + num_pre;
+    u32 inside_start_statement = post_start_statement + num_post;
+
+    u32 pre_starting_cell_index = emit_context.current_cell_index;
+
+    u32 condition_block = emit_settings.next_basicblock_id++;
+    u32 body_block = emit_settings.next_basicblock_id++;
+    u32 increment_block = emit_settings.next_basicblock_id++;
+    u32 continuation_block = emit_settings.next_basicblock_id++;
+
+    // Emit pre-statements
+    if(emit_body(pre_start_statement, pre_start_statement + num_pre, false)){
+        return 1;
+    }
+
+    u32 pre_num_cells = emit_context.current_cell_index - pre_starting_cell_index;
+    u32 pushed = emit_end_basicblock_jump(condition_block);
+    
+    emit_start_basicblock_landing(condition_block, pushed);
+    // Evaluate condition
+    u32 condition_type = expression_emit(expressions[operands[expression.ops + 1]]);
+    if(condition_type >= TYPES_CAPACITY) return 1;
+
+    if(condition_type != u1_type){
+        printf("\nerror on line %d: Expected 'for' condition to be 'u1', got '", u24_unpack(expression.line));
+        type_print(types[condition_type]);
+        printf("'\n");
+        return 1;
+    }
+
+    if(emit_end_basicblock_jump_conditional(body_block, continuation_block) != pushed){
+        printf("\ninternal error: emit_for_stack() got bad push amount for jumping to increment block\n");
+        return 1;
+    }
+
+    emit_start_basicblock_landing(body_block, pushed);
+    // Emit 'for' body
+    if(emit_body_scoped(inside_start_statement, inside_start_statement + num_inside, false)){
+        return 1;
+    }
+    emit_end_basicblock_jump_compatible(increment_block, pushed);
+
+    emit_start_basicblock_landing(increment_block, pushed);
+    // Emit post-statements
+    if(emit_body_scoped(post_start_statement, post_start_statement + num_post, false)){
+        return 1;
+    }
+    emit_end_basicblock_jump_compatible(condition_block, pushed);
+
+    emit_start_basicblock_landing(continuation_block, pushed);
+
+    // Deallocate pre-statement variables
+    if(pre_num_cells != 0){
+        printf("%d<", pre_num_cells);
+        emit_context.current_cell_index -= pre_num_cells;
+    }
+
+    return 0;
+}
+
+static ErrorCode emit_for_tape(Expression expression){
     u1 was_breakable = emit_context.can_break;
     u1 was_continuable = emit_context.can_continue;
     u32 old_didnt_break_cell = emit_context.didnt_break_cell;

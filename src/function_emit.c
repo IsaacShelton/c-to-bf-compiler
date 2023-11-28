@@ -609,9 +609,9 @@ static u0 exit_switch(){
 
 static ErrorCode emit_while(Expression expression){
     if(emit_context.in_recursive_function){
-        return emit_while_tape(expression);
-    } else {
         return emit_while_stack(expression);
+    } else {
+        return emit_while_tape(expression);
     }
 }
 
@@ -644,7 +644,7 @@ static ErrorCode emit_while_stack(Expression expression){
     expression_emit(expressions[operands[expression.ops]]);
 
     // Either redo or continue onwards
-    emit_end_basicblock_jump_conditional(then_block, pushed);
+    emit_end_basicblock_jump_conditional(then_block, continuation_block);
 
     // Continuation block
     emit_start_basicblock_landing(continuation_block, pushed);

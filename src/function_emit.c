@@ -148,6 +148,8 @@ static ErrorCode emit_case(Expression expression);
 
 static ErrorCode emit_if_like_stack(Expression expression);
 static ErrorCode emit_if_like_tape(Expression expression);
+static ErrorCode emit_while_stack(Expression expression);
+static ErrorCode emit_while_tape(Expression expression);
 
 static u1 can_statement_break_current_level(u32 statement_index);
 static u1 can_statements_break_current_level(u32 start_statement_i, u32 stop_statement_i);
@@ -604,6 +606,50 @@ static u0 exit_switch(){
 }
 
 static ErrorCode emit_while(Expression expression){
+    if(emit_context.in_recursive_function){
+        return emit_while_tape(expression);
+    } else {
+        return emit_while_stack(expression);
+    }
+}
+
+static ErrorCode emit_while_stack(Expression expression){
+    // Evaluate condition
+    u32 condition_type = expression_emit(expressions[operands[expression.ops]]);
+    if(condition_type >= TYPES_CAPACITY) return 1;
+
+    if(condition_type != u1_type){
+        printf("\nerror on line %d: Expected 'if' condition to be 'u1', got '", u24_unpack(expression.line));
+        type_print(types[condition_type]);
+        printf("'\n");
+        return 1;
+    }
+
+    u32 then_block = emit_settings.next_basicblock_id++;
+    u32 continuation_block = emit_settings.next_basicblock_id++;
+
+    u32 pushed = emit_end_basicblock_jump_conditional(then_block, continuation_block);
+
+    // Then block
+    emit_start_basicblock_landing(then_block, pushed);
+
+    // Emit 'while' body
+    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false)){
+        return 1;
+    }
+
+    // Re-evaluate condition (this should never fail)
+    expression_emit(expressions[operands[expression.ops]]);
+
+    // Either redo or continue onwards
+    emit_end_basicblock_jump_conditional(then_block, pushed);
+
+    // Continuation block
+    emit_start_basicblock_landing(continuation_block, pushed);
+    return 0;
+}
+
+static ErrorCode emit_while_tape(Expression expression){
     u1 was_breakable = emit_context.can_break;
     u1 was_continuable = emit_context.can_continue;
     u32 old_didnt_break_cell = emit_context.didnt_break_cell;
@@ -611,8 +657,6 @@ static ErrorCode emit_while(Expression expression){
 
     enter_maybe_breakable_continuable_loop(expression, 2);
 
-    u32 starting_cell_index = emit_context.current_cell_index;
-    
     // Evaluate condition
     emit_pre_loop_condition_early_return_check();
     u32 condition_type = expression_emit(expressions[operands[expression.ops]]);
@@ -635,14 +679,8 @@ static ErrorCode emit_while(Expression expression){
     emit_reset_didnt_continue();
 
     // Emit 'while' body
-    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false)){
+    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false)){
         return 1;
-    }
-
-    // Deallocate variables
-    if(emit_context.current_cell_index > starting_cell_index){
-        printf("%d<", emit_context.current_cell_index - starting_cell_index);
-        emit_context.current_cell_index = starting_cell_index;
     }
 
     // Re-evaluate condition (should never fail)

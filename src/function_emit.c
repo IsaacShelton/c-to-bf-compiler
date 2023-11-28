@@ -150,6 +150,8 @@ static ErrorCode emit_if_like_stack(Expression expression);
 static ErrorCode emit_if_like_tape(Expression expression);
 static ErrorCode emit_while_stack(Expression expression);
 static ErrorCode emit_while_tape(Expression expression);
+static ErrorCode emit_do_while_stack(Expression expression);
+static ErrorCode emit_do_while_tape(Expression expression);
 
 static u1 can_statement_break_current_level(u32 statement_index);
 static u1 can_statements_break_current_level(u32 start_statement_i, u32 stop_statement_i);
@@ -619,7 +621,7 @@ static ErrorCode emit_while_stack(Expression expression){
     if(condition_type >= TYPES_CAPACITY) return 1;
 
     if(condition_type != u1_type){
-        printf("\nerror on line %d: Expected 'if' condition to be 'u1', got '", u24_unpack(expression.line));
+        printf("\nerror on line %d: Expected 'while' condition to be 'u1', got '", u24_unpack(expression.line));
         type_print(types[condition_type]);
         printf("'\n");
         return 1;
@@ -708,6 +710,47 @@ static ErrorCode emit_while_tape(Expression expression){
 }
 
 static ErrorCode emit_do_while(Expression expression){
+    if(emit_context.in_recursive_function){
+        return emit_do_while_stack(expression);
+    } else {
+        return emit_do_while_tape(expression);
+    }
+}
+
+static ErrorCode emit_do_while_stack(Expression expression){
+    u32 then_block = emit_settings.next_basicblock_id++;
+    u32 continuation_block = emit_settings.next_basicblock_id++;
+
+    u32 pushed = emit_end_basicblock_jump(then_block);
+
+    // Then block
+    emit_start_basicblock_landing(then_block, pushed);
+
+    // Emit 'do-while' body
+    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false)){
+        return 1;
+    }
+
+    // Evaluate condition
+    u32 condition_type = expression_emit(expressions[operands[expression.ops]]);
+    if(condition_type >= TYPES_CAPACITY) return 1;
+
+    if(condition_type != u1_type){
+        printf("\nerror on line %d: Expected 'do-while' condition to be 'u1', got '", u24_unpack(expression.line));
+        type_print(types[condition_type]);
+        printf("'\n");
+        return 1;
+    }
+
+    // Either redo or continue onwards
+    emit_end_basicblock_jump_conditional(then_block, continuation_block);
+
+    // Continuation block
+    emit_start_basicblock_landing(continuation_block, pushed);
+    return 0;
+}
+
+static ErrorCode emit_do_while_tape(Expression expression){
     u1 was_breakable = emit_context.can_break;
     u1 was_continuable = emit_context.can_continue;
     u32 old_didnt_break_cell = emit_context.didnt_break_cell;

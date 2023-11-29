@@ -1262,7 +1262,66 @@ ErrorCode print_array_reference(Destination destination, u32 max_length, u24 lin
     return 0;
 }
 
-static u32 expression_emit_ternary(Expression expression){
+static u32 expression_emit_ternary_stack(Expression expression){
+    u32 condition = operands[expression.ops];
+    u32 when_true = operands[expression.ops + 1];
+    u32 when_false = operands[expression.ops + 2];
+
+    // Evaluate condition
+    u32 condition_type = expression_emit(expressions[condition]);
+    if(condition_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    if(condition_type != u1_type){
+        printf("\nerror on line %d: Expected ternary condition to be 'u1', got '", u24_unpack(expression.line));
+        type_print(types[condition_type]);
+        printf("'\n");
+        return TYPES_CAPACITY;
+    }
+
+    u32 then_block = emit_settings.next_basicblock_id++;
+    u32 else_block = emit_settings.next_basicblock_id++;
+    u32 continuation_block = emit_settings.next_basicblock_id++;
+
+    u32 pushed = emit_end_basicblock_jump_conditional(then_block, else_block);
+
+    // Then block
+    emit_start_basicblock_landing(then_block, pushed);
+
+    u32 when_true_type = expression_emit(expressions[when_true]);
+    if(when_true_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    u32 result_size = type_sizeof_or_max(when_true_type, expression.line);
+    if(result_size == -1) return TYPES_CAPACITY;
+
+    if(emit_settings.in_basicblock){
+        emit_end_basicblock_jump_compatible(continuation_block, pushed + result_size);
+    }
+
+    // Else block
+    emit_start_basicblock_landing(else_block, pushed);
+
+    u32 when_false_type = expression_emit(expressions[when_false]);
+    if(when_false_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    if(when_false_type != when_true_type){
+        printf("\nerror on line %d: Expected false branch of ternary expression to be '", u24_unpack(expression.line));
+        type_print(types[when_true_type]);
+        printf("', got '");
+        type_print(types[when_false_type]);
+        printf("'\n");
+        return TYPES_CAPACITY;
+    }
+
+    if(emit_settings.in_basicblock){
+        emit_end_basicblock_jump_compatible(continuation_block, pushed + result_size);
+    }
+
+    // Continuation block
+    emit_start_basicblock_landing(continuation_block, pushed + result_size);
+    return when_true_type;
+}
+
+static u32 expression_emit_ternary_tape(Expression expression){
     // result should_do_else condition
 
     u32 condition = operands[expression.ops];
@@ -1359,6 +1418,15 @@ static u32 expression_emit_ternary(Expression expression){
 
     return result_type;
 }
+
+static u32 expression_emit_ternary(Expression expression){
+    if(emit_context.in_recursive_function){
+        return expression_emit_ternary_stack(expression);
+    } else {
+        return expression_emit_ternary_tape(expression);
+    }
+}
+
 
 static u32 expression_emit_string(Expression expression){
     u32 str = expression.ops;

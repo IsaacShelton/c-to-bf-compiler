@@ -1,0 +1,13 @@
+
+u0 main(){
+    for(u8 i = 0; i < 10; i++){
+        put('A' + i);
+
+        if(i == 5){
+            break;
+        }
+    }
+
+    put('\n');
+}
+

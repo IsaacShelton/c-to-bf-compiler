@@ -1,0 +1,14 @@
+
+u0 main(){
+    for(u8 i = 0; i < 10; i++){
+        if(i == 5){
+            // No 'F'
+            continue;
+        }
+
+        put('A' + i);
+    }
+
+    put('\n');
+}
+

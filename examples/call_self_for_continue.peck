@@ -1,0 +1,27 @@
+
+u0 main(){
+    dashes(20);
+}
+
+u0 dashes(u8 length){
+    for(u8 i = 0; i < 2 * length; i++){
+        if(i >= 10 && i <= 24){
+            continue;
+        }
+
+        if(i % 8 == 0){
+            print(" ");
+        } else if(i % 2 == 0){
+            print("-");
+        } else {
+            print(" ");
+        }
+    }
+
+    print("\n");
+
+    if(length > 1){
+        dashes(length - 1);
+    }
+}
+

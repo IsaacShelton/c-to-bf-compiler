@@ -917,6 +917,11 @@ static ErrorCode emit_for(Expression expression){
 }
 
 static ErrorCode emit_for_stack(Expression expression){
+    u1 was_breakable = emit_context.can_break;
+    u1 was_continuable = emit_context.can_continue;
+    JumpContext old_break_context = emit_context.break_basicblock_context;
+    JumpContext old_continue_context = emit_context.continue_basicblock_context;
+
     u32 num_pre = operands[expression.ops];
     u32 num_post = operands[expression.ops + 2];
     u32 num_inside = operands[expression.ops + 3];
@@ -932,14 +937,37 @@ static ErrorCode emit_for_stack(Expression expression){
     u32 increment_block = emit_settings.next_basicblock_id++;
     u32 continuation_block = emit_settings.next_basicblock_id++;
 
+    emit_context.can_break = can_loop_break(emit_context.current_statement);
+    emit_context.can_continue = can_loop_continue(emit_context.current_statement);
+
     // Emit pre-statements
     if(emit_body(pre_start_statement, pre_start_statement + num_pre, false)){
         return 1;
     }
-    if(!emit_settings.in_basicblock) return 0;
+    if(!emit_settings.in_basicblock){
+        emit_context.break_basicblock_context = old_break_context;
+        emit_context.continue_basicblock_context = old_continue_context;
+        emit_context.can_break = was_breakable;
+        emit_context.can_continue = was_continuable;
+        return 0;
+    }
 
     u32 pre_num_cells = emit_context.current_cell_index - pre_starting_cell_index;
     u32 pushed = emit_end_basicblock_jump(condition_block);
+
+    if(emit_context.can_break){
+        emit_context.break_basicblock_context = (JumpContext){
+            .basicblock_id = continuation_block,
+            .num_cells_input = pushed,
+        };
+    }
+
+    if(emit_context.can_continue){
+        emit_context.continue_basicblock_context = (JumpContext){
+            .basicblock_id = increment_block,
+            .num_cells_input = pushed,
+        };
+    }
     
     emit_start_basicblock_landing(condition_block, pushed);
     // Evaluate condition
@@ -966,6 +994,10 @@ static ErrorCode emit_for_stack(Expression expression){
     if(emit_settings.in_basicblock){
         emit_end_basicblock_jump_compatible(increment_block, pushed);
     } else {
+        emit_context.break_basicblock_context = old_break_context;
+        emit_context.continue_basicblock_context = old_continue_context;
+        emit_context.can_break = was_breakable;
+        emit_context.can_continue = was_continuable;
         return 0;
     }
 
@@ -977,6 +1009,10 @@ static ErrorCode emit_for_stack(Expression expression){
     if(emit_settings.in_basicblock){
         emit_end_basicblock_jump_compatible(condition_block, pushed);
     } else {
+        emit_context.break_basicblock_context = old_break_context;
+        emit_context.continue_basicblock_context = old_continue_context;
+        emit_context.can_break = was_breakable;
+        emit_context.can_continue = was_continuable;
         return 0;
     }
 
@@ -988,6 +1024,10 @@ static ErrorCode emit_for_stack(Expression expression){
         emit_context.current_cell_index -= pre_num_cells;
     }
 
+    emit_context.break_basicblock_context = old_break_context;
+    emit_context.continue_basicblock_context = old_continue_context;
+    emit_context.can_break = was_breakable;
+    emit_context.can_continue = was_continuable;
     return 0;
 }
 
@@ -1007,12 +1047,16 @@ static ErrorCode emit_for_tape(Expression expression){
 
     u32 pre_starting_cell_index = emit_context.current_cell_index;
 
+    u32 for_statement_index = emit_context.current_statement;
+
     // Emit pre-statements
     if(emit_body(pre_start_statement, pre_start_statement + num_pre, false)){
         return 1;
     }
 
+    emit_context.current_statement = for_statement_index;
     enter_maybe_breakable_continuable_loop_tape(expression, 4);
+    emit_context.current_statement = pre_start_statement + num_pre;
 
     u32 starting_cell_index = emit_context.current_cell_index;
     
@@ -1505,6 +1549,20 @@ static u1 can_loop_break(u32 statement_index){
             return can_statements_break_current_level(statement_index + 1, statement_index + 1 + num_inside);
         }
         break;
+    case EXPRESSION_FOR: {
+            u32 num_pre = operands[container.ops];
+            u32 num_post = operands[container.ops + 2];
+            u32 num_inside = operands[container.ops + 3];
+
+            u32 pre_start_statement = statement_index + 1;
+            u32 post_start_statement = pre_start_statement + num_pre;
+            u32 inside_start_statement = post_start_statement + num_post;
+
+            return
+                can_statements_break_current_level(inside_start_statement, inside_start_statement + num_inside)
+             || can_statements_break_current_level(post_start_statement, post_start_statement + num_post);
+        }
+        break;
     default:
         return can_statement_break_current_level(statement_index);
     }
@@ -1570,6 +1628,20 @@ static u1 can_loop_continue(u32 statement_index){
     case EXPRESSION_DO_WHILE: {
             u32 num_inside = operands[container.ops + 1];
             return can_statements_continue_current_level(statement_index + 1, statement_index + 1 + num_inside);
+        }
+        break;
+    case EXPRESSION_FOR: {
+            u32 num_pre = operands[container.ops];
+            u32 num_post = operands[container.ops + 2];
+            u32 num_inside = operands[container.ops + 3];
+
+            u32 pre_start_statement = statement_index + 1;
+            u32 post_start_statement = pre_start_statement + num_pre;
+            u32 inside_start_statement = post_start_statement + num_post;
+
+            return
+                can_statements_continue_current_level(inside_start_statement, inside_start_statement + num_inside)
+             || can_statements_continue_current_level(post_start_statement, post_start_statement + num_post);
         }
         break;
     default:

@@ -1,0 +1,28 @@
+
+u0 main(){
+    stairs(1);
+}
+
+u0 stairs(u8 step){
+    u8 i = 0;
+
+    do {
+        if(i + 1 == step){
+            print("|__");
+        } else {
+            print("   ");
+        }
+        i++;
+
+        if(i == 6){
+            break;
+        }
+    } while(i < step);
+
+    print("\n");
+
+    if(step < 10){
+        stairs(step + 1);
+    }
+}
+

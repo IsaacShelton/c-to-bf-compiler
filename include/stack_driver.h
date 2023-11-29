@@ -3,6 +3,7 @@
 #define _PECK_STACK_DRIVER_H
 
 #include "utypes.h"
+#include "emit_context.h"
 
 void emit_stack_driver_pre(u32 entry_basicblock_id);
 void emit_stack_driver_post();
@@ -24,6 +25,7 @@ u32 emit_jump_compatible(u32 target_basicblock_id, u32 expected_pushed_cells);
 u32 emit_end_basicblock_jump(u32 target_basicblock_id);
 void emit_end_basicblock_jump_compatible(u32 target_basicblock_id, u32 expected_pushed_cells);
 u32 emit_end_basicblock_jump_conditional(u32 then_basicblock_id, u32 else_basicblock_id);
+u0 emit_end_basicblock_jump_to(JumpContext context);
 
 #endif // _PACK_STACK_DRIVER_H
 

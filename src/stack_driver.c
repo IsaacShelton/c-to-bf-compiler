@@ -138,7 +138,7 @@ u32 emit_jump_compatible(u32 target_basicblock_id, u32 expected_pushed_cells){
     u32 pushed = emit_jump(target_basicblock_id);
 
     if(pushed != expected_pushed_cells){
-        fprintf(stderr, "emit_jump_compatible - tried to do incompatible jump (%d vs %d)\n", pushed, expected_pushed_cells);
+        printf("\ninternal error: emit_jump_compatible - tried to do incompatible jump (%d vs %d)\n", pushed, expected_pushed_cells);
     }
 
     return pushed;
@@ -146,6 +146,7 @@ u32 emit_jump_compatible(u32 target_basicblock_id, u32 expected_pushed_cells){
 
 u32 emit_end_basicblock_jump(u32 target_basicblock_id){
     u32 pushed = emit_jump(target_basicblock_id);
+
     emit_end_basicblock();
     return pushed;
 }
@@ -154,7 +155,7 @@ void emit_end_basicblock_jump_compatible(u32 target_basicblock_id, u32 expected_
     u32 amount = emit_end_basicblock_jump(target_basicblock_id);
 
     if(amount != expected_pushed_cells){
-        fprintf(stderr, "emit_end_basicblock_jump_compatible - tried to end basicblock via incompatible jump (%d vs %d)\n", amount, expected_pushed_cells);
+        printf("internal error: emit_end_basicblock_jump_compatible - tried to end basicblock via incompatible jump (%d vs %d)\n", amount, expected_pushed_cells);
     }
 }
 
@@ -212,6 +213,18 @@ u32 emit_end_basicblock_jump_conditional(u32 then_basicblock_id, u32 else_basicb
     // End basicblock
     emit_end_basicblock();
     return pushed;
+}
+
+u0 emit_end_basicblock_jump_to(JumpContext context){
+    u32 has = emit_context.current_cell_index - emit_settings.stack_driver_position;
+    u32 remove = has - context.num_cells_input;
+
+    if(remove != 0){
+        printf("%d<", remove);
+        emit_context.current_cell_index -= remove;
+    }
+
+    emit_end_basicblock_jump_compatible(context.basicblock_id, context.num_cells_input);
 }
 
 void emit_stack_driver_post(){

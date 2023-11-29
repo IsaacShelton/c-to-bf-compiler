@@ -1,0 +1,25 @@
+
+u0 main(){
+    pyramid(10);
+}
+
+u0 pyramid(u8 length){
+    u8 i = 0;
+
+    while(i < length){
+        i++;
+
+        if(i >= 5 && i <= 7){
+            continue;
+        }
+
+        print("*");
+    }
+
+    print("\n");
+
+    if(length > 1){
+        pyramid(length - 1);
+    }
+}
+

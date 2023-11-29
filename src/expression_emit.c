@@ -1509,9 +1509,14 @@ static u32 expression_emit_break(Expression expression){
         return TYPES_CAPACITY;
     }
 
-    // Zero 'didnt_break_cell'
-    u32 offset = emit_context.current_cell_index - emit_context.didnt_break_cell;
-    printf("%d<[-]%d>", offset, offset);
+    if(emit_context.in_recursive_function){
+        emit_end_basicblock_jump_to(emit_context.break_basicblock_context);
+    } else {
+        // Zero 'didnt_break_cell'
+        u32 offset = emit_context.current_cell_index - emit_context.didnt_break_cell;
+        printf("%d<[-]%d>", offset, offset);
+    }
+
     return u0_type;
 }
 
@@ -1521,9 +1526,14 @@ static u32 expression_emit_continue(Expression expression){
         return TYPES_CAPACITY;
     }
 
-    // Zero 'didnt_continue_cell'
-    u32 offset = emit_context.current_cell_index - emit_context.didnt_continue_cell;
-    printf("%d<[-]%d>", offset, offset);
+    if(emit_context.in_recursive_function){
+        emit_end_basicblock_jump_to(emit_context.continue_basicblock_context);
+    } else {
+        // Zero 'didnt_continue_cell'
+        u32 offset = emit_context.current_cell_index - emit_context.didnt_continue_cell;
+        printf("%d<[-]%d>", offset, offset);
+    }
+
     return u0_type;
 }
 
@@ -1752,7 +1762,7 @@ u32 expression_emit(Expression expression){
         printf("<,>");
         return u0_type;
     case EXPRESSION_IMPLEMENT_READU8:
-        printf("<[-]>[-]+[[-]>[-],[+[-----------[>[-]++++++[<------>-]<--<<[->>++++++++++<<]>>[-<<+>>]<+>]]]<]");
+        printf("<[-]>[-]+[[-]>[-],[+[11-[>[-]6+[<6->-]<--<<[->>10+<<]>>[-<<+>>]<+>]]]<]");
         return u0_type;
     case EXPRESSION_U1:
         emit_u1(expression.ops);

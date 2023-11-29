@@ -439,6 +439,10 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement);
 static HoneInfo hone_for_body_or_skip(u32 current_statement, u32 target_statement, u32 num_pre, u32 num_post, u32 len, u32 inner_variable_offset){
     u32 pre_offset = 0;
 
+    if(emit_context.in_recursive_function){
+        fprintf(stderr, "warning: hone_for_body_or_skip is unimplemented for recursive functions\n");
+    }
+
     for(u32 i = current_statement + 1; i < current_statement + 1 + num_pre; i++){
         Expression expression = expressions[statements[i]];
 
@@ -560,7 +564,7 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
     case EXPRESSION_WHILE:
     case EXPRESSION_DO_WHILE: {
             u32 num_statements = operands[expression.ops + 1];
-            u32 inner_variable_offset = operands[expression.ops + 2];
+            u32 inner_variable_offset = emit_context.in_recursive_function ? 0 : operands[expression.ops + 2];
 
             if(target_statement <= current_statement + num_statements){
                 return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = inner_variable_offset };
@@ -573,7 +577,7 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
             u32 num_pre = operands[expression.ops];
             u32 num_post = operands[expression.ops + 2];
             u32 len = operands[expression.ops + 3];
-            u32 inner_variable_offset = operands[expression.ops + 4];
+            u32 inner_variable_offset = emit_context.in_recursive_function ? 0 : operands[expression.ops + 4];
 
             if(target_statement <= current_statement + num_pre){
                 return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = 0 };

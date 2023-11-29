@@ -5,6 +5,11 @@
 #include "utypes.h"
 
 typedef struct {
+    u32 basicblock_id;
+    u32 num_cells_input;
+} JumpContext;
+
+typedef struct {
     u32 function;
     u32 function_cell_index;
     u32 current_cell_index;
@@ -20,6 +25,8 @@ typedef struct {
     u32 switch_value_type_cached_size;
     u32 switch_start_cell_index;
     u32 fell_through_cell;
+    JumpContext break_basicblock_context;
+    JumpContext continue_basicblock_context;
 } EmitContext;
 
 typedef struct {

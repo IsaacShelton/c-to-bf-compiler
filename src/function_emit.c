@@ -558,7 +558,7 @@ static u0 emit_reset_didnt_continue(){
     }
 }
 
-static u0 enter_maybe_breakable_continuable_loop(Expression expression, u32 inner_variable_offset_ops_offset){
+static u0 enter_maybe_breakable_continuable_loop_tape(Expression expression, u32 inner_variable_offset_ops_offset){
     emit_context.can_break = can_loop_break(emit_context.current_statement);
     emit_context.can_continue = can_loop_continue(emit_context.current_statement);
 
@@ -624,6 +624,11 @@ static ErrorCode emit_while(Expression expression){
 }
 
 static ErrorCode emit_while_stack(Expression expression){
+    u1 was_breakable = emit_context.can_break;
+    u1 was_continuable = emit_context.can_continue;
+    JumpContext old_break_context = emit_context.break_basicblock_context;
+    JumpContext old_continue_context = emit_context.continue_basicblock_context;
+
     // Evaluate condition
     u32 condition_type = expression_emit(expressions[operands[expression.ops]]);
     if(condition_type >= TYPES_CAPACITY) return 1;
@@ -637,8 +642,38 @@ static ErrorCode emit_while_stack(Expression expression){
 
     u32 then_block = emit_settings.next_basicblock_id++;
     u32 continuation_block = emit_settings.next_basicblock_id++;
-
     u32 pushed = emit_end_basicblock_jump_conditional(then_block, continuation_block);
+
+    emit_context.can_break = can_loop_break(emit_context.current_statement);
+    emit_context.can_continue = can_loop_continue(emit_context.current_statement);
+
+    if(emit_context.can_break){
+        emit_context.break_basicblock_context = (JumpContext){
+            .basicblock_id = continuation_block,
+            .num_cells_input = pushed,
+        };
+    }
+
+    if(emit_context.can_continue){
+        // Create special separate block if using `continue`
+        u32 condition_block = emit_settings.next_basicblock_id++;
+
+        // Condition block
+        emit_start_basicblock_landing(condition_block, pushed);
+
+        // Re-evaluate condition (this should never fail)
+        expression_emit(expressions[operands[expression.ops]]);
+
+        // Either redo or continue onwards
+        if(emit_settings.in_basicblock){
+            emit_end_basicblock_jump_conditional(then_block, continuation_block);
+        }
+
+        emit_context.continue_basicblock_context = (JumpContext){
+            .basicblock_id = condition_block,
+            .num_cells_input = pushed,
+        };
+    }
 
     // Then block
     emit_start_basicblock_landing(then_block, pushed);
@@ -648,16 +683,20 @@ static ErrorCode emit_while_stack(Expression expression){
         return 1;
     }
 
-    // Re-evaluate condition (this should never fail)
-    expression_emit(expressions[operands[expression.ops]]);
-
     // Either redo or continue onwards
     if(emit_settings.in_basicblock){
+        // Re-evaluate condition (this should never fail)
+        expression_emit(expressions[operands[expression.ops]]);
+
         emit_end_basicblock_jump_conditional(then_block, continuation_block);
     }
 
     // Continuation block
     emit_start_basicblock_landing(continuation_block, pushed);
+    emit_context.break_basicblock_context = old_break_context;
+    emit_context.continue_basicblock_context = old_continue_context;
+    emit_context.can_break = was_breakable;
+    emit_context.can_continue = was_continuable;
     return 0;
 }
 
@@ -667,7 +706,7 @@ static ErrorCode emit_while_tape(Expression expression){
     u32 old_didnt_break_cell = emit_context.didnt_break_cell;
     u32 old_didnt_continue_cell = emit_context.didnt_continue_cell;
 
-    enter_maybe_breakable_continuable_loop(expression, 2);
+    enter_maybe_breakable_continuable_loop_tape(expression, 2);
 
     // Evaluate condition
     emit_pre_loop_condition_early_return_check();
@@ -728,10 +767,53 @@ static ErrorCode emit_do_while(Expression expression){
 }
 
 static ErrorCode emit_do_while_stack(Expression expression){
+    u1 was_breakable = emit_context.can_break;
+    u1 was_continuable = emit_context.can_continue;
+    JumpContext old_break_context = emit_context.break_basicblock_context;
+    JumpContext old_continue_context = emit_context.continue_basicblock_context;
+
     u32 then_block = emit_settings.next_basicblock_id++;
     u32 continuation_block = emit_settings.next_basicblock_id++;
-
     u32 pushed = emit_end_basicblock_jump(then_block);
+
+    emit_context.can_break = can_loop_break(emit_context.current_statement);
+    emit_context.can_continue = can_loop_continue(emit_context.current_statement);
+
+    if(emit_context.can_break){
+        emit_context.break_basicblock_context = (JumpContext){
+            .basicblock_id = continuation_block,
+            .num_cells_input = pushed,
+        };
+    }
+
+    if(emit_context.can_continue){
+        // Create special separate block if using `continue`
+        u32 condition_block = emit_settings.next_basicblock_id++;
+
+        // Condition block
+        emit_start_basicblock_landing(condition_block, pushed);
+
+        // Evaluate condition
+        u32 condition_type = expression_emit(expressions[operands[expression.ops]]);
+        if(condition_type >= TYPES_CAPACITY) return 1;
+
+        if(condition_type != u1_type){
+            printf("\nerror on line %d: Expected 'do-while' condition to be 'u1', got '", u24_unpack(expression.line));
+            type_print(types[condition_type]);
+            printf("'\n");
+            return 1;
+        }
+
+        // Either redo or continue onwards
+        if(emit_settings.in_basicblock){
+            emit_end_basicblock_jump_conditional(then_block, continuation_block);
+        }
+
+        emit_context.continue_basicblock_context = (JumpContext){
+            .basicblock_id = condition_block,
+            .num_cells_input = pushed,
+        };
+    }
 
     // Then block
     emit_start_basicblock_landing(then_block, pushed);
@@ -741,24 +823,28 @@ static ErrorCode emit_do_while_stack(Expression expression){
         return 1;
     }
 
-    // Evaluate condition
-    u32 condition_type = expression_emit(expressions[operands[expression.ops]]);
-    if(condition_type >= TYPES_CAPACITY) return 1;
-
-    if(condition_type != u1_type){
-        printf("\nerror on line %d: Expected 'do-while' condition to be 'u1', got '", u24_unpack(expression.line));
-        type_print(types[condition_type]);
-        printf("'\n");
-        return 1;
-    }
-
     // Either redo or continue onwards
     if(emit_settings.in_basicblock){
+        // Evaluate condition
+        u32 condition_type = expression_emit(expressions[operands[expression.ops]]);
+        if(condition_type >= TYPES_CAPACITY) return 1;
+
+        if(condition_type != u1_type){
+            printf("\nerror on line %d: Expected 'do-while' condition to be 'u1', got '", u24_unpack(expression.line));
+            type_print(types[condition_type]);
+            printf("'\n");
+            return 1;
+        }
+
         emit_end_basicblock_jump_conditional(then_block, continuation_block);
     }
 
     // Continuation block
     emit_start_basicblock_landing(continuation_block, pushed);
+    emit_context.break_basicblock_context = old_break_context;
+    emit_context.continue_basicblock_context = old_continue_context;
+    emit_context.can_break = was_breakable;
+    emit_context.can_continue = was_continuable;
     return 0;
 }
 
@@ -768,7 +854,7 @@ static ErrorCode emit_do_while_tape(Expression expression){
     u32 old_didnt_break_cell = emit_context.didnt_break_cell;
     u32 old_didnt_continue_cell = emit_context.didnt_continue_cell;
 
-    enter_maybe_breakable_continuable_loop(expression, 2);
+    enter_maybe_breakable_continuable_loop_tape(expression, 2);
 
     u32 starting_cell_index = emit_context.current_cell_index;
 
@@ -926,7 +1012,7 @@ static ErrorCode emit_for_tape(Expression expression){
         return 1;
     }
 
-    enter_maybe_breakable_continuable_loop(expression, 4);
+    enter_maybe_breakable_continuable_loop_tape(expression, 4);
 
     u32 starting_cell_index = emit_context.current_cell_index;
     

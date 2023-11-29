@@ -36,6 +36,7 @@ set -ex
 "$self/../peck" "$self/empty_global.peck"
 "$self/../peck" "$self/enums.peck"
 "$self/../peck" "$self/equals_not_equals.peck"
+"$self/../peck" "$self/fib.peck"
 "$self/../peck" "$self/for.peck"
 "$self/../peck" "$self/function_call_simple.peck"
 "$self/../peck" "$self/get.peck"

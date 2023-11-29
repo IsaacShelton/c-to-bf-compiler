@@ -47,6 +47,7 @@ static Container get_parent_container(u32 statement_index){
         case EXPRESSION_IMPLEMENT_PRINTU1:
         case EXPRESSION_IMPLEMENT_PRINTU8:
         case EXPRESSION_IMPLEMENT_GET:
+        case EXPRESSION_IMPLEMENT_READU8:
         case EXPRESSION_U1:
         case EXPRESSION_U8:
         case EXPRESSION_U16:
@@ -243,6 +244,7 @@ u32 find_declaration(u32 start_statement, u32 stop_statement, u32 name){
         case EXPRESSION_IMPLEMENT_PRINTU1:
         case EXPRESSION_IMPLEMENT_PRINTU8:
         case EXPRESSION_IMPLEMENT_GET:
+        case EXPRESSION_IMPLEMENT_READU8:
         case EXPRESSION_U1:
         case EXPRESSION_U8:
         case EXPRESSION_U16:
@@ -347,6 +349,7 @@ static HoneInfo hone_switch_case_or_skip(u32 current_statement, u32 target_state
         case EXPRESSION_IMPLEMENT_PRINTU1:
         case EXPRESSION_IMPLEMENT_PRINTU8:
         case EXPRESSION_IMPLEMENT_GET:
+        case EXPRESSION_IMPLEMENT_READU8:
         case EXPRESSION_U1:
         case EXPRESSION_U8:
         case EXPRESSION_U16:
@@ -470,6 +473,7 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
     case EXPRESSION_IMPLEMENT_PRINTU1:
     case EXPRESSION_IMPLEMENT_PRINTU8:
     case EXPRESSION_IMPLEMENT_GET:
+    case EXPRESSION_IMPLEMENT_READU8:
     case EXPRESSION_U1:
     case EXPRESSION_U8:
     case EXPRESSION_U16:

@@ -3,8 +3,9 @@
 
 - recursion
 - typedef aliases
+- defines
+- array size expressions
 - `printf`
-- `readu8()` 
 - `readu16()` 
 - `readu24()` 
 - `readu32()` 

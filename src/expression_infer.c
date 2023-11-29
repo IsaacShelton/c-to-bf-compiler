@@ -80,13 +80,13 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
 
     switch(expression.kind){
     case EXPRESSION_NONE:
-    case EXPRESSION_RETURN:
     case EXPRESSION_DECLARE:
     case EXPRESSION_PRINT_LITERAL:
     case EXPRESSION_IMPLEMENT_PUT:
     case EXPRESSION_IMPLEMENT_PRINTU1:
     case EXPRESSION_IMPLEMENT_PRINTU8:
     case EXPRESSION_IMPLEMENT_GET:
+    case EXPRESSION_IMPLEMENT_READU8:
     case EXPRESSION_U1:
     case EXPRESSION_U8:
     case EXPRESSION_U16:
@@ -106,6 +106,9 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
     case EXPRESSION_PANICLOOP:
         break;
 
+    case EXPRESSION_RETURN:
+        expression_infer(expression.ops, type_to_expression_kind(functions[emit_context.function].return_type));
+        break;
     case EXPRESSION_ASSIGN:
         if(preferred_int_kind == EXPRESSION_NONE){
             preferred_int_kind = expression_get_preferred_int_kind_or_none(operands[expression.ops]);

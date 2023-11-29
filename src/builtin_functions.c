@@ -152,11 +152,40 @@ static ErrorCode add_get_function(){
     return 0;
 }
 
+static ErrorCode add_readu8_function(){
+    u8 raw_function_name[16] = "readu8";
+
+    u32 name = aux_cstr_alloc(raw_function_name);
+    if(name >= AUX_CAPACITY) return 1;
+
+    u32 implementation = add_statement_from_new((Expression){
+        .kind = EXPRESSION_IMPLEMENT_READU8,
+        .line = u24_pack(0),
+        .ops = 0,
+    });
+
+    if(implementation >= STATEMENTS_CAPACITY) return 1;
+
+    Function function = (Function){
+        .name = name,
+        .arity = 0,
+        .return_type = u8_type,
+        .begin = implementation,
+        .num_stmts = 1,
+        .is_recursive = false,
+        .line = u24_pack(0),
+    };
+
+    if(add_function(function) >= FUNCTIONS_CAPACITY) return 1;
+    return 0;
+}
+
 ErrorCode add_builtin_functions(){
     if(add_put_function()) return 1;
     if(add_printu1_function()) return 1;
     if(add_printu8_function()) return 1;
     if(add_get_function()) return 1;
+    if(add_readu8_function()) return 1;
     return 0;
 }
 

@@ -31,6 +31,7 @@ typedef struct {
     u1 stack_overflow_checks;
     u32 stack_overflow_message;
     u32 stack_size;
+    u1 in_basicblock;
 } EmitSettings;
 
 extern EmitContext emit_context;

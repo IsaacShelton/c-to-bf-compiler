@@ -22,6 +22,9 @@ void emit_stack_driver_pre(u32 main_function_index){
     emit_settings.stack_overflow_checks = true;
     emit_settings.stack_overflow_message = aux_cstr_alloc((u8*) "---- STACK OVERFLOW!!! ----\n");
 
+    // Initialize `in_basicblock`
+    emit_settings.in_basicblock = false;
+
     // Create stack pointer
     emit_settings.stack_pointer = emit_context.current_cell_index;
     emit_u32(8);
@@ -46,6 +49,13 @@ void emit_stack_driver_pre(u32 main_function_index){
 
     // Debug print new basicblock id
     /*
+    dupe_cells(4);
+    printf("3<");
+    emit_printu8();
+    printf("[-]++++++++++++++++++++++++++++++++.");
+    printf("<");
+    emit_context.current_cell_index -= 4;
+
     emit_stack_pointer();
     emit_printu8();
     printf("[-]++++++++++++++++++++++++++++++++.");
@@ -103,10 +113,13 @@ void emit_start_basicblock(u32 basicblock_id){
     printf("<");
     emit_context.current_cell_index--;
     printf("[");
+
+    emit_settings.in_basicblock = true;
 }
 
 void emit_end_basicblock(){
     printf("[-]]");
+    emit_settings.in_basicblock = false;
 }
 
 void emit_start_basicblock_landing(u32 basicblock_id, u32 num_cells_to_pop){
@@ -310,10 +323,6 @@ u32 emit_recursive_functions(){
             continue;
         }
 
-        /*
-        fprintf(stderr, "Generating recursive function %d (basicblock %d)\n", (int) function_i, (int) basicblock_id_for_function(function_i));
-        */
-
         if(emit_settings.stack_driver_position != emit_context.current_cell_index){
             int off_by = (int) emit_context.current_cell_index - (int) emit_settings.stack_driver_position;
             printf("\ninternal error on line %d: Failed to generate recursive function as final resting cell index does not match expected stack driver position (%d cells off)\n", u24_unpack(function.line), off_by);
@@ -324,10 +333,12 @@ u32 emit_recursive_functions(){
         if(args_size == -1) return 1;
 
         emit_start_basicblock_landing(basicblock_id_for_function(function_i), args_size);
-            if(function_emit(function_i, emit_settings.stack_driver_position, emit_context.current_cell_index)){
-                return 1;
-            }
-        emit_end_basicblock();
+        if(function_emit(function_i, emit_settings.stack_driver_position, emit_context.current_cell_index)){
+            return 1;
+        }
+        if(emit_settings.in_basicblock){
+            emit_end_basicblock();
+        }
     }
 
     return 0;

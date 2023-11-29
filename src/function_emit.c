@@ -154,6 +154,8 @@ static ErrorCode emit_do_while_stack(Expression expression);
 static ErrorCode emit_do_while_tape(Expression expression);
 static ErrorCode emit_for_stack(Expression expression);
 static ErrorCode emit_for_tape(Expression expression);
+static ErrorCode emit_case_stack(Expression expression);
+static ErrorCode emit_case_tape(Expression expression);
 
 static u1 can_statement_break_current_level(u32 statement_index);
 static u1 can_statements_break_current_level(u32 start_statement_i, u32 stop_statement_i);
@@ -457,7 +459,9 @@ static ErrorCode emit_if_like_stack(Expression expression){
         return 1;
     }
 
-    emit_end_basicblock_jump_compatible(continuation_block, pushed);
+    if(emit_settings.in_basicblock){
+        emit_end_basicblock_jump_compatible(continuation_block, pushed);
+    }
 
     if(has_else){
         // Else block
@@ -468,7 +472,9 @@ static ErrorCode emit_if_like_stack(Expression expression){
             return 1;
         }
 
-        emit_end_basicblock_jump_compatible(continuation_block, pushed);
+        if(emit_settings.in_basicblock){
+            emit_end_basicblock_jump_compatible(continuation_block, pushed);
+        }
     }
 
     // Continuation block
@@ -646,7 +652,9 @@ static ErrorCode emit_while_stack(Expression expression){
     expression_emit(expressions[operands[expression.ops]]);
 
     // Either redo or continue onwards
-    emit_end_basicblock_jump_conditional(then_block, continuation_block);
+    if(emit_settings.in_basicblock){
+        emit_end_basicblock_jump_conditional(then_block, continuation_block);
+    }
 
     // Continuation block
     emit_start_basicblock_landing(continuation_block, pushed);
@@ -745,7 +753,9 @@ static ErrorCode emit_do_while_stack(Expression expression){
     }
 
     // Either redo or continue onwards
-    emit_end_basicblock_jump_conditional(then_block, continuation_block);
+    if(emit_settings.in_basicblock){
+        emit_end_basicblock_jump_conditional(then_block, continuation_block);
+    }
 
     // Continuation block
     emit_start_basicblock_landing(continuation_block, pushed);
@@ -840,6 +850,7 @@ static ErrorCode emit_for_stack(Expression expression){
     if(emit_body(pre_start_statement, pre_start_statement + num_pre, false)){
         return 1;
     }
+    if(!emit_settings.in_basicblock) return 0;
 
     u32 pre_num_cells = emit_context.current_cell_index - pre_starting_cell_index;
     u32 pushed = emit_end_basicblock_jump(condition_block);
@@ -866,14 +877,22 @@ static ErrorCode emit_for_stack(Expression expression){
     if(emit_body_scoped(inside_start_statement, inside_start_statement + num_inside, false)){
         return 1;
     }
-    emit_end_basicblock_jump_compatible(increment_block, pushed);
+    if(emit_settings.in_basicblock){
+        emit_end_basicblock_jump_compatible(increment_block, pushed);
+    } else {
+        return 0;
+    }
 
     emit_start_basicblock_landing(increment_block, pushed);
     // Emit post-statements
     if(emit_body_scoped(post_start_statement, post_start_statement + num_post, false)){
         return 1;
     }
-    emit_end_basicblock_jump_compatible(condition_block, pushed);
+    if(emit_settings.in_basicblock){
+        emit_end_basicblock_jump_compatible(condition_block, pushed);
+    } else {
+        return 0;
+    }
 
     emit_start_basicblock_landing(continuation_block, pushed);
 
@@ -1096,6 +1115,70 @@ static ErrorCode emit_switch(Expression expression){
 }
 
 static ErrorCode emit_case(Expression expression){
+    if(emit_context.in_recursive_function){
+        return emit_case_stack(expression);
+    } else {
+        return emit_case_tape(expression);
+    }
+}
+
+static ErrorCode emit_case_value_test(Expression case_expression){
+    // Evaluate test value
+    u32 test_type = expression_emit(expressions[operands[case_expression.ops]]);
+    if(test_type >= TYPES_CAPACITY) return 1;
+
+    if(test_type != emit_context.switch_value_type){
+        printf("\nerror on line %d: Expected 'case' value to be '", u24_unpack(case_expression.line));
+        type_print(types[emit_context.switch_value_type]);
+        printf(", got '");
+        type_print(types[test_type]);
+        printf("'\n");
+        return 1;
+    }
+
+    // Compare test value to switch value
+    u1 ok = false;
+
+    if(emit_context.switch_value_type == u8_type){
+        emit_eq_u8();
+        ok = true;
+    } else {
+        u32 found_enum = find_enum_from_type(emit_context.switch_value_type);
+        
+        if(found_enum <= TYPEDEFS_CAPACITY){
+            TypeDef def = typedefs[found_enum];
+
+            if(def.kind == TYPEDEF_ENUM && def.computed_size == 1){
+                emit_eq_u8();
+                ok = true;
+            }
+        }
+    }
+
+    if(!ok){
+        printf("\nerror on line %d: Unsupported 'case' type '", u24_unpack(case_expression.line));
+        type_print(types[test_type]);
+        printf("'\n");
+        return 1;
+    }
+
+    return 0;
+}
+
+static ErrorCode emit_case_stack(Expression expression){
+    // Dupe switch value
+    copy_cells_static(emit_context.switch_start_cell_index, emit_context.switch_value_type_cached_size);
+
+    // Emit test value
+    if(emit_case_value_test(expression)){
+        return 1;
+    }
+
+    fprintf(stderr, "ERROR: emit_case_stack is UNIMPLEMENTED\n");
+    return 1;
+}
+
+static ErrorCode emit_case_tape(Expression expression){
     // Emits code for case statements
 
     if(emit_context.switch_value_type >= TYPES_CAPACITY){
@@ -1112,42 +1195,7 @@ static ErrorCode emit_case(Expression expression){
         // Dupe switch value
         copy_cells_static(emit_context.switch_start_cell_index, emit_context.switch_value_type_cached_size);
         
-        // Evaluate test value
-        u32 test_type = expression_emit(expressions[operands[expression.ops]]);
-        if(test_type >= TYPES_CAPACITY) return 1;
-
-        if(test_type != emit_context.switch_value_type){
-            printf("\nerror on line %d: Expected 'case' value to be '", u24_unpack(expression.line));
-            type_print(types[emit_context.switch_value_type]);
-            printf(", got '");
-            type_print(types[test_type]);
-            printf("'\n");
-            return 1;
-        }
-
-        // Compare test value to switch value
-        u1 ok = false;
-
-        if(emit_context.switch_value_type == u8_type){
-            emit_eq_u8();
-            ok = true;
-        } else {
-            u32 found_enum = find_enum_from_type(emit_context.switch_value_type);
-            
-            if(found_enum <= TYPEDEFS_CAPACITY){
-                TypeDef def = typedefs[found_enum];
-
-                if(def.kind == TYPEDEF_ENUM && def.computed_size == 1){
-                    emit_eq_u8();
-                    ok = true;
-                }
-            }
-        }
-
-        if(!ok){
-            printf("\nerror on line %d: Unsupported 'case' type '", u24_unpack(expression.line));
-            type_print(types[test_type]);
-            printf("'\n");
+        if(emit_case_value_test(expression)){
             return 1;
         }
 
@@ -1215,6 +1263,7 @@ u1 can_function_early_return(u32 function_index){
         case EXPRESSION_IMPLEMENT_PRINTU1:
         case EXPRESSION_IMPLEMENT_PRINTU8:
         case EXPRESSION_IMPLEMENT_GET:
+        case EXPRESSION_IMPLEMENT_READU8:
         case EXPRESSION_U1:
         case EXPRESSION_U8:
         case EXPRESSION_U16:

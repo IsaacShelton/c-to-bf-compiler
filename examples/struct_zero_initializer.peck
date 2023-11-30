@@ -1,0 +1,22 @@
+
+typedef struct {
+    u8 height_ft;
+    u8 age;
+} Person;
+
+u0 main(){
+    Person person;
+    person.height_ft = 6;
+    person.age = 72;
+
+    person = (Person){0}; // Alternative way of zero-initializing with {0}
+
+    print("Person Height: ");
+    printu8(person.height_ft);
+    print(" ft\n");
+
+    print("Person Age: ");
+    printu8(person.age);
+    print(" years old\n");
+}
+

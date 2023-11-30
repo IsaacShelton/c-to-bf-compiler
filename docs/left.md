@@ -1,7 +1,6 @@
 
 # Features and bugs left
 
-- (StructName){0} initialization
 - `printf`
 - global initializers?
 - `readu16()` 

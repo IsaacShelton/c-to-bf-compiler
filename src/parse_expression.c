@@ -313,7 +313,21 @@ static Expression parse_struct_initializer(Type type, u24 line_number){
     u32 length = 0;
     u32 temporary_storage[MAX_INITIALIZER_LIST_LENGTH];
 
-    while(!eat_token(TOKEN_END)){
+    u1 skip = false;
+
+    if(is_token(TOKEN_INT)){
+        u32 value = eat_int();
+
+        if(value == 0 && eat_token(TOKEN_END)){
+            skip = true;
+        } else {
+            printf("\nerror on line %d: Expected '{0}' for zero-initializer\n", u24_unpack(line_number));
+            stop_parsing();
+            return (Expression){0};
+        }
+    }
+
+    if(!skip) while(!eat_token(TOKEN_END)){
         if(!eat_token(TOKEN_MEMBER)){
             printf("\nerror on line %d: Expected '.' for field of struct literal\n", u24_unpack(line_number));
             stop_parsing();

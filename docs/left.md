@@ -1,10 +1,10 @@
 
 # Features and bugs left
 
-- typedef aliases
 - defines
 - array size expressions
 - `printf`
+- global initializers?
 - `readu16()` 
 - `readu24()` 
 - `readu32()` 

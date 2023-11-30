@@ -22,7 +22,15 @@ Type parse_type(){
     }
 
     type.name = eat_word();
-    type.dimensions = parse_dimensions((u32[4]){0, 0, 0, 0});
+
+    u32 unaliased = try_resolve_type_alias(type.name);
+
+    if(unaliased < TYPES_CAPACITY){
+        type = types[unaliased];
+        type.dimensions = parse_dimensions(dimensions[type.dimensions]);
+    } else {
+        type.dimensions = parse_dimensions((u32[4]){0, 0, 0, 0});
+    }
 
     // Translate C integer types
     if(aux_cstr_equals_void(type.name)){

@@ -3,7 +3,7 @@
 #include "../include/storage.h"
 #include "../include/typedef.h"
 #include "../include/expression_print.h"
-
+#include "../include/type_print.h"
 
 static u0 typedef_struct_print(TypeDef def){
     printf("typedef struct {\n");
@@ -16,7 +16,7 @@ static u0 typedef_struct_print(TypeDef def){
 
     printf("} ");
     print_aux_cstr(def.name);
-    printf(";\n");
+    printf(";");
 }
 
 u0 typedef_print(TypeDef def){
@@ -27,5 +27,13 @@ u0 typedef_print(TypeDef def){
     default:
         printf("<unknown typdef>");
     }
+}
+
+u0 type_alias_print(TypeAlias alias){
+    printf("typedef ");
+    type_print(types[alias.rewritten_type]);
+    printf(" ");
+    print_aux_cstr(alias.name);
+    printf(";");
 }
 

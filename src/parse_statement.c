@@ -11,7 +11,6 @@
 static u1 eat_semicolon();
 static u32 add_statement_else_print_error(Expression expression);
 static ErrorCode parse_declaration_assignment(u32 variable_name, u24 line_number);
-static ErrorCode parse_declaration();
 static ErrorCode parse_if();
 static ErrorCode parse_while();
 static ErrorCode parse_do_while();
@@ -25,7 +24,7 @@ static ErrorCode parse_default();
 
 ErrorCode parse_statement(){
     if(is_type_followed_by(TOKEN_WORD)){
-        if(parse_declaration()) return 1;
+        if(parse_declaration(true)) return 1;
     } else if(eat_token(TOKEN_IF)){
         if(parse_if()) return 1;
     } else if(eat_token(TOKEN_WHILE)){
@@ -139,7 +138,7 @@ static ErrorCode parse_declaration_assignment(u32 variable_name, u24 line_number
     return !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
 }
 
-static ErrorCode parse_declaration(){
+ErrorCode parse_declaration(u1 allow_assignment){
     u24 line_number = current_line_packed();
 
     Type type = parse_type();
@@ -176,7 +175,7 @@ static ErrorCode parse_declaration(){
         .ops = ops,
     };
 
-    if(is_token(TOKEN_ASSIGN)){
+    if(allow_assignment && is_token(TOKEN_ASSIGN)){
         return add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY || parse_declaration_assignment(variable_name, line_number);
     } else {
         return !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;

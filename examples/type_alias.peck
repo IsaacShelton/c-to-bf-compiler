@@ -1,0 +1,13 @@
+
+typedef void nothing;
+typedef u8 string[256];
+
+nothing main(){
+    show_message("Hello World using type aliases!\n");
+    return;
+}
+
+nothing show_message(string message){
+    print(message);
+}
+

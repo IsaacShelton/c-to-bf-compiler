@@ -29,5 +29,10 @@ typedef struct {
     u32 computed_size;
 } TypeDef;
 
+typedef struct {
+    u32 name;
+    u32 rewritten_type;
+} TypeAlias;
+
 #endif // _PECK_AST_TYPEDEF_H
 

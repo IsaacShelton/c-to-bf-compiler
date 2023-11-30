@@ -50,6 +50,13 @@ int main(void){
         printf("\n");
     }
     */
+    
+    /*
+    for(u32 i = 0; i < num_type_aliases; i++){
+        type_alias_print(type_aliases[i]);
+        printf("\n");
+    }
+    */
 
     /*
     for(u32 i = 0; i < num_functions; i++){

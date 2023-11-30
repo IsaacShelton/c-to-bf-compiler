@@ -51,6 +51,9 @@ extern u32 num_globals;
 extern TypeDef typedefs[TYPEDEFS_CAPACITY];
 extern u32 num_typedefs;
 
+extern TypeAlias type_aliases[TYPE_ALIASES_CAPACITY];
+extern u32 num_type_aliases;
+
 extern CloseNeeded closes_needed[CLOSES_NEEDED_CAPCAITY];
 extern u32 num_closes_needed;
 
@@ -68,6 +71,8 @@ u32 add_operands3(u32 a, u32 b, u32 c);
 u32 add_operands5(u32 a, u32 b, u32 c, u32 d, u32 e);
 u32 add_global(Global global);
 u32 add_typedef(TypeDef def);
+u32 add_type_alias(TypeAlias alias);
+u32 try_resolve_type_alias(u32 name);
 u32 find_typedef(u32 name);
 u32 aux_cstr_alloc(u8 null_terminated_name[32]);
 u1 aux_cstr_equals(u32 a, u32 b);

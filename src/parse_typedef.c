@@ -141,6 +141,34 @@ static ErrorCode parse_typedef_enum(u24 line_number){
     return def >= TYPEDEFS_CAPACITY;
 }
 
+static ErrorCode parse_typedef_alias(u24 line_number){
+    // typedef substitution_type alias_name;
+    //                 ^
+
+    if(parse_declaration(false)){
+        return 1;
+    }
+
+    num_statements--;
+    Expression expression = expressions[--num_expressions];
+
+    if(expression.kind != EXPRESSION_DECLARE){
+        printf("\ninternal error on line %d: Expected declaration for typedef alias\n", u24_unpack(line_number));
+        return 1;
+    }
+
+    u32 type = operands[expression.ops];
+    u32 name = operands[expression.ops + 1];
+    num_operands -= 2;
+
+    u32 alias = add_type_alias((TypeAlias){
+        .name = name,
+        .rewritten_type = type,
+    });
+
+    return alias >= TYPE_ALIASES_CAPACITY;
+}
+
 ErrorCode parse_typedef(){
     // typedef 
     //         ^
@@ -155,8 +183,6 @@ ErrorCode parse_typedef(){
         return parse_typedef_enum(line_number);
     }
 
-    printf("error on line %d: Alias typdefs are not supported yet\n", current_line());
-    stop_parsing();
-    return 1;
+    return parse_typedef_alias(line_number);
 }
 

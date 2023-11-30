@@ -44,6 +44,9 @@ u32 num_globals = 0;
 TypeDef typedefs[TYPEDEFS_CAPACITY];
 u32 num_typedefs = 0;
 
+TypeAlias type_aliases[TYPE_ALIASES_CAPACITY];
+u32 num_type_aliases = 0;
+
 CloseNeeded closes_needed[CLOSES_NEEDED_CAPCAITY];
 u32 num_closes_needed = 0;
 
@@ -210,13 +213,33 @@ u32 add_global(Global global){
 }
 
 u32 add_typedef(TypeDef def){
-    if(num_typedefs < GLOBALS_CAPACITY){
+    if(num_typedefs < TYPEDEFS_CAPACITY){
         typedefs[num_typedefs] = def;
         return num_typedefs++;
     }
 
     printf("Out of memory: Exceeded maximum number of type definitions\n");
     return TYPEDEFS_CAPACITY;
+}
+
+u32 add_type_alias(TypeAlias alias){
+    if(num_type_aliases < TYPE_ALIASES_CAPACITY){
+        type_aliases[num_type_aliases] = alias;
+        return num_type_aliases++;
+    }
+
+    printf("Out of memory: Exceeded maximum number of type aliases\n");
+    return TYPE_ALIASES_CAPACITY;
+}
+
+u32 try_resolve_type_alias(u32 name){
+    for(u32 i = 0; i < num_type_aliases; i++){
+        if(aux_cstr_equals(type_aliases[i].name, name)){
+            return type_aliases[i].rewritten_type;
+        }
+    }
+    
+    return TYPES_CAPACITY;
 }
 
 u32 find_typedef(u32 name){

@@ -57,7 +57,7 @@ u1 is_type_followed_by(TokenKind followed_by){
     for(u8 i = 1; ok && is_token(TOKEN_OPEN_BRACKET); i++){
         if(
             !eat_token(TOKEN_OPEN_BRACKET)
-         || !eat_token(TOKEN_INT)
+         || !(eat_token(TOKEN_INT) || eat_token(TOKEN_WORD))
          || !eat_token(TOKEN_CLOSE_BRACKET)
          || i > 4
         ){

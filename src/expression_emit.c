@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "../include/io.h"
 #include "../include/expression_emit.h"
 #include "../include/expression.h"
 #include "../include/storage.h"
@@ -158,7 +159,7 @@ static u32 expression_emit_printf(Expression expression){
                     break;
                 } else if(c != '%'){
                     printf("\nerror on line %d: Unknown printf format '%%", u24_unpack(expression.line));
-                    putchar(c);
+                    put(c);
                     printf("'\n");
                     return TYPES_CAPACITY;
                 }
@@ -498,11 +499,6 @@ static u1 is_destination(Expression expression){
 }
 
 static Destination destination_member(Destination destination, u32 name, u24 line_on_error){
-    if(destination.offset_size > 0){
-        printf("\nerror on line %d: Cannot member into destination that already has an offset yet (not supported)\n", u24_unpack(line_on_error));
-        return (Destination) { .type = TYPES_CAPACITY };
-    }
-
     Type type = types[destination.type];
     u1 is_struct_type = true;
     TypeDef def;
@@ -603,7 +599,7 @@ static Destination destination_index(
 
     if(index_type == u8_type || index_type == u16_type || index_type == u24_type || index_type == u32_type){
         index_type_size = type_sizeof_or_max(index_type, u24_pack(0));
-        if(index_type_size >= TYPES_CAPACITY) return (Destination){ .type = TYPES_CAPACITY };
+        if(index_type_size == -1) return (Destination){ .type = TYPES_CAPACITY };
     } else {
         printf("\nerror on line %d: Cannot use index of type '", u24_unpack(index_expression.line));
         type_print(types[index_type]);

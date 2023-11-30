@@ -5,7 +5,7 @@
 #include "../include/lex_context.h"
 
 LexedToken lex_character_literal(){
-    LexedToken result = {
+    LexedToken result = (LexedToken){
         .token = (Token){
             .line = u24_pack(lex_line_number),
             .kind = TOKEN_INT,

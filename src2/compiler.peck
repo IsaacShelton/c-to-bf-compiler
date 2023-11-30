@@ -1,3 +1,5 @@
+typedef u8 ErrorCode;
+typedef u8 ExpressionGetTypeMode;
 
 
 
@@ -299,6 +301,7 @@ typedef enum {
     EXPRESSION_BREAK,
     EXPRESSION_CONTINUE,
     EXPRESSION_FOR, /* { num_pre_statements, condition, pre_post_statements, num_statements, computed_inner_variable_offset } */
+    EXPRESSION_CONDITIONLESS_BLOCK, /* { num_statements } */
     EXPRESSION_SIZEOF_TYPE, /* { type } */
     EXPRESSION_SIZEOF_TYPE_U8, /* { type } */
     EXPRESSION_SIZEOF_TYPE_U16, /* { type } */
@@ -361,7 +364,6 @@ u32 write_destination_unsafe(u32 new_value_type, Destination destination, u24 er
 #define EXPRESSION_GET_TYPE_MODE_PRINT_ERROR 1
 #define EXPRESSION_GET_TYPE_MODE_INFER 2
 
-typedef u8 ExpressionGetTypeMode;
 
 u32 expression_get_type(Expression expression, ExpressionGetTypeMode mode);
 u32 get_item_type(Type type, u24 line_on_error, u1 show_error_message);
@@ -456,15 +458,6 @@ u32 infer();
 
 
 
-
-u0 put(u8 c){
-    putchar(c);
-}
-
-u8 get(){
-    char c = getc(stdin);
-    return c != EOF ? c : 0;
-}
 
 
 
@@ -861,18 +854,17 @@ u0 type_alias_print(TypeAlias alias);
 
 
 
-typedef void u0;
-typedef bool u1;
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
+
+
+
+
+
 
 // NOTE: `bytes` are in big endian
 typedef struct { u8 bytes[3]; } u24;
 u24 u24_pack(u32 value);
 u32 u24_unpack(u24 value);
 
-typedef u8 ErrorCode;
 
 
 
@@ -1167,6 +1159,11 @@ ErrorCode compute_typedef_sizes(){
     for(u32 i = 0; i < num_typedefs; i++){
         TypeDef def = typedefs[i];
 
+        if(def.kind == TYPEDEF_ENUM){
+            typedefs[i].computed_size = 1;
+            continue;
+        }
+
         for(u32 j = def.begin; j < def.begin + def.num_fields; j++){
             Expression expression = expressions[statements[j]];
             if(expression.kind != EXPRESSION_DECLARE) continue;
@@ -1191,6 +1188,10 @@ ErrorCode compute_typedef_sizes(){
                 if(num_dependencies == TYPE_DEPENDENCIES_CAPACITY){
                     printf("\nOut of memory: Exceeded maximum number of typedef dependencies\n");
                     return 1;
+                }
+
+                if(typedefs[required].kind == TYPEDEF_ENUM){
+                    continue;
                 }
 
                 u1 already_exists = false;
@@ -1219,7 +1220,6 @@ ErrorCode compute_typedef_sizes(){
     // Compute types that have no remaining dependencies
     while(progress){
         progress = false;
-        
         // Compute sizes for all trivial typedefs
         for(u32 i = 0; i < num_typedefs; i++){
             if(!(outgoing[i] == 0 && typedefs[i].computed_size == -1)) continue;
@@ -1245,22 +1245,22 @@ ErrorCode compute_typedef_sizes(){
                     progress = true;
                 }
             }
-
-            break;
         }
     }
+
+    u1 has_undetermined = false;
 
     // Ensure all typedefs were processed
     for(u32 i = 0; i < num_typedefs; i++){
         if(outgoing[i] != 0){
             printf("\nerror on line %d: Type '", u24_unpack(typedefs[i].line));
             print_aux_cstr(typedefs[i].name);
-            printf("' has infinite size\n");
-            return 1;
+            printf("' has infinite size, %d dependencies remain\n", outgoing[i]);
+            has_undetermined = true;
         }
     }
 
-    return 0;
+    return has_undetermined ? 1 : 0;
 }
 
 
@@ -3834,7 +3834,7 @@ u0 emit_stdlib_function_call(u8 function_name[16], u32 return_size, u32 params_s
         return;
     }
 
-    if(function_emit(function_index, start_function_cell_index, emit_context.current_cell_index)){
+    if(function_emit(function_index, start_function_cell_index, emit_context.current_cell_index) != 0){
         printf("\nFailed to emit standard library function call, errors exist inside of function\n");
         return;
     }
@@ -5018,7 +5018,8 @@ ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u32 offset_size){
 }
 
 u32 expression_emit_printf(Expression expression){
-    u32 arity = operands[expression.ops + 1];
+    u32 thing = expression.ops + 1;
+    u32 arity = operands[thing];
 
     if(arity < 1){
         printf("\nerror on line %d: printf requires at least one argument\n", u24_unpack(expression.line));
@@ -5051,7 +5052,7 @@ u32 expression_emit_printf(Expression expression){
                     break;
                 } else if(c != '%'){
                     printf("\nerror on line %d: Unknown printf format '%%", u24_unpack(expression.line));
-                    putchar(c);
+                    put(c);
                     printf("'\n");
                     return TYPES_CAPACITY;
                 }
@@ -5391,11 +5392,6 @@ u1 is_destination(Expression expression){
 }
 
 Destination destination_member(Destination destination, u32 name, u24 line_on_error){
-    if(destination.offset_size > 0){
-        printf("\nerror on line %d: Cannot member into destination that already has an offset yet (not supported)\n", u24_unpack(line_on_error));
-        return (Destination) { .type = TYPES_CAPACITY };
-    }
-
     Type type = types[destination.type];
     u1 is_struct_type = true;
     TypeDef def;
@@ -6848,6 +6844,7 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_IF_ELSE:
     case EXPRESSION_WHILE:
     case EXPRESSION_DO_WHILE:
+    case EXPRESSION_CONDITIONLESS_BLOCK:
     case EXPRESSION_FOR:
     case EXPRESSION_SWITCH:
         break;
@@ -7091,6 +7088,7 @@ u32 expression_get_type(Expression expression, ExpressionGetTypeMode mode){
     case EXPRESSION_BREAK:
     case EXPRESSION_CONTINUE:
     case EXPRESSION_FOR:
+    case EXPRESSION_CONDITIONLESS_BLOCK:
     case EXPRESSION_SWITCH:
     case EXPRESSION_CASE:
     case EXPRESSION_ARRAY_INITIALIZER:
@@ -7472,6 +7470,7 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
     case EXPRESSION_WHILE:
     case EXPRESSION_DO_WHILE:
         expression_infer(operands[expression.ops], EXPRESSION_U1);
+    case EXPRESSION_CONDITIONLESS_BLOCK:
         break;
     case EXPRESSION_FOR:
         // Go to context past pre-statements
@@ -7979,6 +7978,7 @@ ErrorCode emit_do_while_stack(Expression expression);
 ErrorCode emit_do_while_tape(Expression expression);
 ErrorCode emit_for_stack(Expression expression);
 ErrorCode emit_for_tape(Expression expression);
+ErrorCode emit_conditionless_block(Expression expression);
 ErrorCode emit_switch_stack(Expression expression);
 ErrorCode emit_switch_tape(Expression expression);
 ErrorCode emit_case_stack(Expression expression);
@@ -8200,6 +8200,10 @@ ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i, u1 allow_cases)
         case EXPRESSION_DO_WHILE:
             if(emit_do_while(expression)) return 1;
             i += operands[expression.ops + 1];
+            break;
+        case EXPRESSION_CONDITIONLESS_BLOCK:
+            if(emit_conditionless_block(expression)) return 1;
+            i += expression.ops;
             break;
         case EXPRESSION_SWITCH:
             if(emit_switch(expression)) return 1;
@@ -8960,6 +8964,15 @@ ErrorCode emit_for_tape(Expression expression){
     return emit_break_check() || emit_continue_check() || emit_early_return_check();
 }
 
+ErrorCode emit_conditionless_block(Expression expression){
+    // Emit body
+    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + expression.ops + 1, false)){
+        return 1;
+    }
+
+    return 0;
+}
+
 ErrorCode emit_switch(Expression expression){
     if(emit_context.in_recursive_function){
         return emit_switch_stack(expression);
@@ -9101,6 +9114,10 @@ SwitchInfo get_switch_case_info(Expression switch_expression){
             break;
         case EXPRESSION_IF_ELSE:
             i += operands[expression.ops + 1] + operands[expression.ops + 2];
+            break;
+        case EXPRESSION_CONDITIONLESS_BLOCK:
+            i += expression.ops;
+            break;
         case EXPRESSION_FOR:
             i += operands[expression.ops] + operands[expression.ops + 2] + operands[expression.ops + 3];
             break;
@@ -9576,6 +9593,10 @@ u1 can_function_early_return(u32 function_index){
                 i += num_then + num_else;
             }
             break;
+        case EXPRESSION_CONDITIONLESS_BLOCK:
+            if(has_return_in_region(i + 1, i + expression.ops + 1)) return true;
+            i += expression.ops + 1;
+            break;
         case EXPRESSION_FOR: {
                 u32 num_pre = operands[expression.ops];
                 u32 num_post = operands[expression.ops + 2];
@@ -9960,6 +9981,17 @@ u0 print_body(u32 start_i, u32 stop_i, u32 indentation, u1 print_trailing_semico
                 printf("){\n");
                 print_body(i + 1, i + len + 1, indentation + 1, true);
                 i += len;
+                indent(indentation);
+                printf("}\n");
+            }
+            break;
+        case EXPRESSION_CONDITIONLESS_BLOCK: {
+                u32 len = expression.ops;
+
+                printf("{\n");
+                print_body(i + 1, i + len + 1, indentation + 1, true);
+                i += len;
+
                 indent(indentation);
                 printf("}\n");
             }
@@ -10429,7 +10461,10 @@ u32 lex(){
     }
 
     if(code_buffer_length >= 8 && memcmp(code_buffer, "`stdlib\n", 8) == 0){
-        memmove(code_buffer, &code_buffer[8], code_buffer_length - 8);
+        // ---- memmove(code_buffer, &code_buffer[8], code_buffer_length - 8); ----
+        for(u32 i = 0; i + 8 < code_buffer_length; i++){
+            code_buffer[i] = code_buffer[i + 8];
+        }
         code_buffer_length -= 8;
         
         // Compile as standard libary,
@@ -10559,7 +10594,7 @@ u32 lex(){
 
 
 LexedToken lex_character_literal(){
-    LexedToken result = {
+    LexedToken result = (LexedToken){
         .token = (Token){
             .line = u24_pack(lex_line_number),
             .kind = TOKEN_INT,
@@ -11217,7 +11252,7 @@ ErrorCode parse_function(u32 symbol_name, u32 symbol_type, u24 line_number){
         }) >= STATEMENTS_CAPACITY){
             stop_parsing();
             return 1;
-        };
+        }
 
         if(!eat_token(TOKEN_NEXT)){
             if(!is_token(TOKEN_CLOSE)){
@@ -12688,6 +12723,7 @@ ErrorCode parse_if();
 ErrorCode parse_while();
 ErrorCode parse_do_while();
 ErrorCode parse_for();
+ErrorCode parse_conditionless_block();
 ErrorCode parse_return();
 ErrorCode parse_break();
 ErrorCode parse_continue();
@@ -12718,6 +12754,8 @@ ErrorCode parse_statement(){
         if(parse_case()) return 1;
     } else if(eat_token(TOKEN_DEFAULT)){
         if(parse_default()) return 1;
+    } else if(is_token(TOKEN_BEGIN)){
+        if(parse_conditionless_block()) return 1;
     } else {
         Expression statement = parse_expression();
         if(had_parse_error) return 1;
@@ -13181,6 +13219,31 @@ ErrorCode parse_for(){
     return 0;
 }
 
+ErrorCode parse_conditionless_block(){
+    // {
+    // ^
+
+    Expression statement = (Expression){
+        .kind = EXPRESSION_CONDITIONLESS_BLOCK,
+        .line = current_line_packed(),
+        .ops = 0,
+    };
+
+    u32 block = add_statement_else_print_error(statement);
+    if(block >= STATEMENTS_CAPACITY){
+        return 1;
+    }
+
+    u32 length = parse_block(false);
+
+    if(length >= STATEMENTS_CAPACITY){
+        return 1;
+    }
+
+    expressions[statements[block]].ops = length;
+    return 0;
+}
+
 ErrorCode parse_return(){
     // return 
     //         ^
@@ -13352,7 +13415,7 @@ ErrorCode parse_default(){
 
 
 Type parse_type(){
-    Type type = {
+    Type type = (Type){
         .name = 0,
         .dimensions = 0,
     };
@@ -13373,7 +13436,8 @@ Type parse_type(){
         type = types[unaliased];
         type.dimensions = parse_dimensions(dimensions[type.dimensions]);
     } else {
-        type.dimensions = parse_dimensions((u32[4]){0, 0, 0, 0});
+        u32 starting[4] = {0, 0, 0, 0};
+        type.dimensions = parse_dimensions(starting);
     }
 
     // Translate C integer types
@@ -24900,11 +24964,11 @@ u32 try_resolve_define(u32 name){
 u32 aux_cstr_alloc(u8 null_terminated_name[32]){
     u8 length = 0;
 
-    while(length < 32 && null_terminated_name[length]){
+    while(length < 32 && (u1) null_terminated_name[length]){
         length++;
     }
 
-    if(num_aux + length + 1 >= AUX_CAPACITY){
+    if(num_aux + (u32) length + 1 >= AUX_CAPACITY){
         printf("Out of memory: Auxiliary memory used up\n");
         return AUX_CAPACITY;
     }
@@ -25123,8 +25187,8 @@ u1 aux_cstr_equals_memcpy(u32 a){
 }
 
 u0 print_aux_cstr(u32 index){
-    for(u32 i = index; aux[i]; i++){
-        putchar(aux[i]);
+    for(u32 i = index; (u1) aux[i]; i++){
+        put(aux[i]);
     }
 }
 
@@ -25140,7 +25204,7 @@ u0 print_aux_cstr_escaped(u32 index){
         } else if(c == '\0'){
             printf("\\0");
         } else {
-            putchar(aux[i]);
+            put(aux[i]);
         }
     }
 }
@@ -25319,6 +25383,9 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_STRUCT:
         printf("struct");
         break;
+    case TOKEN_MEMBER:
+        printf(".");
+        break;
     case TOKEN_ADD_ASSIGN:
         printf("+=");
         break;
@@ -25380,7 +25447,7 @@ u0 token_print(Token token, u1 safe){
         printf("#");
         break;
     default:
-        printf("<unknown>");
+        printf("<unknown %d>", (u32) token.kind);
     }
 }
 
@@ -25662,6 +25729,20 @@ Container get_parent_container(u32 statement_index){
                 }
             }
             break;
+        case EXPRESSION_CONDITIONLESS_BLOCK: {
+                u32 num_statements = expression.ops;
+
+                if(i + num_statements >= statement_index){
+                    return (Container){
+                        .self_statement = i,
+                        .start_statement = i + 1,
+                        .stop_statement = i + num_statements + 1,
+                        .secondary_start_statement = STATEMENTS_CAPACITY,
+                        .secondary_stop_statement = STATEMENTS_CAPACITY,
+                    };
+                }
+            }
+            break;
         case EXPRESSION_FOR: {
                 u32 num_pre = operands[expression.ops];
                 u32 num_post = operands[expression.ops + 2];
@@ -25817,6 +25898,9 @@ u32 find_declaration(u32 start_statement, u32 stop_statement, u32 name){
         case EXPRESSION_IF_ELSE:
             i += operands[expression.ops + 1] + operands[expression.ops + 2];
             break;
+        case EXPRESSION_CONDITIONLESS_BLOCK:
+            i += expression.ops;
+            break;
         case EXPRESSION_FOR:
             i += operands[expression.ops] + operands[expression.ops + 2] + operands[expression.ops + 3];
             break;
@@ -25923,6 +26007,10 @@ HoneInfo hone_switch_case_or_skip(u32 current_statement, u32 target_statement, u
             break;
         case EXPRESSION_IF_ELSE:
             i += operands[expression.ops + 1] + operands[expression.ops + 2];
+            break;
+        case EXPRESSION_CONDITIONLESS_BLOCK:
+            i += expression.ops;
+            break;
         case EXPRESSION_FOR:
             i += operands[expression.ops] + operands[expression.ops + 2] + operands[expression.ops + 3];
             break;
@@ -26078,6 +26166,16 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
 
             if(target_statement <= current_statement + num_statements){
                 return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = inner_variable_offset };
+            } else {
+                return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = 0 };
+            }
+        }
+        break;
+    case EXPRESSION_CONDITIONLESS_BLOCK:{
+            u32 num_statements = expression.ops;
+
+            if(target_statement <= current_statement + num_statements){
+                return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = 0 };
             } else {
                 return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = 0 };
             }

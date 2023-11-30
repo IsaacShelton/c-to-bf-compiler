@@ -401,7 +401,10 @@ u32 lex(){
     }
 
     if(code_buffer_length >= 8 && memcmp(code_buffer, "`stdlib\n", 8) == 0){
-        memmove(code_buffer, &code_buffer[8], code_buffer_length - 8);
+        // ---- memmove(code_buffer, &code_buffer[8], code_buffer_length - 8); ----
+        for(u32 i = 0; i + 8 < code_buffer_length; i++){
+            code_buffer[i] = code_buffer[i + 8];
+        }
         code_buffer_length -= 8;
         
         // Compile as standard libary,

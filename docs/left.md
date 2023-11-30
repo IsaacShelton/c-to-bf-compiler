@@ -6,6 +6,6 @@
 - `readu32()` 
 - `read()` array
 - file directives
-- `strcmp`, `strlen`, `strcat`, `memset`
+- `strcmp`, `strlen`, `strcat`, `memset`, `memmove()`
 - `u24`
 

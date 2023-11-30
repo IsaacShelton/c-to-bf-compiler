@@ -607,7 +607,7 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
             }
         }
         break;
-    case EXPRESSION_CONDITIONLESS_BLOCK:{
+    case EXPRESSION_CONDITIONLESS_BLOCK: {
             u32 num_statements = expression.ops;
 
             if(target_statement <= current_statement + num_statements){

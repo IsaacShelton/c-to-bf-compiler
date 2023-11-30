@@ -2568,7 +2568,7 @@ u0 emit_stdlib_function_call(u8 function_name[16], u32 return_size, u32 params_s
         return;
     }
 
-    if(function_emit(function_index, start_function_cell_index, emit_context.current_cell_index)){
+    if(function_emit(function_index, start_function_cell_index, emit_context.current_cell_index) != 0){
         fprintf(stderr, "Failed to emit standard library function call, errors exist inside of function\n");
         return;
     }

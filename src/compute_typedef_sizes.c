@@ -22,6 +22,11 @@ ErrorCode compute_typedef_sizes(){
     for(u32 i = 0; i < num_typedefs; i++){
         TypeDef def = typedefs[i];
 
+        if(def.kind == TYPEDEF_ENUM){
+            typedefs[i].computed_size = 1;
+            continue;
+        }
+
         for(u32 j = def.begin; j < def.begin + def.num_fields; j++){
             Expression expression = expressions[statements[j]];
             if(expression.kind != EXPRESSION_DECLARE) continue;
@@ -46,6 +51,10 @@ ErrorCode compute_typedef_sizes(){
                 if(num_dependencies == TYPE_DEPENDENCIES_CAPACITY){
                     printf("\nOut of memory: Exceeded maximum number of typedef dependencies\n");
                     return 1;
+                }
+
+                if(typedefs[required].kind == TYPEDEF_ENUM){
+                    continue;
                 }
 
                 u1 already_exists = false;
@@ -74,7 +83,6 @@ ErrorCode compute_typedef_sizes(){
     // Compute types that have no remaining dependencies
     while(progress){
         progress = false;
-        
         // Compute sizes for all trivial typedefs
         for(u32 i = 0; i < num_typedefs; i++){
             if(!(outgoing[i] == 0 && typedefs[i].computed_size == -1)) continue;
@@ -100,21 +108,21 @@ ErrorCode compute_typedef_sizes(){
                     progress = true;
                 }
             }
-
-            break;
         }
     }
+
+    u1 has_undetermined = false;
 
     // Ensure all typedefs were processed
     for(u32 i = 0; i < num_typedefs; i++){
         if(outgoing[i] != 0){
             printf("\nerror on line %d: Type '", u24_unpack(typedefs[i].line));
             print_aux_cstr(typedefs[i].name);
-            printf("' has infinite size\n");
-            return 1;
+            printf("' has infinite size, %d dependencies remain\n", outgoing[i]);
+            has_undetermined = true;
         }
     }
 
-    return 0;
+    return has_undetermined ? 1 : 0;
 }
 

@@ -154,6 +154,9 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_STRUCT:
         printf("struct");
         break;
+    case TOKEN_MEMBER:
+        printf(".");
+        break;
     case TOKEN_ADD_ASSIGN:
         printf("+=");
         break;
@@ -215,7 +218,7 @@ u0 token_print(Token token, u1 safe){
         printf("#");
         break;
     default:
-        printf("<unknown>");
+        printf("<unknown %d>", (u32) token.kind);
     }
 }
 

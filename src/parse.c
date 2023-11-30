@@ -73,7 +73,7 @@ ErrorCode parse_function(u32 symbol_name, u32 symbol_type, u24 line_number){
         }) >= STATEMENTS_CAPACITY){
             stop_parsing();
             return 1;
-        };
+        }
 
         if(!eat_token(TOKEN_NEXT)){
             if(!is_token(TOKEN_CLOSE)){

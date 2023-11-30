@@ -8,7 +8,7 @@
 #include "../include/builtin_types.h"
 
 Type parse_type(){
-    Type type = {
+    Type type = (Type){
         .name = 0,
         .dimensions = 0,
     };
@@ -29,7 +29,8 @@ Type parse_type(){
         type = types[unaliased];
         type.dimensions = parse_dimensions(dimensions[type.dimensions]);
     } else {
-        type.dimensions = parse_dimensions((u32[4]){0, 0, 0, 0});
+        u32 starting[4] = {0, 0, 0, 0};
+        type.dimensions = parse_dimensions(starting);
     }
 
     // Translate C integer types

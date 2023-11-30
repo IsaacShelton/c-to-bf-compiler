@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include "../include/io.h"
 #include "../include/config.h"
 #include "../include/storage.h"
 #include "../include/type.h"
@@ -277,11 +278,11 @@ u32 try_resolve_define(u32 name){
 u32 aux_cstr_alloc(u8 null_terminated_name[32]){
     u8 length = 0;
 
-    while(length < 32 && null_terminated_name[length]){
+    while(length < 32 && (u1) null_terminated_name[length]){
         length++;
     }
 
-    if(num_aux + length + 1 >= AUX_CAPACITY){
+    if(num_aux + (u32) length + 1 >= AUX_CAPACITY){
         printf("Out of memory: Auxiliary memory used up\n");
         return AUX_CAPACITY;
     }
@@ -500,8 +501,8 @@ u1 aux_cstr_equals_memcpy(u32 a){
 }
 
 u0 print_aux_cstr(u32 index){
-    for(u32 i = index; aux[i]; i++){
-        putchar(aux[i]);
+    for(u32 i = index; (u1) aux[i]; i++){
+        put(aux[i]);
     }
 }
 
@@ -517,7 +518,7 @@ u0 print_aux_cstr_escaped(u32 index){
         } else if(c == '\0'){
             printf("\\0");
         } else {
-            putchar(aux[i]);
+            put(aux[i]);
         }
     }
 }

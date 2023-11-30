@@ -1,7 +1,6 @@
 
 # Features and bugs left
 
-- `memcmp`
 - `readu16()` 
 - `readu24()` 
 - `readu32()` 

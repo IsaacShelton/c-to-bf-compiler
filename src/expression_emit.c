@@ -16,6 +16,8 @@
 #include "../include/expression_get_type.h"
 #include "../include/stack_driver.h"
 
+static u32 expression_emit_string(Expression expression);
+
 static u0 print_nth_argument_label(u32 number){
     switch(number){
     case 0:
@@ -169,7 +171,6 @@ static u32 expression_emit_printf(Expression expression){
 
         if(c == 'd'){
             Expression argument = expressions[operands[expression.ops + 2 + next_argument_i++]];
-
             u32 argument_type = expression_emit(argument);
             if(argument_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
@@ -201,9 +202,117 @@ static u32 expression_emit_printf(Expression expression){
 }
 
 static u32 expression_emit_memcmp(Expression expression){
-    printf("\nerror on line %d: memcmp is unimplemented\n", u24_unpack(expression.line));
-    return TYPES_CAPACITY;
+    u32 arity = operands[expression.ops + 1];
 
+    if(arity != 3){
+        printf("\nerror on line %d: memcmp requires three arguments\n", u24_unpack(expression.line));
+        return TYPES_CAPACITY;
+    }
+
+    Expression bytes_argument = expressions[operands[expression.ops + 2 + 2]];
+    if(bytes_argument.kind != EXPRESSION_INT){
+        printf("\nerror on line %d: Third argument to memcmp must be a compile-time known integer\n", u24_unpack(expression.line));
+        return TYPES_CAPACITY;
+    }
+
+    u32 bytes = bytes_argument.ops;
+
+    if(bytes == 0){
+        emit_u8(0);
+        return u8_type;
+    }
+
+    u32 type_dimensions[4] = { bytes };
+    Type new_type_layout = (Type){
+        .name = types[u8_type].name,
+        .dimensions = add_dimensions(type_dimensions),
+    };
+    u32 new_type = add_type(new_type_layout);
+    if(new_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    Destination destination;
+    Expression argument;
+
+    argument = expressions[operands[expression.ops + 2]];
+    if(argument.kind == EXPRESSION_STRING){
+        expression_emit_string(argument);
+    } else {
+        destination = expression_get_destination(argument, emit_context.current_cell_index);
+        if(destination.type >= TYPES_CAPACITY) return 1;
+        destination.type = new_type;
+        if(read_destination(destination, expression.line) >= TYPES_CAPACITY){
+            return TYPES_CAPACITY;
+        }
+    }
+
+    argument = expressions[operands[expression.ops + 2 + 1]];
+    if(argument.kind == EXPRESSION_STRING){
+        expression_emit_string(argument);
+    } else {
+        destination = expression_get_destination(argument, emit_context.current_cell_index);
+        if(destination.type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+        destination.type = new_type;
+        if(read_destination(destination, expression.line) >= TYPES_CAPACITY){
+            return TYPES_CAPACITY;
+        }
+    }
+
+    // Allocate not done and result cell
+    printf(">[-]+>[-]<");
+
+    for(u32 j = 0; j < bytes; j++){
+        int i = bytes - 1 - j;
+        
+        // If not done
+        printf("[");
+
+        // Zero initialize temporary cell
+        printf("<[-]");
+
+        // Go to Y
+        printf("%d<", i + 1);
+
+        // Set X to X - Y
+        printf("[%d<-%d>+%d<-]", bytes, bytes + i + 1, i + 1);
+        printf("%d>[%d<+%d>-]", i + 1, i + 1, i + 1);
+
+        // Move X' to temporary cell
+        u32 x_distance = bytes + i + 1;
+        printf("%d<[-%d>+%d<]%d>", x_distance, x_distance, x_distance, x_distance);
+
+        // If temporary cell is not zero
+        printf("[");
+        
+        // Move temporary cell to result cell
+        printf("[>>+<<-]");
+
+        // Set 'not done' to false
+        printf(">[-]<");
+
+        printf("]");
+
+        // Go to 'not done' cell
+        printf(">");
+
+        // Mark as done if out of bytes
+        if(j + 1 == bytes){
+            printf("[-]");
+        }
+    }
+
+    // Close if's
+    printf("%d]", bytes);
+
+    // Go to result cell
+    printf(">");
+
+    // Copy result cell to final position
+    u32 distance = 2 + 2 * bytes;
+    printf("%d<[-]%d>[-%d<+%d>]", distance, distance, distance, distance);
+
+    // Point to next available cell
+    printf("%d<", distance - 1);
+    emit_context.current_cell_index -= 2 * bytes - 1;
     return u8_type;
 }
 
@@ -310,13 +419,6 @@ static u32 expression_emit_call(Expression expression){
 
     return function.return_type;
 }
-
-typedef struct {
-    u32 tape_location;
-    u8 offset_size;
-    u1 on_stack;
-    u32 type; // If >= TYPES_CAPACITY, then error occurred
-} Destination;
 
 static u1 is_destination(Expression expression){
     switch(expression.kind){
@@ -540,7 +642,7 @@ static Destination destination_index(
     };
 }
 
-static Destination expression_get_destination(Expression expression, u32 tape_anchor){
+Destination expression_get_destination(Expression expression, u32 tape_anchor){
     // Creates a u32 value on the tape with the mutable location for an expression.
     // If result is `on_stack`, then the u32 offset will be relative to the stack pointer,
     // Otherwise, the u32 offset will be relative to the supplied anchor cell
@@ -1290,7 +1392,7 @@ static u32 expression_emit_or(Expression expression){
     return u1_type;
 }
 
-static u32 read_destination(Destination destination, u24 line_on_error){
+u32 read_destination(Destination destination, u24 line_on_error){
     if(destination.on_stack){
         printf("\nerror on line %d: Cannot index into destination on the stack yet (not supported)\n", u24_unpack(line_on_error));
         return TYPES_CAPACITY;

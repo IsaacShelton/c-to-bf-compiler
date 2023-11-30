@@ -1,0 +1,17 @@
+
+u0 main(){
+    u8 string[32] = "Hello World";
+
+    print("memcmp result with \"Helln\" is: ");
+    printu8(memcmp(string, "Helln", 5));
+    printf("\n");
+
+    print("memcmp result with \"Hello\" is: ");
+    printu8(memcmp(string, "Hello", 5));
+    printf("\n");
+
+    print("memcmp result with \"Hellp\" is: ");
+    printu8(memcmp(string, "Hellp", 5));
+    printf("\n");
+}
+

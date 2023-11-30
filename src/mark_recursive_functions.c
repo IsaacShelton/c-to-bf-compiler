@@ -119,7 +119,6 @@ ErrorCode mark_recursive_functions(){
             case EXPRESSION_BIT_COMPLEMENT:
             case EXPRESSION_NEGATE:
             case EXPRESSION_PRINT_ARRAY:
-            case EXPRESSION_RETURN:
             case EXPRESSION_PRE_INCREMENT:
             case EXPRESSION_PRE_DECREMENT:
             case EXPRESSION_POST_INCREMENT:
@@ -130,6 +129,16 @@ ErrorCode mark_recursive_functions(){
                 }
 
                 expressions_to_process[num_expressions_to_process++] = expression.ops;
+                break;
+            case EXPRESSION_RETURN:
+                if(num_expressions_to_process + 1 >= EXPRESSIONS_TO_PROCESS_CAPACITY){
+                    printf("\nout of memory: Exceeded maximum number of expressions being processed during determination of recursive functions\n");
+                    return 1;
+                }
+
+                if(expression.ops != EXPRESSIONS_CAPACITY){
+                    expressions_to_process[num_expressions_to_process++] = expression.ops;
+                }
                 break;
             case EXPRESSION_TERNARY:
                 if(num_expressions_to_process + 3 >= EXPRESSIONS_TO_PROCESS_CAPACITY){

@@ -511,14 +511,18 @@ static ErrorCode parse_return(){
     //         ^
 
     u24 line = tokens[parse_i - 1].line;
+    u32 value = EXPRESSIONS_CAPACITY;
 
-    Expression value_expression = parse_expression();
-    if(had_parse_error) return 1;
+    // Parse return value if not followed by a ';'
+    if(!is_token(TOKEN_SEMICOLON)){
+        Expression value_expression = parse_expression();
+        if(had_parse_error) return 1;
 
-    u32 value = add_expression(value_expression);
-    if(value >= EXPRESSIONS_CAPACITY){
-        stop_parsing();
-        return 1;
+        value = add_expression(value_expression);
+        if(value >= EXPRESSIONS_CAPACITY){
+            stop_parsing();
+            return 1;
+        }
     }
 
     Expression statement = (Expression){

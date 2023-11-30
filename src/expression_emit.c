@@ -1444,9 +1444,16 @@ static u32 expression_emit_string(Expression expression){
 
 static u32 expression_emit_return(Expression expression){
     u32 return_type = functions[emit_context.function].return_type;
+    u32 value_type;
 
-    u32 value_type = expression_emit(expressions[expression.ops]);
-    if(value_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+    if(expression.ops == EXPRESSIONS_CAPACITY){
+        // `return;`
+        value_type = u0_type;
+    } else {
+        // `return value;`
+        value_type = expression_emit(expressions[expression.ops]);
+        if(value_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+    }
 
     if(value_type != return_type){
         if(grow_type(value_type, return_type, false)){
@@ -1504,13 +1511,13 @@ static u32 expression_emit_return(Expression expression){
 }
 
 static u32 expression_emit_break(Expression expression){
-    if(!emit_context.can_break){
+    if(!emit_settings.can_break){
         printf("\nerror on line %d: Cannot break, nowhere to go\n", u24_unpack(expression.line));
         return TYPES_CAPACITY;
     }
 
     if(emit_context.in_recursive_function){
-        emit_end_basicblock_jump_to(emit_context.break_basicblock_context);
+        emit_end_basicblock_jump_to(emit_settings.break_basicblock_context);
     } else {
         // Zero 'didnt_break_cell'
         u32 offset = emit_context.current_cell_index - emit_context.didnt_break_cell;
@@ -1521,13 +1528,13 @@ static u32 expression_emit_break(Expression expression){
 }
 
 static u32 expression_emit_continue(Expression expression){
-    if(!emit_context.can_continue){
+    if(!emit_settings.can_continue){
         printf("\nerror on line %d: Cannot continue, nowhere to go\n", u24_unpack(expression.line));
         return TYPES_CAPACITY;
     }
 
     if(emit_context.in_recursive_function){
-        emit_end_basicblock_jump_to(emit_context.continue_basicblock_context);
+        emit_end_basicblock_jump_to(emit_settings.continue_basicblock_context);
     } else {
         // Zero 'didnt_continue_cell'
         u32 offset = emit_context.current_cell_index - emit_context.didnt_continue_cell;

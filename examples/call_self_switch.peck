@@ -1,0 +1,38 @@
+
+u0 letters(u8 letter){
+    switch(letter){
+    case 'A':
+        print("Got A\n");
+        break;
+    case 'B':
+        print("Got B\n");
+        break;
+    case 'C':
+        print("Got C\n");
+        break;
+    case 'D':
+        print("Got D\n");
+        break;
+    default:
+        print("Got something other than A, B, C, or D which is [");
+        put(letter);
+        print("]\n");
+    }
+
+    if(letter != 'A'){
+        letters(letter - 1);
+    }
+}
+
+u0 main(){
+    print("Enter a letter: ");
+    u8 letter = get();
+
+    if(letter < 'A' || letter > 'Z'){
+        print("Letter must be in range A..Z\n");
+        return;
+    }
+
+    letters(letter);
+}
+

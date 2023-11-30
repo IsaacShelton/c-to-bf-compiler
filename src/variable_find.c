@@ -424,7 +424,8 @@ static HoneInfo hone_switch_case_or_skip(u32 current_statement, u32 target_state
                 u32 num_case_statements = operands[expression.ops + 1];
 
                 if(target_statement <= i + num_case_statements){
-                    return (HoneInfo){ .delta_i = i - (current_statement + 1), .delta_depth = 1, .delta_offset = 2 };
+                    u32 delta_offset = emit_context.in_recursive_function ? 0 : 2;
+                    return (HoneInfo){ .delta_i = i - (current_statement + 1), .delta_depth = 1, .delta_offset = delta_offset };
                 }
             }
             break;

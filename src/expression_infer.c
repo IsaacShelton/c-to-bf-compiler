@@ -107,7 +107,9 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
         break;
 
     case EXPRESSION_RETURN:
-        expression_infer(expression.ops, type_to_expression_kind(functions[emit_context.function].return_type));
+        if(expression.ops != EXPRESSIONS_CAPACITY){
+            expression_infer(expression.ops, type_to_expression_kind(functions[emit_context.function].return_type));
+        }
         break;
     case EXPRESSION_ASSIGN:
         if(preferred_int_kind == EXPRESSION_NONE){

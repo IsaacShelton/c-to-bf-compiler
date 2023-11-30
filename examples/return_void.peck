@@ -1,0 +1,14 @@
+
+u0 main(){
+    print("Enter a letter: ");
+
+    u8 letter = get();
+
+    if(letter < 'A' || letter > 'Z'){
+        print("Letter must be in range A..Z\n");
+        return;
+    }
+
+    print("You entered a valid letter\n");
+}
+

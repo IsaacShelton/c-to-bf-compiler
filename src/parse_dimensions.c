@@ -37,14 +37,38 @@ u32 parse_dimensions(u32 start_type_dimensions[4]){
             return UNIQUE_DIMENSIONS_CAPACITY;
         }
 
-        if(!is_token(TOKEN_INT)){
+        u32 dim;
+
+        if(is_token(TOKEN_INT)){
+            dim = eat_int();
+        } else if(is_token(TOKEN_WORD)){
+            u32 definition_name = eat_word();
+
+            u32 resolved = try_resolve_define(definition_name);
+            if(resolved >= EXPRESSIONS_CAPACITY){
+                printf("\nerror on line %d: Undeclared compile-time definition '", current_line());
+                print_aux_cstr(definition_name);
+                printf("'\n");
+                stop_parsing();
+                return UNIQUE_DIMENSIONS_CAPACITY;
+            }
+
+            Expression expression = expressions[resolved];
+            if(expression.kind != EXPRESSION_INT){
+                printf("\nerror on line %d: Cannot use non-integer from compile-time definition '", current_line());
+                print_aux_cstr(definition_name);
+                printf("' as type dimension\n");
+                stop_parsing();
+                return UNIQUE_DIMENSIONS_CAPACITY;
+            }
+
+            dim = expression.ops;
+        } else {
             printf("\nerror on line %d: Expected number for dimension of type\n", current_line());
             instead_got();
             stop_parsing();
             return UNIQUE_DIMENSIONS_CAPACITY;
         }
-
-        u32 dim = eat_int();
 
         if(dim == 0){
             printf("\nerror on line %d: Cannot have array dimension of 0\n", current_line());

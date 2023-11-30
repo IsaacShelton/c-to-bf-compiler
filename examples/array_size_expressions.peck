@@ -1,0 +1,11 @@
+
+#define NUM_ITEMS 1024
+
+u0 main(){
+    u8 items[NUM_ITEMS];
+
+    print("sizeof items is: ");
+    printu16(sizeof items);
+    print("\n");
+}
+

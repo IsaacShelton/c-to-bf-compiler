@@ -1,7 +1,6 @@
 
 # Features and bugs left
 
-- array size expressions
 - (StructName){0} initialization
 - `printf`
 - global initializers?

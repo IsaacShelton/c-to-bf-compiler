@@ -211,6 +211,9 @@ u0 token_print(Token token, u1 safe){
     case TOKEN_ENUM:
         printf("enum");
         break;
+    case TOKEN_HASH:
+        printf("#");
+        break;
     default:
         printf("<unknown>");
     }

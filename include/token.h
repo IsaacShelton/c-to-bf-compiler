@@ -74,6 +74,7 @@ typedef enum {
     TOKEN_CASE,
     TOKEN_DEFAULT,
     TOKEN_ENUM,
+    TOKEN_HASH,
 } TokenKind;
 
 typedef struct {

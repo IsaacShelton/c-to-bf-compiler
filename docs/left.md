@@ -1,8 +1,8 @@
 
 # Features and bugs left
 
-- defines
 - array size expressions
+- (StructName){0} initialization
 - `printf`
 - global initializers?
 - `readu16()` 

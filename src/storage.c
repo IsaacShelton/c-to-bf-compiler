@@ -47,6 +47,9 @@ u32 num_typedefs = 0;
 TypeAlias type_aliases[TYPE_ALIASES_CAPACITY];
 u32 num_type_aliases = 0;
 
+Define defines[DEFINES_CAPACITY];
+u32 num_defines;
+
 CloseNeeded closes_needed[CLOSES_NEEDED_CAPCAITY];
 u32 num_closes_needed = 0;
 
@@ -222,6 +225,15 @@ u32 add_typedef(TypeDef def){
     return TYPEDEFS_CAPACITY;
 }
 
+u32 find_typedef(u32 name){
+    for(u32 i = 0; i < num_typedefs; i++){
+        if(aux_cstr_equals(typedefs[i].name, name)){
+            return i;
+        }
+    }
+    return TYPEDEFS_CAPACITY;
+}
+
 u32 add_type_alias(TypeAlias alias){
     if(num_type_aliases < TYPE_ALIASES_CAPACITY){
         type_aliases[num_type_aliases] = alias;
@@ -242,13 +254,24 @@ u32 try_resolve_type_alias(u32 name){
     return TYPES_CAPACITY;
 }
 
-u32 find_typedef(u32 name){
-    for(u32 i = 0; i < num_typedefs; i++){
-        if(aux_cstr_equals(typedefs[i].name, name)){
-            return i;
+u32 add_define(Define define){
+    if(num_defines < DEFINES_CAPACITY){
+        defines[num_defines] = define;
+        return num_defines++;
+    }
+
+    printf("Out of memory: Exceeded maximum number of #define's\n");
+    return DEFINES_CAPACITY;
+}
+
+u32 try_resolve_define(u32 name){
+    for(u32 i = 0; i < num_defines; i++){
+        if(aux_cstr_equals(defines[i].name, name)){
+            return defines[i].expression;
         }
     }
-    return TYPEDEFS_CAPACITY;
+
+    return EXPRESSIONS_CAPACITY;
 }
 
 u32 aux_cstr_alloc(u8 null_terminated_name[32]){
@@ -430,6 +453,17 @@ u1 aux_cstr_equals_panicloop(u32 a){
         && aux[a + 7] == 'o'
         && aux[a + 8] == 'p'
         && aux[a + 9] == '\0';
+}
+
+u1 aux_cstr_equals_define(u32 a){
+    return a + 6 < AUX_CAPACITY
+        && aux[a    ] == 'd'
+        && aux[a + 1] == 'e'
+        && aux[a + 2] == 'f'
+        && aux[a + 3] == 'i'
+        && aux[a + 4] == 'n'
+        && aux[a + 5] == 'e'
+        && aux[a + 6] == '\0';
 }
 
 u0 print_aux_cstr(u32 index){

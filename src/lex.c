@@ -33,6 +33,7 @@ SimpleToken simple_tokens[15] = {
     (SimpleToken){ .c = '?', .kind = TOKEN_TERNARY },
     (SimpleToken){ .c = ':', .kind = TOKEN_COLON },
     (SimpleToken){ .c = '.', .kind = TOKEN_MEMBER },
+    (SimpleToken){ .c = '#', .kind = TOKEN_HASH },
 };
 
 static u1 is_ident(u8 c){

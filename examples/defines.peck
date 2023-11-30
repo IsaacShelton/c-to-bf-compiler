@@ -1,0 +1,13 @@
+
+#define MESSAGE "Hello World using #define's\n"
+#define X 5
+#define COMPILE_TIME_MATH_RESULT 2 * X + 4 - 6 / 6
+
+u0 main(){
+    print(MESSAGE);
+
+    print("Math result is: ");
+    printu8(COMPILE_TIME_MATH_RESULT);
+    print("\n");
+}
+

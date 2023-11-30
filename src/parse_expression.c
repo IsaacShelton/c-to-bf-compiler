@@ -467,6 +467,12 @@ static Expression parse_primary_base_expression(){
             return parse_expression_call(name, line_number);
         }
 
+        // Resolve '#define' constants
+        u32 resolved = try_resolve_define(name);
+        if(resolved < EXPRESSIONS_CAPACITY){
+            return expressions[resolved];
+        }
+
         // Else, normal variable
         return (Expression){
             .kind = EXPRESSION_VARIABLE,

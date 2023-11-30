@@ -17,6 +17,7 @@
 #include "../include/parse_type.h"
 #include "../include/typedef.h"
 #include "../include/parse_typedef.h"
+#include "../include/parse_macro.h"
 
 static u32 parse_function_body(Function function){
     // { ... }
@@ -132,6 +133,11 @@ u32 parse(){
 
         if(eat_token(TOKEN_TYPEDEF)){
             if(parse_typedef()) return 1;
+            continue;
+        }
+
+        if(eat_token(TOKEN_HASH)){
+            if(parse_macro()) return 1;
             continue;
         }
 

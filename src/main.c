@@ -59,6 +59,13 @@ int main(void){
     */
 
     /*
+    for(u32 i = 0; i < num_defines; i++){
+        define_print(defines[i]);
+        printf("\n");
+    }
+    */
+
+    /*
     for(u32 i = 0; i < num_functions; i++){
         function_print(functions[i]);
         printf("\n");

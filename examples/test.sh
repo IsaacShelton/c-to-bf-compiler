@@ -24,6 +24,8 @@ set -ex
 "$self/../peck" "$self/call_self_for_continue.peck" "$self/call_self_for_continue.rlebf"
 "$self/../peck" "$self/call_self_if.peck" "$self/call_self_if.rlebf"
 "$self/../peck" "$self/call_self_switch.peck" "$self/call_self_switch.rlebf"
+"$self/../peck" "$self/call_self_switch_fallthrough.peck" "$self/call_self_switch_fallthrough.rlebf"
+"$self/../peck" "$self/call_self_switch_variables.peck" "$self/call_self_switch_variables.rlebf"
 "$self/../peck" "$self/call_self_ternary.peck" "$self/call_self_ternary.rlebf"
 "$self/../peck" "$self/call_self_while.peck" "$self/call_self_while.rlebf"
 "$self/../peck" "$self/call_self_while_break.peck" "$self/call_self_while_break.rlebf"

@@ -1,0 +1,37 @@
+
+u0 recursive_function(u8 value){
+    switch(value){
+    case 'A':
+        u8 i = 0;
+        while(i < 10){
+            printu8(i);
+            print(" ");
+            print("Got A\n");
+            i++;
+        }
+        break;
+    case 'B':
+        print("Got B\n");
+        break;
+    case 'C':
+        print("Got C\n");
+        break;
+    case 'D':
+        print("Got D\n");
+        break;
+    default:
+        print("Got something other than A, B, C, or D\n");
+    }
+
+    if(false){
+        recursive_function(0);
+    }
+}
+
+u0 main(){
+    print("Enter a letter: ");
+    u8 value = get();
+
+    recursive_function(value);
+}
+

@@ -79,6 +79,7 @@ set -ex
 "$self/../peck" "$self/print_array.peck"
 "$self/../peck" "$self/print_reference.peck"
 "$self/../peck" "$self/print_string.peck"
+"$self/../peck" "$self/printf.peck"
 "$self/../peck" "$self/printu1.peck"
 "$self/../peck" "$self/put.peck"
 "$self/../peck" "$self/recursion_detection_simple.peck"

@@ -2536,22 +2536,24 @@ u0 emit_additive_u8(u1 is_plus){
 }
 
 u0 emit_stdlib_function_call(u8 function_name[16], u32 return_size, u32 params_size){
-    // Make room for return value
-    for(u32 i = 0; i < return_size; i++){
-        printf("[-]>");
-    }
-    emit_context.current_cell_index += return_size;
+    if(return_size != 0){
+        // Make room for return value
+        for(u32 i = 0; i < return_size; i++){
+            printf("[-]>");
+        }
+        emit_context.current_cell_index += return_size;
 
-    // Move parameters over to make room for return value
-    printf("<");
-    printf("%d<", return_size);
-
-    for(u32 i = 0; i < params_size; i++){
-        printf("[-%d>+%d<]", return_size, return_size);
+        // Move parameters over to make room for return value
         printf("<");
-    }
+        printf("%d<", return_size);
 
-    printf("%d>", 1 + return_size + params_size);
+        for(u32 i = 0; i < params_size; i++){
+            printf("[-%d>+%d<]", return_size, return_size);
+            printf("<");
+        }
+
+        printf("%d>", 1 + return_size + params_size);
+    }
 
     u32 start_function_cell_index = emit_context.current_cell_index - params_size;
 
@@ -3358,5 +3360,13 @@ u0 emit_bit_complement_u16(){
 
 u0 emit_bit_complement_u32(){
     emit_stdlib_function_call((u8*) "u32_bit_neg", 4, 4);
+}
+
+u0 emit_printu16(){
+    emit_stdlib_function_call((u8*) "printu16", 0, 2);
+}
+
+u0 emit_printu32(){
+    emit_stdlib_function_call((u8*) "printu32", 0, 4);
 }
 

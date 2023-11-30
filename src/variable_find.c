@@ -18,7 +18,7 @@ typedef struct {
 static Container get_parent_container(u32 statement_index){
     // Returns Conainer with start_statement >= STATEMENTS_CAPACITY when not parent container exists
 
-    if(statement_index >= STATEMENTS_CAPACITY){
+    if(statement_index >= STATEMENTS_CAPACITY || emit_context.function >= FUNCTIONS_CAPACITY){
         // No parent container exists
         return (Container){
             .self_statement = STATEMENTS_CAPACITY,
@@ -42,6 +42,8 @@ static Container get_parent_container(u32 statement_index){
         case EXPRESSION_DECLARE:
         case EXPRESSION_PRINT_LITERAL:
         case EXPRESSION_PRINT_ARRAY:
+        case EXPRESSION_PRINTF:
+        case EXPRESSION_MEMCMP:
         case EXPRESSION_CALL:
         case EXPRESSION_IMPLEMENT_PUT:
         case EXPRESSION_IMPLEMENT_PRINTU1:
@@ -239,6 +241,8 @@ u32 find_declaration(u32 start_statement, u32 stop_statement, u32 name){
         case EXPRESSION_RETURN:
         case EXPRESSION_PRINT_LITERAL:
         case EXPRESSION_PRINT_ARRAY:
+        case EXPRESSION_PRINTF:
+        case EXPRESSION_MEMCMP:
         case EXPRESSION_CALL:
         case EXPRESSION_IMPLEMENT_PUT:
         case EXPRESSION_IMPLEMENT_PRINTU1:
@@ -344,6 +348,8 @@ static HoneInfo hone_switch_case_or_skip(u32 current_statement, u32 target_state
         case EXPRESSION_DECLARE:
         case EXPRESSION_PRINT_LITERAL:
         case EXPRESSION_PRINT_ARRAY:
+        case EXPRESSION_PRINTF:
+        case EXPRESSION_MEMCMP:
         case EXPRESSION_CALL:
         case EXPRESSION_IMPLEMENT_PUT:
         case EXPRESSION_IMPLEMENT_PRINTU1:
@@ -473,6 +479,8 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
     case EXPRESSION_DECLARE:
     case EXPRESSION_PRINT_LITERAL:
     case EXPRESSION_PRINT_ARRAY:
+    case EXPRESSION_PRINTF:
+    case EXPRESSION_MEMCMP:
     case EXPRESSION_CALL:
     case EXPRESSION_IMPLEMENT_PUT:
     case EXPRESSION_IMPLEMENT_PRINTU1:

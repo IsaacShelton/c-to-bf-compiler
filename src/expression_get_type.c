@@ -79,6 +79,8 @@ u32 expression_get_type(Expression expression, ExpressionGetTypeMode mode){
     case EXPRESSION_DECLARE:
     case EXPRESSION_PRINT_LITERAL:
     case EXPRESSION_PRINT_ARRAY:
+    case EXPRESSION_PRINTF:
+    case EXPRESSION_MEMCMP:
     case EXPRESSION_IMPLEMENT_PUT:
     case EXPRESSION_IMPLEMENT_PRINTU1:
     case EXPRESSION_IMPLEMENT_PRINTU8:

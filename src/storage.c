@@ -466,6 +466,28 @@ u1 aux_cstr_equals_define(u32 a){
         && aux[a + 6] == '\0';
 }
 
+u1 aux_cstr_equals_printf(u32 a){
+    return a + 6 < AUX_CAPACITY
+        && aux[a    ] == 'p'
+        && aux[a + 1] == 'r'
+        && aux[a + 2] == 'i'
+        && aux[a + 3] == 'n'
+        && aux[a + 4] == 't'
+        && aux[a + 5] == 'f'
+        && aux[a + 6] == '\0';
+}
+
+u1 aux_cstr_equals_memcmp(u32 a){
+    return a + 6 < AUX_CAPACITY
+        && aux[a    ] == 'm'
+        && aux[a + 1] == 'e'
+        && aux[a + 2] == 'm'
+        && aux[a + 3] == 'c'
+        && aux[a + 4] == 'm'
+        && aux[a + 5] == 'p'
+        && aux[a + 6] == '\0';
+}
+
 u0 print_aux_cstr(u32 index){
     for(u32 i = index; aux[i]; i++){
         putchar(aux[i]);

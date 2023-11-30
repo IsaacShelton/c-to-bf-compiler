@@ -121,6 +121,9 @@ u0 emit_bit_complement_u8();
 u0 emit_bit_complement_u16();
 u0 emit_bit_complement_u32();
 
+u0 emit_printu16();
+u0 emit_printu32();
+
 u0 emit_stdlib_function_call(u8 function_name[16], u32 return_size, u32 params_size);
 
 #endif // _PECK_EMIT_H

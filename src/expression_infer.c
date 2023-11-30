@@ -10,7 +10,7 @@
 #include "../include/type_print.h"
 #include "../include/expression_get_type.h"
 
-static ExpressionKind type_to_expression_kind(u32 type){
+ExpressionKind type_to_expression_kind(u32 type){
     if(type == u8_type){
         return EXPRESSION_U8;
     } else if(type == u16_type){
@@ -46,16 +46,18 @@ static ExpressionKind function_argument_preferred_int_kind(u32 function_begin, u
 static u0 expression_infer_call(Expression expression){
     u32 name = operands[expression.ops];
     u32 function_index = find_function(name);
+    u1 has_function = function_index < FUNCTIONS_CAPACITY;
 
-    if(function_index >= FUNCTIONS_CAPACITY){
-        return;
-    }
-    
     u32 arity = operands[expression.ops + 1];
 
     for(u32 i = 0; i < arity; i++){
         u32 argument = operands[expression.ops + 2 + i];
-        expression_infer(argument, function_argument_preferred_int_kind(functions[function_index].begin, i));
+
+        ExpressionKind preferred = has_function
+            ? function_argument_preferred_int_kind(functions[function_index].begin, i)
+            : EXPRESSION_NONE;
+
+        expression_infer(argument, preferred);
     }
 }
 
@@ -131,10 +133,19 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
         }
         break;
     case EXPRESSION_CALL:
+    case EXPRESSION_PRINTF:
+    case EXPRESSION_MEMCMP:
         expression_infer_call(expression);
         break;
-    case EXPRESSION_CAST:
-        expression_infer(operands[expression.ops + 1], EXPRESSION_NONE);
+    case EXPRESSION_CAST: {
+            u32 value = operands[expression.ops + 1];
+
+            if(expressions[value].kind == EXPRESSION_INT){
+                expression_infer(value, type_to_expression_kind(operands[expression.ops]));
+            } else {
+                expression_infer(value, EXPRESSION_NONE);
+            }
+        }
         break;
     case EXPRESSION_ADD:
     case EXPRESSION_SUBTRACT:

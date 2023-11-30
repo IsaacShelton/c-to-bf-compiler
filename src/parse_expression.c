@@ -176,6 +176,12 @@ static Expression parse_expression_call(u32 name, u24 line_number){
         .ops = 0,
     };
 
+    if(aux_cstr_equals_printf(name)){
+        expression.kind = EXPRESSION_PRINTF;
+    } else if(aux_cstr_equals_memcmp(name)){
+        expression.kind = EXPRESSION_MEMCMP;
+    }
+
     u32 arguments[ARITY_CAPACITY];
     u8 arity = 0;
 

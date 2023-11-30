@@ -1,0 +1,20 @@
+
+u0 main(){
+    u8 a = 10;
+    u8 b = 13;
+    u8 c = 17;
+    printf("a=%d b=%d c=%d\n", a, b, c);
+
+    u16 d = 1000;
+    u16 e = 100;
+    u16 f = 10;
+    printf("d=%d e=%d f=%d\n", d, e, f);
+
+    u32 g = 12345;
+    u32 h = 123456;
+    u32 i = 1234567;
+    printf("g=%d h=%d i=%d\n", g, h, i);
+
+    printf("1=%d 2=%d 1000=%d\n", 1, 2, (u16) 1000);
+}
+

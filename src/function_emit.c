@@ -1201,6 +1201,8 @@ static SwitchInfo get_switch_case_info(Expression switch_expression){
         case EXPRESSION_DECLARE:
         case EXPRESSION_PRINT_LITERAL:
         case EXPRESSION_PRINT_ARRAY:
+        case EXPRESSION_PRINTF:
+        case EXPRESSION_MEMCMP:
         case EXPRESSION_CALL:
         case EXPRESSION_IMPLEMENT_PUT:
         case EXPRESSION_IMPLEMENT_PRINTU1:
@@ -1666,6 +1668,8 @@ u1 can_function_early_return(u32 function_index){
         case EXPRESSION_DECLARE:
         case EXPRESSION_PRINT_LITERAL:
         case EXPRESSION_PRINT_ARRAY:
+        case EXPRESSION_PRINTF:
+        case EXPRESSION_MEMCMP:
         case EXPRESSION_CALL:
         case EXPRESSION_IMPLEMENT_PUT:
         case EXPRESSION_IMPLEMENT_PRINTU1:
@@ -1989,6 +1993,11 @@ ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 s
     }
 
     if(function_index == emit_settings.main_function_index){
+        if(function.return_type != u0_type){
+            printf("\nerror on line %d: Main function must have the return type 'u0'\n", u24_unpack(function.line));
+            return 1;
+        }
+
         if(emit_globals_initialization()){
             return 1;
         }

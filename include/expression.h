@@ -81,6 +81,8 @@ typedef enum {
     EXPRESSION_FIELD_INITIALIZER, /* { field_name, field_value } */
     EXPRESSION_ENUM_VARIANT, /* { name } */
     EXPRESSION_PANICLOOP, /* {} */
+    EXPRESSION_PRINTF, /* <same as EXPRESSION_CALL> */
+    EXPRESSION_MEMCMP, /* <same as EXPRESSION_CALL> */
 } ExpressionKind;
 
 typedef struct {

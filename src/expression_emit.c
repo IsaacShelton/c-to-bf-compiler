@@ -121,6 +121,92 @@ static ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u32 offset_si
     return 1;
 }
 
+static u32 expression_emit_printf(Expression expression){
+    u32 arity = operands[expression.ops + 1];
+
+    if(arity < 1){
+        printf("\nerror on line %d: printf requires at least one argument\n", u24_unpack(expression.line));
+        return TYPES_CAPACITY;
+    }
+
+    Expression format_argument = expressions[operands[expression.ops + 2]];
+
+    if(format_argument.kind != EXPRESSION_STRING){
+        printf("\nerror on line %d: First argument to 'printf' must be a compile-time known string\n", u24_unpack(expression.line));
+        return TYPES_CAPACITY;
+    }
+
+    u32 format = format_argument.ops;
+    u32 next_argument_i = 1;
+    u8 c = aux[format];
+
+    while(c != 0){
+        // Print until a '%'
+
+        printf("[-]");
+        u8 previous_value = 0;
+
+        while(c != 0){
+            if(c == '%'){
+                c = aux[++format];
+
+                if(c == 'd'){
+                    format++;
+                    break;
+                } else if(c != '%'){
+                    printf("\nerror on line %d: Unknown printf format '%%", u24_unpack(expression.line));
+                    putchar(c);
+                    printf("'\n");
+                    return TYPES_CAPACITY;
+                }
+            }
+
+            set_cell_to_value(c, previous_value);
+            printf(".");
+            previous_value = c;
+            c = aux[++format];
+        }
+
+        if(c == 'd'){
+            Expression argument = expressions[operands[expression.ops + 2 + next_argument_i++]];
+
+            u32 argument_type = expression_emit(argument);
+            if(argument_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+            if(argument_type == u1_type){
+                emit_printu1();
+            } else if(argument_type == u8_type){
+                emit_printu8();
+            } else if(argument_type == u16_type){
+                emit_printu16();
+            } else if(argument_type == u32_type){
+                emit_printu32();
+            } else {
+                printf("\nerror on line %d: Cannot print '", u24_unpack(expression.line));
+                type_print(types[argument_type]);
+                printf("' with printf format specifier '%%d'\n");
+                return TYPES_CAPACITY;
+            }
+            
+            c = aux[format];
+        }
+    }
+
+    if(next_argument_i != arity){
+        printf("\nerror on line %d: printf was supplied with %d unused arguments\n", u24_unpack(expression.line), arity - next_argument_i);
+        return TYPES_CAPACITY;
+    }
+
+    return u0_type;
+}
+
+static u32 expression_emit_memcmp(Expression expression){
+    printf("\nerror on line %d: memcmp is unimplemented\n", u24_unpack(expression.line));
+    return TYPES_CAPACITY;
+
+    return u8_type;
+}
+
 static u32 expression_emit_call(Expression expression){
     u32 name = operands[expression.ops];
     u32 arity = operands[expression.ops + 1];
@@ -128,7 +214,7 @@ static u32 expression_emit_call(Expression expression){
     int function_index = find_function(name);
 
     if(function_index >= FUNCTIONS_CAPACITY){
-        printf("\nerror: Undeclared function '");
+        printf("\nerror on line %d: Undeclared function '", u24_unpack(expression.line));
         print_aux_cstr(name);
         printf("'\n");
         return TYPES_CAPACITY;
@@ -1754,6 +1840,10 @@ u32 expression_emit(Expression expression){
             }
         }
         return u0_type;
+    case EXPRESSION_PRINTF:
+        return expression_emit_printf(expression);
+    case EXPRESSION_MEMCMP:
+        return expression_emit_memcmp(expression);
     case EXPRESSION_CALL:
         return expression_emit_call(expression);
     case EXPRESSION_IMPLEMENT_PUT:
@@ -1775,6 +1865,10 @@ u32 expression_emit(Expression expression){
         emit_u1(expression.ops);
         return u1_type;
     case EXPRESSION_INT:
+        if(expression.ops >= 256){
+            printf("\nerror on line %d: Cannot fit integer literal value into assumed type 'u8', must be explicitly casted to correct type", u24_unpack(expression.line));
+            return TYPES_CAPACITY;
+        }
     case EXPRESSION_U8:
         emit_u8(expression.ops);
         return u8_type;

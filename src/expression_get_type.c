@@ -66,6 +66,7 @@ u32 expression_get_type(Expression expression, ExpressionGetTypeMode mode){
     case EXPRESSION_BREAK:
     case EXPRESSION_CONTINUE:
     case EXPRESSION_FOR:
+    case EXPRESSION_CONDITIONLESS_BLOCK:
     case EXPRESSION_SWITCH:
     case EXPRESSION_CASE:
     case EXPRESSION_ARRAY_INITIALIZER:

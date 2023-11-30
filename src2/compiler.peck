@@ -318,6 +318,7 @@ typedef enum {
     EXPRESSION_PANICLOOP, /* {} */
     EXPRESSION_PRINTF, /* <same as EXPRESSION_CALL> */
     EXPRESSION_MEMCMP, /* <same as EXPRESSION_CALL> */
+    EXPRESSION_MEMCPY, /* <same as EXPRESSION_CALL> */
 } ExpressionKind;
 
 typedef struct {
@@ -349,6 +350,8 @@ typedef struct {
 u32 expression_emit(Expression expression);
 Destination expression_get_destination(Expression expression, u32 tape_anchor);
 u32 read_destination(Destination destination, u24 line_on_error);
+u32 write_destination(u32 new_value_type, Destination destination, u24 error_line_number);
+u32 write_destination_unsafe(u32 new_value_type, Destination destination, u24 error_line_number);
 
 
 
@@ -685,6 +688,7 @@ u1 aux_cstr_equals_panicloop(u32 a);
 u1 aux_cstr_equals_define(u32 a);
 u1 aux_cstr_equals_printf(u32 a);
 u1 aux_cstr_equals_memcmp(u32 a);
+u1 aux_cstr_equals_memcpy(u32 a);
 u32 aux_cstr_len(u32 str);
 u0 print_aux_cstr(u32 index);
 u0 print_aux_cstr_escaped(u32 index);
@@ -4962,8 +4966,8 @@ ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u32 offset_size){
     u32 f[4];
     u32 t[4];
 
-    memcpy(f, &dimensions[from_type.dimensions], sizeof f);
-    memcpy(t, &dimensions[to_type.dimensions], sizeof t);
+    memcpy(f, dimensions[from_type.dimensions], sizeof f);
+    memcpy(t, dimensions[to_type.dimensions], sizeof t);
 
     u8 num_f_dims = 1;
     u8 num_t_dims = 1;
@@ -5204,6 +5208,69 @@ u32 expression_emit_memcmp(Expression expression){
     printf("%d<", distance - 1);
     emit_context.current_cell_index -= 2 * bytes - 1;
     return u8_type;
+}
+
+u32 expression_emit_memcpy(Expression expression){
+    u32 arity = operands[expression.ops + 1];
+
+    if(arity != 3){
+        printf("\nerror on line %d: memcpy requires three arguments\n", u24_unpack(expression.line));
+        return TYPES_CAPACITY;
+    }
+
+    Expression bytes_argument = expressions[operands[expression.ops + 2 + 2]];
+    u32 bytes;
+
+    if(bytes_argument.kind == EXPRESSION_INT){
+        bytes = bytes_argument.ops;
+    } else if(bytes_argument.kind == EXPRESSION_SIZEOF_TYPE){
+        bytes = type_sizeof_or_max(bytes_argument.ops, bytes_argument.line);
+        if(bytes == -1) return TYPES_CAPACITY;
+    } else if(bytes_argument.kind == EXPRESSION_SIZEOF_VALUE){
+        u32 type = expression_get_type(expressions[bytes_argument.ops], EXPRESSION_GET_TYPE_MODE_PRINT_ERROR);
+        if(type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+        bytes = type_sizeof_or_max(type, bytes_argument.line);
+        if(bytes == -1) return TYPES_CAPACITY;
+    } else {
+        printf("\nerror on line %d: Third argument to memcpy must be a compile-time known integer\n", u24_unpack(expression.line));
+        return TYPES_CAPACITY;
+    }
+
+    if(bytes == 0){
+        return u0_type;
+    }
+
+    u32 type_dimensions[4] = { bytes };
+    Type new_type_layout = (Type){
+        .name = types[u8_type].name,
+        .dimensions = add_dimensions(type_dimensions),
+    };
+    u32 new_type = add_type(new_type_layout);
+    if(new_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    // Read N bytes of source
+    Destination destination;
+    Expression argument;
+    argument = expressions[operands[expression.ops + 2 + 1]];
+    if(argument.kind == EXPRESSION_STRING){
+        expression_emit_string(argument);
+    } else {
+        destination = expression_get_destination(argument, emit_context.current_cell_index);
+        if(destination.type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+        destination.type = new_type;
+        if(read_destination(destination, expression.line) >= TYPES_CAPACITY){
+            return TYPES_CAPACITY;
+        }
+    }
+
+    // Get destination
+    argument = expressions[operands[expression.ops + 2]];
+    destination = expression_get_destination(argument, emit_context.current_cell_index);
+    if(destination.type >= TYPES_CAPACITY) return 1;
+    destination.type = new_type;
+
+    return write_destination_unsafe(new_type, destination, expression.line);
 }
 
 u32 expression_emit_call(Expression expression){
@@ -5606,6 +5673,10 @@ u32 write_destination(u32 new_value_type, Destination destination, u24 error_lin
         new_value_type = destination.type;
     }
 
+    return write_destination_unsafe(new_value_type, destination, error_line_number);
+}
+
+u32 write_destination_unsafe(u32 new_value_type, Destination destination, u24 error_line_number){
     u32 type_size = type_sizeof_or_max(new_value_type, error_line_number);
     if(type_size == -1) return TYPES_CAPACITY;
 
@@ -6836,6 +6907,8 @@ u32 expression_emit(Expression expression){
         return expression_emit_printf(expression);
     case EXPRESSION_MEMCMP:
         return expression_emit_memcmp(expression);
+    case EXPRESSION_MEMCPY:
+        return expression_emit_memcpy(expression);
     case EXPRESSION_CALL:
         return expression_emit_call(expression);
     case EXPRESSION_IMPLEMENT_PUT:
@@ -7032,13 +7105,14 @@ u32 expression_get_type(Expression expression, ExpressionGetTypeMode mode){
     case EXPRESSION_PRINT_LITERAL:
     case EXPRESSION_PRINT_ARRAY:
     case EXPRESSION_PRINTF:
-    case EXPRESSION_MEMCMP:
+    case EXPRESSION_MEMCPY:
     case EXPRESSION_IMPLEMENT_PUT:
     case EXPRESSION_IMPLEMENT_PRINTU1:
     case EXPRESSION_IMPLEMENT_PRINTU8:
         return u0_type;
     case EXPRESSION_IMPLEMENT_GET:
     case EXPRESSION_IMPLEMENT_READU8:
+    case EXPRESSION_MEMCMP:
         return u8_type;
     case EXPRESSION_CALL:
         return expression_get_type_for_call(expression);
@@ -7181,7 +7255,7 @@ u32 expression_get_type(Expression expression, ExpressionGetTypeMode mode){
 
 u32 get_item_type(Type type, u24 line_on_error, u1 show_error_message){
     u32 dims[4];
-    memcpy(dims, &dimensions[type.dimensions], sizeof(u32) * 4);
+    memcpy(dims, dimensions[type.dimensions], sizeof(u32) * 4);
 
     if(dims[0] == 0){
         if(show_error_message){
@@ -7336,6 +7410,7 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
     case EXPRESSION_CALL:
     case EXPRESSION_PRINTF:
     case EXPRESSION_MEMCMP:
+    case EXPRESSION_MEMCPY:
         expression_infer_call(expression);
         break;
     case EXPRESSION_CAST: {
@@ -7493,7 +7568,10 @@ u0 expression_print(Expression expression){
         expression_print(expressions[expression.ops]);
         printf("\")");
         break;
-    case EXPRESSION_CALL: {
+    case EXPRESSION_CALL:
+    case EXPRESSION_PRINTF:
+    case EXPRESSION_MEMCMP:
+    case EXPRESSION_MEMCPY: {
             u32 name = operands[expression.ops];
             u32 arity = operands[expression.ops + 1];
             print_aux_cstr(name);
@@ -8950,6 +9028,7 @@ SwitchInfo get_switch_case_info(Expression switch_expression){
         case EXPRESSION_PRINT_ARRAY:
         case EXPRESSION_PRINTF:
         case EXPRESSION_MEMCMP:
+        case EXPRESSION_MEMCPY:
         case EXPRESSION_CALL:
         case EXPRESSION_IMPLEMENT_PUT:
         case EXPRESSION_IMPLEMENT_PRINTU1:
@@ -9417,6 +9496,7 @@ u1 can_function_early_return(u32 function_index){
         case EXPRESSION_PRINT_ARRAY:
         case EXPRESSION_PRINTF:
         case EXPRESSION_MEMCMP:
+        case EXPRESSION_MEMCPY:
         case EXPRESSION_CALL:
         case EXPRESSION_IMPLEMENT_PUT:
         case EXPRESSION_IMPLEMENT_PRINTU1:
@@ -11602,6 +11682,8 @@ Expression parse_expression_call(u32 name, u24 line_number){
         expression.kind = EXPRESSION_PRINTF;
     } else if(aux_cstr_equals_memcmp(name)){
         expression.kind = EXPRESSION_MEMCMP;
+    } else if(aux_cstr_equals_memcpy(name)){
+        expression.kind = EXPRESSION_MEMCPY;
     }
 
     u32 arguments[ARITY_CAPACITY];
@@ -25029,6 +25111,17 @@ u1 aux_cstr_equals_memcmp(u32 a){
         && aux[a + 6] == '\0';
 }
 
+u1 aux_cstr_equals_memcpy(u32 a){
+    return a + 6 < AUX_CAPACITY
+        && aux[a    ] == 'm'
+        && aux[a + 1] == 'e'
+        && aux[a + 2] == 'm'
+        && aux[a + 3] == 'c'
+        && aux[a + 4] == 'p'
+        && aux[a + 5] == 'y'
+        && aux[a + 6] == '\0';
+}
+
 u0 print_aux_cstr(u32 index){
     for(u32 i = index; aux[i]; i++){
         putchar(aux[i]);
@@ -25448,6 +25541,7 @@ Container get_parent_container(u32 statement_index){
         case EXPRESSION_PRINT_ARRAY:
         case EXPRESSION_PRINTF:
         case EXPRESSION_MEMCMP:
+        case EXPRESSION_MEMCPY:
         case EXPRESSION_CALL:
         case EXPRESSION_IMPLEMENT_PUT:
         case EXPRESSION_IMPLEMENT_PRINTU1:
@@ -25647,6 +25741,7 @@ u32 find_declaration(u32 start_statement, u32 stop_statement, u32 name){
         case EXPRESSION_PRINT_ARRAY:
         case EXPRESSION_PRINTF:
         case EXPRESSION_MEMCMP:
+        case EXPRESSION_MEMCPY:
         case EXPRESSION_CALL:
         case EXPRESSION_IMPLEMENT_PUT:
         case EXPRESSION_IMPLEMENT_PRINTU1:
@@ -25754,6 +25849,7 @@ HoneInfo hone_switch_case_or_skip(u32 current_statement, u32 target_statement, u
         case EXPRESSION_PRINT_ARRAY:
         case EXPRESSION_PRINTF:
         case EXPRESSION_MEMCMP:
+        case EXPRESSION_MEMCPY:
         case EXPRESSION_CALL:
         case EXPRESSION_IMPLEMENT_PUT:
         case EXPRESSION_IMPLEMENT_PRINTU1:
@@ -25885,6 +25981,7 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
     case EXPRESSION_PRINT_ARRAY:
     case EXPRESSION_PRINTF:
     case EXPRESSION_MEMCMP:
+    case EXPRESSION_MEMCPY:
     case EXPRESSION_CALL:
     case EXPRESSION_IMPLEMENT_PUT:
     case EXPRESSION_IMPLEMENT_PRINTU1:

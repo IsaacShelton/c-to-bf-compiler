@@ -1,0 +1,11 @@
+
+u0 main(){
+    {
+        u8 message[10] = "Hello";
+        print(message);
+        print("\n");
+    }
+
+    print("Done\n");
+}
+

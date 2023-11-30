@@ -15,6 +15,7 @@ static ErrorCode parse_if();
 static ErrorCode parse_while();
 static ErrorCode parse_do_while();
 static ErrorCode parse_for();
+static ErrorCode parse_conditionless_block();
 static ErrorCode parse_return();
 static ErrorCode parse_break();
 static ErrorCode parse_continue();
@@ -45,6 +46,8 @@ ErrorCode parse_statement(){
         if(parse_case()) return 1;
     } else if(eat_token(TOKEN_DEFAULT)){
         if(parse_default()) return 1;
+    } else if(is_token(TOKEN_BEGIN)){
+        if(parse_conditionless_block()) return 1;
     } else {
         Expression statement = parse_expression();
         if(had_parse_error) return 1;
@@ -505,6 +508,31 @@ static ErrorCode parse_for(){
 
     // Set number of statements
     operands[ops + 3] = num_inside;
+    return 0;
+}
+
+static ErrorCode parse_conditionless_block(){
+    // {
+    // ^
+
+    Expression statement = (Expression){
+        .kind = EXPRESSION_CONDITIONLESS_BLOCK,
+        .line = current_line_packed(),
+        .ops = 0,
+    };
+
+    u32 block = add_statement_else_print_error(statement);
+    if(block >= STATEMENTS_CAPACITY){
+        return 1;
+    }
+
+    u32 length = parse_block(false);
+
+    if(length >= STATEMENTS_CAPACITY){
+        return 1;
+    }
+
+    expressions[statements[block]].ops = length;
     return 0;
 }
 

@@ -197,6 +197,7 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
     case EXPRESSION_WHILE:
     case EXPRESSION_DO_WHILE:
         expression_infer(operands[expression.ops], EXPRESSION_U1);
+    case EXPRESSION_CONDITIONLESS_BLOCK:
         break;
     case EXPRESSION_FOR:
         // Go to context past pre-statements

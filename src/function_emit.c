@@ -154,6 +154,7 @@ static ErrorCode emit_do_while_stack(Expression expression);
 static ErrorCode emit_do_while_tape(Expression expression);
 static ErrorCode emit_for_stack(Expression expression);
 static ErrorCode emit_for_tape(Expression expression);
+static ErrorCode emit_conditionless_block(Expression expression);
 static ErrorCode emit_switch_stack(Expression expression);
 static ErrorCode emit_switch_tape(Expression expression);
 static ErrorCode emit_case_stack(Expression expression);
@@ -375,6 +376,10 @@ static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i, u1 allow
         case EXPRESSION_DO_WHILE:
             if(emit_do_while(expression)) return 1;
             i += operands[expression.ops + 1];
+            break;
+        case EXPRESSION_CONDITIONLESS_BLOCK:
+            if(emit_conditionless_block(expression)) return 1;
+            i += expression.ops;
             break;
         case EXPRESSION_SWITCH:
             if(emit_switch(expression)) return 1;
@@ -1135,6 +1140,15 @@ static ErrorCode emit_for_tape(Expression expression){
     return emit_break_check() || emit_continue_check() || emit_early_return_check();
 }
 
+static ErrorCode emit_conditionless_block(Expression expression){
+    // Emit body
+    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + expression.ops + 1, false)){
+        return 1;
+    }
+
+    return 0;
+}
+
 static ErrorCode emit_switch(Expression expression){
     if(emit_context.in_recursive_function){
         return emit_switch_stack(expression);
@@ -1276,6 +1290,10 @@ static SwitchInfo get_switch_case_info(Expression switch_expression){
             break;
         case EXPRESSION_IF_ELSE:
             i += operands[expression.ops + 1] + operands[expression.ops + 2];
+            break;
+        case EXPRESSION_CONDITIONLESS_BLOCK:
+            i += expression.ops;
+            break;
         case EXPRESSION_FOR:
             i += operands[expression.ops] + operands[expression.ops + 2] + operands[expression.ops + 3];
             break;
@@ -1750,6 +1768,10 @@ u1 can_function_early_return(u32 function_index){
                 if(has_return_in_region(i + 1, i + num_then + num_else + 1)) return true;
                 i += num_then + num_else;
             }
+            break;
+        case EXPRESSION_CONDITIONLESS_BLOCK:
+            if(has_return_in_region(i + 1, i + expression.ops + 1)) return true;
+            i += expression.ops + 1;
             break;
         case EXPRESSION_FOR: {
                 u32 num_pre = operands[expression.ops];

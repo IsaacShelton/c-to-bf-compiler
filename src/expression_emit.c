@@ -1955,6 +1955,7 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_IF_ELSE:
     case EXPRESSION_WHILE:
     case EXPRESSION_DO_WHILE:
+    case EXPRESSION_CONDITIONLESS_BLOCK:
     case EXPRESSION_FOR:
     case EXPRESSION_SWITCH:
         break;

@@ -109,6 +109,17 @@ static u0 print_body(u32 start_i, u32 stop_i, u32 indentation, u1 print_trailing
                 printf("}\n");
             }
             break;
+        case EXPRESSION_CONDITIONLESS_BLOCK: {
+                u32 len = expression.ops;
+
+                printf("{\n");
+                print_body(i + 1, i + len + 1, indentation + 1, true);
+                i += len;
+
+                indent(indentation);
+                printf("}\n");
+            }
+            break;
         case EXPRESSION_SWITCH: {
                 u32 len = operands[expression.ops + 1];
 

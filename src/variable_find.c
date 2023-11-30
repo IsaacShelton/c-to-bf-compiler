@@ -165,6 +165,20 @@ static Container get_parent_container(u32 statement_index){
                 }
             }
             break;
+        case EXPRESSION_CONDITIONLESS_BLOCK: {
+                u32 num_statements = expression.ops;
+
+                if(i + num_statements >= statement_index){
+                    return (Container){
+                        .self_statement = i,
+                        .start_statement = i + 1,
+                        .stop_statement = i + num_statements + 1,
+                        .secondary_start_statement = STATEMENTS_CAPACITY,
+                        .secondary_stop_statement = STATEMENTS_CAPACITY,
+                    };
+                }
+            }
+            break;
         case EXPRESSION_FOR: {
                 u32 num_pre = operands[expression.ops];
                 u32 num_post = operands[expression.ops + 2];
@@ -320,6 +334,9 @@ u32 find_declaration(u32 start_statement, u32 stop_statement, u32 name){
         case EXPRESSION_IF_ELSE:
             i += operands[expression.ops + 1] + operands[expression.ops + 2];
             break;
+        case EXPRESSION_CONDITIONLESS_BLOCK:
+            i += expression.ops;
+            break;
         case EXPRESSION_FOR:
             i += operands[expression.ops] + operands[expression.ops + 2] + operands[expression.ops + 3];
             break;
@@ -426,6 +443,10 @@ static HoneInfo hone_switch_case_or_skip(u32 current_statement, u32 target_state
             break;
         case EXPRESSION_IF_ELSE:
             i += operands[expression.ops + 1] + operands[expression.ops + 2];
+            break;
+        case EXPRESSION_CONDITIONLESS_BLOCK:
+            i += expression.ops;
+            break;
         case EXPRESSION_FOR:
             i += operands[expression.ops] + operands[expression.ops + 2] + operands[expression.ops + 3];
             break;
@@ -581,6 +602,16 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
 
             if(target_statement <= current_statement + num_statements){
                 return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = inner_variable_offset };
+            } else {
+                return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = 0 };
+            }
+        }
+        break;
+    case EXPRESSION_CONDITIONLESS_BLOCK:{
+            u32 num_statements = expression.ops;
+
+            if(target_statement <= current_statement + num_statements){
+                return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = 0 };
             } else {
                 return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = 0 };
             }

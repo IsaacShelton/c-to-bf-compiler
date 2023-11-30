@@ -1,9 +1,6 @@
 
 # Features and bugs left
 
-- recursion
-    - switch
-    - variable lookup
 - typedef aliases
 - defines
 - array size expressions

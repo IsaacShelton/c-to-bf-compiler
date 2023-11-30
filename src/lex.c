@@ -40,6 +40,82 @@ static u1 is_ident(u8 c){
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || (c >= '0' && c <= '9');
 }
 
+LexedToken lex_hex_integer(u32 i, u24 line){
+    u32 value = 0;
+
+    while(i < code_buffer_length){
+        u8 lead = code_buffer[i];
+
+        if(lead >= '0' && lead <= '9'){
+            value = 16 * value + lead - '0';
+        } else if(lead >= 'A' && lead <= 'F'){
+            value = 16 * value + 10 + lead - 'A';
+        } else if(lead >= 'a' && lead <= 'f'){
+            value = 16 * value + 10 + lead - 'a';
+        } else {
+            break;
+        }
+
+        i++;
+    }
+
+    return (LexedToken){
+        .token = (Token){
+            .kind = TOKEN_INT,
+            .data = value,
+            .line = line,
+        },
+        .consumed = i,
+    };
+}
+
+LexedToken lex_dec_integer(u32 i, u32 lead, u24 line){
+    u32 value = lead - '0';
+
+    while(i < code_buffer_length){
+        lead = code_buffer[i];
+
+        if(!(lead >= '0' && lead <= '9')){
+            break;
+        }
+
+        value = 10 * value + lead - '0';
+        i++;
+    }
+
+    return (LexedToken){
+        .token = (Token){
+            .kind = TOKEN_INT,
+            .data = value,
+            .line = line,
+        },
+        .consumed = i,
+    };
+}
+
+LexedToken lex_integer(u8 lead, u24 line){
+    u32 i = 1;
+
+    if(i < code_buffer_length){
+        u8 next_lead = code_buffer[i];
+
+        if(next_lead == 'x' || next_lead == 'X'){
+            return lex_hex_integer(i + 1, line);
+        } else {
+            return lex_dec_integer(i, lead, line);
+        }
+    }
+
+    return (LexedToken){
+        .token = (Token){
+            .kind = TOKEN_INT,
+            .data = lead - '0',
+            .line = line,
+        },
+        .consumed = i,
+    };
+}
+
 LexedToken lex_main(){
     LexedToken result = (LexedToken){
         .token = (Token){
@@ -95,19 +171,7 @@ LexedToken lex_main(){
 
     // Handle integers
     if(lead >= '0' && lead <= '9'){
-        u32 value = lead - '0';
-
-        u32 i = 1;
-        lead = code_buffer[i];
-        while(lead >= '0' && lead <= '9'){
-            value = 10 * value + lead - '0';
-            lead = code_buffer[++i];
-        }
-
-        result.token.kind = TOKEN_INT;
-        result.token.data = value;
-        result.consumed = i;
-        return result;
+        return lex_integer(lead, result.token.line);
     }
 
     // Handle identifiers

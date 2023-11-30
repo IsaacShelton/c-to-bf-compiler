@@ -1,0 +1,19 @@
+
+u0 main(){
+    print("0xFF = ");
+    printu8(0xFF);
+    print("\n");
+
+    print("0x3A = ");
+    printu8(0x3A);
+    print("\n");
+    
+    print("0x14 = ");
+    printu8(0x14);
+    print("\n");
+
+    print("0xcd10 = ");
+    printu16(0xcd10);
+    print("\n");
+}
+

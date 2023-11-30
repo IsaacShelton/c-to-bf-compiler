@@ -56,6 +56,7 @@ set -ex
 "$self/../peck" "$self/get.peck"
 "$self/../peck" "$self/global_initialization.peck"
 "$self/../peck" "$self/global_variables.peck"
+"$self/../peck" "$self/hex.peck"
 "$self/../peck" "$self/if_else.peck"
 "$self/../peck" "$self/if_else_if.peck"
 "$self/../peck" "$self/if_variable_lookup.peck"

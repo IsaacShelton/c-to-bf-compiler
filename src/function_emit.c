@@ -1927,6 +1927,39 @@ static u1 can_loop_continue(u32 statement_index){
     }
 }
 
+static ErrorCode emit_globals_initialization(){
+    u32 global_variable_cell_offset = 0;
+    for(u32 global_i = 0; global_i < num_globals; global_i++){
+        Global global = globals[global_i];
+
+        u32 size = type_sizeof_or_max(global.type, global.line);
+        if(size == -1) return 1;
+
+        if(global.initializer < EXPRESSIONS_CAPACITY){
+            u32 type = expression_emit(expressions[global.initializer]);
+            if(type >= TYPES_CAPACITY) return 1;
+
+            if(type != global.type){
+                printf("\nerror on line %d: Cannot '", u24_unpack(global.line));
+                type_print(types[type]);
+                printf("' to '");
+                type_print(types[global.type]);
+                printf("'\n");
+                return 1;
+            }
+
+            printf("<");
+            emit_context.current_cell_index--;
+
+            move_cells_static(global_variable_cell_offset, size);
+        }
+
+        global_variable_cell_offset += size;
+    }
+
+    return 0;
+}
+
 ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 start_current_cell_index){
     Function function = functions[function_index];
     u1 can_early_return = can_function_early_return(function_index);
@@ -1953,6 +1986,12 @@ ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 s
     if(can_early_return){
         printf("[-]+>");
         emit_context.incomplete_cell = emit_context.current_cell_index++;
+    }
+
+    if(function_index == emit_settings.main_function_index){
+        if(emit_globals_initialization()){
+            return 1;
+        }
     }
 
     if(emit_body(function.begin + function.arity, function.begin + function.num_stmts, false)){

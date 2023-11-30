@@ -602,16 +602,16 @@ u32 expression_emit_variable(Expression expression){
         return variable.type;
     }
 
-    if(variable.depth == 0){
-        // Global variable
-        printf("\nerror: global variable expression not supported yet\n");
-        return TYPES_CAPACITY;
-    }
-
     if(variable.location.kind != VARIABLE_LOCATION_ON_TAPE){
         // Stack variable
         printf("\nerror: stack/immutable variable expression not supported yet\n");
         return TYPES_CAPACITY;
+    }
+
+    if(variable.depth == 0){
+        // Global variable
+        copy_cells_static(variable.location.location, size);
+        return variable.type;
     }
 
     // Tape variable

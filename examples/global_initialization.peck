@@ -1,0 +1,14 @@
+
+u8 secret = get_secret();
+
+u0 main(){
+    print("secret = ");
+    printu8(secret);
+    print("\n");
+}
+
+u8 get_secret(){
+    print("get_secret() was called!\n");
+    return 13;
+}
+

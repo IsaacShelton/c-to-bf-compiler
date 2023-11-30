@@ -51,6 +51,7 @@ typedef struct {
     JumpContext break_basicblock_context;
     JumpContext continue_basicblock_context;
     SwitchContext switch_basicblock_context;
+    u32 main_function_index;
 } EmitSettings;
 
 extern EmitContext emit_context;

@@ -117,6 +117,9 @@ int main(void){
     u32 start_cell_index = global_variables_cells + stack_footprint;
     emit_context.current_cell_index = start_cell_index;
 
+    // Remember main function
+    emit_settings.main_function_index = main_function_index;
+
     // If stack is disabled, just emit the `main` function
     if(!emit_settings.enable_stack){
         return function_emit(main_function_index, start_cell_index, start_cell_index);

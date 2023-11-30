@@ -18,6 +18,7 @@
 #include "../include/typedef.h"
 #include "../include/parse_typedef.h"
 #include "../include/parse_macro.h"
+#include "../include/parse_expression.h"
 
 static u32 parse_function_body(Function function){
     // { ... }
@@ -154,9 +155,22 @@ u32 parse(){
         u32 symbol_name = eat_word();
 
         // Global variable
-        if(is_token(TOKEN_SEMICOLON) || is_token(TOKEN_OPEN_BRACKET)){
+        if(is_token(TOKEN_SEMICOLON) || is_token(TOKEN_OPEN_BRACKET) || is_token(TOKEN_ASSIGN)){
             type.dimensions = parse_dimensions(dimensions[type.dimensions]);
             if(type.dimensions >= UNIQUE_DIMENSIONS_CAPACITY) return 1;
+
+            u32 symbol_type = add_type(type);
+            if(symbol_type >= TYPES_CAPACITY) return 1;
+
+            u32 initializer = EXPRESSIONS_CAPACITY;
+
+            if(eat_token(TOKEN_ASSIGN)){
+                Expression initial = parse_expression();
+                if(had_parse_error) return 1;
+
+                initializer = add_expression(initial);
+                if(initializer >= EXPRESSIONS_CAPACITY) return 1;
+            }
 
             if(!eat_token(TOKEN_SEMICOLON)){
                 printf("error on line %d: Expected ';' after global variable\n", current_line());
@@ -164,13 +178,11 @@ u32 parse(){
                 return 1;
             }
 
-            u32 symbol_type = add_type(type);
-            if(symbol_type >= TYPES_CAPACITY) return 1;
-
             u32 global = add_global((Global){
                 .name = symbol_name,
                 .type = symbol_type,
                 .line = line_number,
+                .initializer = initializer,
             });
             if(global >= GLOBALS_CAPACITY) return 1;
         } else {

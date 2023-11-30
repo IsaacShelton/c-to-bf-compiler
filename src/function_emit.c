@@ -1203,6 +1203,7 @@ static SwitchInfo get_switch_case_info(Expression switch_expression){
         case EXPRESSION_PRINT_ARRAY:
         case EXPRESSION_PRINTF:
         case EXPRESSION_MEMCMP:
+        case EXPRESSION_MEMCPY:
         case EXPRESSION_CALL:
         case EXPRESSION_IMPLEMENT_PUT:
         case EXPRESSION_IMPLEMENT_PRINTU1:
@@ -1670,6 +1671,7 @@ u1 can_function_early_return(u32 function_index){
         case EXPRESSION_PRINT_ARRAY:
         case EXPRESSION_PRINTF:
         case EXPRESSION_MEMCMP:
+        case EXPRESSION_MEMCPY:
         case EXPRESSION_CALL:
         case EXPRESSION_IMPLEMENT_PUT:
         case EXPRESSION_IMPLEMENT_PRINTU1:

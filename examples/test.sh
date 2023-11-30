@@ -64,6 +64,7 @@ set -ex
 "$self/../peck" "$self/less_greater_equal.peck"
 "$self/../peck" "$self/line_comments.peck"
 "$self/../peck" "$self/memcmp.peck"
+"$self/../peck" "$self/memcpy.peck"
 "$self/../peck" "$self/multiline_comments.peck"
 "$self/../peck" "$self/multiplication.peck"
 "$self/../peck" "$self/nd_arrays.peck"

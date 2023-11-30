@@ -100,6 +100,7 @@ u1 aux_cstr_equals_panicloop(u32 a);
 u1 aux_cstr_equals_define(u32 a);
 u1 aux_cstr_equals_printf(u32 a);
 u1 aux_cstr_equals_memcmp(u32 a);
+u1 aux_cstr_equals_memcpy(u32 a);
 u32 aux_cstr_len(u32 str);
 u0 print_aux_cstr(u32 index);
 u0 print_aux_cstr_escaped(u32 index);

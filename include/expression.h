@@ -83,6 +83,7 @@ typedef enum {
     EXPRESSION_PANICLOOP, /* {} */
     EXPRESSION_PRINTF, /* <same as EXPRESSION_CALL> */
     EXPRESSION_MEMCMP, /* <same as EXPRESSION_CALL> */
+    EXPRESSION_MEMCPY, /* <same as EXPRESSION_CALL> */
 } ExpressionKind;
 
 typedef struct {

@@ -33,7 +33,10 @@ u0 expression_print(Expression expression){
         expression_print(expressions[expression.ops]);
         printf("\")");
         break;
-    case EXPRESSION_CALL: {
+    case EXPRESSION_CALL:
+    case EXPRESSION_PRINTF:
+    case EXPRESSION_MEMCMP:
+    case EXPRESSION_MEMCPY: {
             u32 name = operands[expression.ops];
             u32 arity = operands[expression.ops + 1];
             print_aux_cstr(name);

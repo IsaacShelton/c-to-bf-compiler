@@ -1,0 +1,12 @@
+
+u0 main(){
+    u8 source[4] = "Hey ";
+    u8 destination[8] = "Original";
+    u8 source2[4] = "John";
+
+    memcpy(destination, source, sizeof source);
+    memcpy(destination[4], source2, sizeof source2);
+    print(destination);
+    print("\n");
+}
+

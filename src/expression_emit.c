@@ -15,6 +15,7 @@
 #include "../include/expression_print.h"
 #include "../include/expression_get_type.h"
 #include "../include/stack_driver.h"
+#include "../include/expression_get_type.h"
 
 static u32 expression_emit_string(Expression expression);
 
@@ -314,6 +315,69 @@ static u32 expression_emit_memcmp(Expression expression){
     printf("%d<", distance - 1);
     emit_context.current_cell_index -= 2 * bytes - 1;
     return u8_type;
+}
+
+static u32 expression_emit_memcpy(Expression expression){
+    u32 arity = operands[expression.ops + 1];
+
+    if(arity != 3){
+        printf("\nerror on line %d: memcpy requires three arguments\n", u24_unpack(expression.line));
+        return TYPES_CAPACITY;
+    }
+
+    Expression bytes_argument = expressions[operands[expression.ops + 2 + 2]];
+    u32 bytes;
+
+    if(bytes_argument.kind == EXPRESSION_INT){
+        bytes = bytes_argument.ops;
+    } else if(bytes_argument.kind == EXPRESSION_SIZEOF_TYPE){
+        bytes = type_sizeof_or_max(bytes_argument.ops, bytes_argument.line);
+        if(bytes == -1) return TYPES_CAPACITY;
+    } else if(bytes_argument.kind == EXPRESSION_SIZEOF_VALUE){
+        u32 type = expression_get_type(expressions[bytes_argument.ops], EXPRESSION_GET_TYPE_MODE_PRINT_ERROR);
+        if(type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+        bytes = type_sizeof_or_max(type, bytes_argument.line);
+        if(bytes == -1) return TYPES_CAPACITY;
+    } else {
+        printf("\nerror on line %d: Third argument to memcpy must be a compile-time known integer\n", u24_unpack(expression.line));
+        return TYPES_CAPACITY;
+    }
+
+    if(bytes == 0){
+        return u0_type;
+    }
+
+    u32 type_dimensions[4] = { bytes };
+    Type new_type_layout = (Type){
+        .name = types[u8_type].name,
+        .dimensions = add_dimensions(type_dimensions),
+    };
+    u32 new_type = add_type(new_type_layout);
+    if(new_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    // Read N bytes of source
+    Destination destination;
+    Expression argument;
+    argument = expressions[operands[expression.ops + 2 + 1]];
+    if(argument.kind == EXPRESSION_STRING){
+        expression_emit_string(argument);
+    } else {
+        destination = expression_get_destination(argument, emit_context.current_cell_index);
+        if(destination.type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+        destination.type = new_type;
+        if(read_destination(destination, expression.line) >= TYPES_CAPACITY){
+            return TYPES_CAPACITY;
+        }
+    }
+
+    // Get destination
+    argument = expressions[operands[expression.ops + 2]];
+    destination = expression_get_destination(argument, emit_context.current_cell_index);
+    if(destination.type >= TYPES_CAPACITY) return 1;
+    destination.type = new_type;
+
+    return write_destination_unsafe(new_type, destination, expression.line);
 }
 
 static u32 expression_emit_call(Expression expression){
@@ -702,7 +766,7 @@ Destination expression_get_destination(Expression expression, u32 tape_anchor){
     }
 }
 
-static u32 write_destination(u32 new_value_type, Destination destination, u24 error_line_number){
+u32 write_destination(u32 new_value_type, Destination destination, u24 error_line_number){
     if(new_value_type != destination.type){
         if(grow_type(new_value_type, destination.type, destination.offset_size)){
             printf("\nerror on line %d: Cannot assign '", u24_unpack(error_line_number));
@@ -716,6 +780,10 @@ static u32 write_destination(u32 new_value_type, Destination destination, u24 er
         new_value_type = destination.type;
     }
 
+    return write_destination_unsafe(new_value_type, destination, error_line_number);
+}
+
+u32 write_destination_unsafe(u32 new_value_type, Destination destination, u24 error_line_number){
     u32 type_size = type_sizeof_or_max(new_value_type, error_line_number);
     if(type_size == -1) return TYPES_CAPACITY;
 
@@ -1946,6 +2014,8 @@ u32 expression_emit(Expression expression){
         return expression_emit_printf(expression);
     case EXPRESSION_MEMCMP:
         return expression_emit_memcmp(expression);
+    case EXPRESSION_MEMCPY:
+        return expression_emit_memcpy(expression);
     case EXPRESSION_CALL:
         return expression_emit_call(expression);
     case EXPRESSION_IMPLEMENT_PUT:

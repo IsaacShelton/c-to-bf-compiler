@@ -80,13 +80,14 @@ u32 expression_get_type(Expression expression, ExpressionGetTypeMode mode){
     case EXPRESSION_PRINT_LITERAL:
     case EXPRESSION_PRINT_ARRAY:
     case EXPRESSION_PRINTF:
-    case EXPRESSION_MEMCMP:
+    case EXPRESSION_MEMCPY:
     case EXPRESSION_IMPLEMENT_PUT:
     case EXPRESSION_IMPLEMENT_PRINTU1:
     case EXPRESSION_IMPLEMENT_PRINTU8:
         return u0_type;
     case EXPRESSION_IMPLEMENT_GET:
     case EXPRESSION_IMPLEMENT_READU8:
+    case EXPRESSION_MEMCMP:
         return u8_type;
     case EXPRESSION_CALL:
         return expression_get_type_for_call(expression);

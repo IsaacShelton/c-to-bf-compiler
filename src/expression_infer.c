@@ -135,6 +135,7 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
     case EXPRESSION_CALL:
     case EXPRESSION_PRINTF:
     case EXPRESSION_MEMCMP:
+    case EXPRESSION_MEMCPY:
         expression_infer_call(expression);
         break;
     case EXPRESSION_CAST: {

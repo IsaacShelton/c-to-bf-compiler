@@ -44,6 +44,7 @@ static Container get_parent_container(u32 statement_index){
         case EXPRESSION_PRINT_ARRAY:
         case EXPRESSION_PRINTF:
         case EXPRESSION_MEMCMP:
+        case EXPRESSION_MEMCPY:
         case EXPRESSION_CALL:
         case EXPRESSION_IMPLEMENT_PUT:
         case EXPRESSION_IMPLEMENT_PRINTU1:
@@ -243,6 +244,7 @@ u32 find_declaration(u32 start_statement, u32 stop_statement, u32 name){
         case EXPRESSION_PRINT_ARRAY:
         case EXPRESSION_PRINTF:
         case EXPRESSION_MEMCMP:
+        case EXPRESSION_MEMCPY:
         case EXPRESSION_CALL:
         case EXPRESSION_IMPLEMENT_PUT:
         case EXPRESSION_IMPLEMENT_PRINTU1:
@@ -350,6 +352,7 @@ static HoneInfo hone_switch_case_or_skip(u32 current_statement, u32 target_state
         case EXPRESSION_PRINT_ARRAY:
         case EXPRESSION_PRINTF:
         case EXPRESSION_MEMCMP:
+        case EXPRESSION_MEMCPY:
         case EXPRESSION_CALL:
         case EXPRESSION_IMPLEMENT_PUT:
         case EXPRESSION_IMPLEMENT_PRINTU1:
@@ -481,6 +484,7 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
     case EXPRESSION_PRINT_ARRAY:
     case EXPRESSION_PRINTF:
     case EXPRESSION_MEMCMP:
+    case EXPRESSION_MEMCPY:
     case EXPRESSION_CALL:
     case EXPRESSION_IMPLEMENT_PUT:
     case EXPRESSION_IMPLEMENT_PRINTU1:

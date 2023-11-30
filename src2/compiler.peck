@@ -3838,17 +3838,17 @@ u0 emit_stdlib_function_call(u8 function_name[16], u32 return_size, u32 params_s
 
 u0 emit_additive_u16(u1 is_plus){
     if(is_plus){
-        emit_stdlib_function_call((u8*) "u16_add", 2, 4);
+        emit_stdlib_function_call( "u16_add", 2, 4);
     } else {
-        emit_stdlib_function_call((u8*) "u16_sub", 2, 4);
+        emit_stdlib_function_call( "u16_sub", 2, 4);
     }
 }
 
 u0 emit_additive_u32(u1 is_plus){
     if(is_plus){
-        emit_stdlib_function_call((u8*) "u32_add", 4, 8);
+        emit_stdlib_function_call( "u32_add", 4, 8);
     } else {
-        emit_stdlib_function_call((u8*) "u32_sub", 4, 8);
+        emit_stdlib_function_call( "u32_sub", 4, 8);
     }
 }
 
@@ -3898,11 +3898,11 @@ u0 emit_multiply_u8(){
 }
 
 u0 emit_multiply_u16(){
-    emit_stdlib_function_call((u8*) "u16_mul", 2, 4);
+    emit_stdlib_function_call( "u16_mul", 2, 4);
 }
 
 u0 emit_multiply_u32(){
-    emit_stdlib_function_call((u8*) "u32_mul", 4, 8);
+    emit_stdlib_function_call( "u32_mul", 4, 8);
 }
 
 u0 emit_divmod_u8(){
@@ -3934,11 +3934,11 @@ u0 emit_divide_u8(){
 }
 
 u0 emit_divide_u16(){
-    emit_stdlib_function_call((u8*) "u16_div", 2, 4);
+    emit_stdlib_function_call( "u16_div", 2, 4);
 }
 
 u0 emit_divide_u32(){
-    emit_stdlib_function_call((u8*) "u32_div", 4, 8);
+    emit_stdlib_function_call( "u32_div", 4, 8);
 }
 
 u0 emit_mod_u8(){
@@ -3953,11 +3953,11 @@ u0 emit_mod_u8(){
 }
 
 u0 emit_mod_u16(){
-    emit_stdlib_function_call((u8*) "u16_mod", 2, 4);
+    emit_stdlib_function_call( "u16_mod", 2, 4);
 }
 
 u0 emit_mod_u32(){
-    emit_stdlib_function_call((u8*) "u32_mod", 4, 8);
+    emit_stdlib_function_call( "u32_mod", 4, 8);
 }
 
 u0 emit_lshift_u8(){
@@ -3999,7 +3999,7 @@ u0 emit_lshift_u16(){
     printf("<");
     emit_context.current_cell_index--;
 
-    emit_stdlib_function_call((u8*) "u16_sll", 2, 3);
+    emit_stdlib_function_call( "u16_sll", 2, 3);
 }
 
 u0 emit_lshift_u32(){
@@ -4007,7 +4007,7 @@ u0 emit_lshift_u32(){
     printf("3<");
     emit_context.current_cell_index -= 3;
 
-    emit_stdlib_function_call((u8*) "u32_sll", 4, 5);
+    emit_stdlib_function_call( "u32_sll", 4, 5);
 }
 
 u0 emit_rshift_u8(){
@@ -4088,7 +4088,7 @@ u0 emit_rshift_u16(){
     printf("<");
     emit_context.current_cell_index--;
 
-    emit_stdlib_function_call((u8*) "u16_srl", 2, 3);
+    emit_stdlib_function_call( "u16_srl", 2, 3);
 }
 
 u0 emit_rshift_u32(){
@@ -4096,7 +4096,7 @@ u0 emit_rshift_u32(){
     printf("3<");
     emit_context.current_cell_index -= 3;
 
-    emit_stdlib_function_call((u8*) "u32_srl", 4, 5);
+    emit_stdlib_function_call( "u32_srl", 4, 5);
 }
 
 u0 emit_eq_u8(){
@@ -4131,11 +4131,11 @@ u0 emit_eq_u8(){
 }
 
 u0 emit_eq_u16(){
-    emit_stdlib_function_call((u8*) "u16_eq", 1, 4);
+    emit_stdlib_function_call( "u16_eq", 1, 4);
 }
 
 u0 emit_eq_u32(){
-    emit_stdlib_function_call((u8*) "u32_eq", 1, 8);
+    emit_stdlib_function_call( "u32_eq", 1, 8);
 }
 
 u0 emit_neq_u8(){
@@ -4164,12 +4164,12 @@ u0 emit_neq_u8(){
 }
 
 u0 emit_neq_u16(){
-    emit_stdlib_function_call((u8*) "u16_eq", 1, 4);
+    emit_stdlib_function_call( "u16_eq", 1, 4);
     emit_not_u1();
 }
 
 u0 emit_neq_u32(){
-    emit_stdlib_function_call((u8*) "u32_eq", 1, 8);
+    emit_stdlib_function_call( "u32_eq", 1, 8);
     emit_not_u1();
 }
 
@@ -4235,11 +4235,11 @@ u0 emit_lt_u8(){
 }
 
 u0 emit_lt_u16(){
-    emit_stdlib_function_call((u8*) "u16_lt", 1, 4);
+    emit_stdlib_function_call( "u16_lt", 1, 4);
 }
 
 u0 emit_lt_u32(){
-    emit_stdlib_function_call((u8*) "u32_lt", 1, 8);
+    emit_stdlib_function_call( "u32_lt", 1, 8);
 }
 
 u0 emit_gt_u8(){
@@ -4307,11 +4307,11 @@ u0 emit_gt_u8(){
 }
 
 u0 emit_gt_u16(){
-    emit_stdlib_function_call((u8*) "u16_gt", 1, 4);
+    emit_stdlib_function_call( "u16_gt", 1, 4);
 }
 
 u0 emit_gt_u32(){
-    emit_stdlib_function_call((u8*) "u32_gt", 1, 8);
+    emit_stdlib_function_call( "u32_gt", 1, 8);
 }
 
 u0 emit_lte_u8(){
@@ -4373,11 +4373,11 @@ u0 emit_lte_u8(){
 }
 
 u0 emit_lte_u16(){
-    emit_stdlib_function_call((u8*) "u16_lte", 1, 4);
+    emit_stdlib_function_call( "u16_lte", 1, 4);
 }
 
 u0 emit_lte_u32(){
-    emit_stdlib_function_call((u8*) "u32_lte", 1, 8);
+    emit_stdlib_function_call( "u32_lte", 1, 8);
 }
 
 u0 emit_gte_u8(){
@@ -4442,11 +4442,11 @@ u0 emit_gte_u8(){
 }
 
 u0 emit_gte_u16(){
-    emit_stdlib_function_call((u8*) "u16_gte", 1, 4);
+    emit_stdlib_function_call( "u16_gte", 1, 4);
 }
 
 u0 emit_gte_u32(){
-    emit_stdlib_function_call((u8*) "u32_gte", 1, 8);
+    emit_stdlib_function_call( "u32_gte", 1, 8);
 }
 
 u0 emit_binary_bitwise_operator_pre(){
@@ -4527,11 +4527,11 @@ u0 emit_bit_and_u8(){
 }
 
 u0 emit_bit_and_u16(){
-    emit_stdlib_function_call((u8*) "u16_bit_and", 2, 4);
+    emit_stdlib_function_call( "u16_bit_and", 2, 4);
 }
 
 u0 emit_bit_and_u32(){
-    emit_stdlib_function_call((u8*) "u32_bit_and", 4, 8);
+    emit_stdlib_function_call( "u32_bit_and", 4, 8);
 }
 
 u0 emit_bit_or_u8(){
@@ -4544,11 +4544,11 @@ u0 emit_bit_or_u8(){
 }
 
 u0 emit_bit_or_u16(){
-    emit_stdlib_function_call((u8*) "u16_bit_or", 2, 4);
+    emit_stdlib_function_call( "u16_bit_or", 2, 4);
 }
 
 u0 emit_bit_or_u32(){
-    emit_stdlib_function_call((u8*) "u32_bit_or", 4, 8);
+    emit_stdlib_function_call( "u32_bit_or", 4, 8);
 }
 
 u0 emit_bit_xor_u8(){
@@ -4561,11 +4561,11 @@ u0 emit_bit_xor_u8(){
 }
 
 u0 emit_bit_xor_u16(){
-    emit_stdlib_function_call((u8*) "u16_bit_xor", 2, 4);
+    emit_stdlib_function_call( "u16_bit_xor", 2, 4);
 }
 
 u0 emit_bit_xor_u32(){
-    emit_stdlib_function_call((u8*) "u32_bit_xor", 4, 8);
+    emit_stdlib_function_call( "u32_bit_xor", 4, 8);
 }
 
 u0 emit_not_u1(){
@@ -4594,7 +4594,7 @@ u0 emit_negate_u16(){
     emit_context.current_cell_index += 2;
 
     // Subtract
-    emit_stdlib_function_call((u8*) "u16_sub", 2, 4);
+    emit_stdlib_function_call( "u16_sub", 2, 4);
 }
 
 u0 emit_negate_u32(){
@@ -4607,7 +4607,7 @@ u0 emit_negate_u32(){
     emit_context.current_cell_index += 4;
 
     // Subtract
-    emit_stdlib_function_call((u8*) "u32_sub", 4, 8);
+    emit_stdlib_function_call( "u32_sub", 4, 8);
 }
 
 u0 emit_bit_complement_u8(){
@@ -4618,19 +4618,19 @@ u0 emit_bit_complement_u8(){
 }
 
 u0 emit_bit_complement_u16(){
-    emit_stdlib_function_call((u8*) "u16_bit_neg", 2, 2);
+    emit_stdlib_function_call( "u16_bit_neg", 2, 2);
 }
 
 u0 emit_bit_complement_u32(){
-    emit_stdlib_function_call((u8*) "u32_bit_neg", 4, 4);
+    emit_stdlib_function_call( "u32_bit_neg", 4, 4);
 }
 
 u0 emit_printu16(){
-    emit_stdlib_function_call((u8*) "printu16", 0, 2);
+    emit_stdlib_function_call( "printu16", 0, 2);
 }
 
 u0 emit_printu32(){
-    emit_stdlib_function_call((u8*) "printu32", 0, 4);
+    emit_stdlib_function_call( "printu32", 0, 4);
 }
 
 
@@ -9988,6 +9988,82 @@ u1 is_ident(u8 c){
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || (c >= '0' && c <= '9');
 }
 
+LexedToken lex_hex_integer(u32 i, u24 line){
+    u32 value = 0;
+
+    while(i < code_buffer_length){
+        u8 lead = code_buffer[i];
+
+        if(lead >= '0' && lead <= '9'){
+            value = 16 * value + lead - '0';
+        } else if(lead >= 'A' && lead <= 'F'){
+            value = 16 * value + 10 + lead - 'A';
+        } else if(lead >= 'a' && lead <= 'f'){
+            value = 16 * value + 10 + lead - 'a';
+        } else {
+            break;
+        }
+
+        i++;
+    }
+
+    return (LexedToken){
+        .token = (Token){
+            .kind = TOKEN_INT,
+            .data = value,
+            .line = line,
+        },
+        .consumed = i,
+    };
+}
+
+LexedToken lex_dec_integer(u32 i, u32 lead, u24 line){
+    u32 value = lead - '0';
+
+    while(i < code_buffer_length){
+        lead = code_buffer[i];
+
+        if(!(lead >= '0' && lead <= '9')){
+            break;
+        }
+
+        value = 10 * value + lead - '0';
+        i++;
+    }
+
+    return (LexedToken){
+        .token = (Token){
+            .kind = TOKEN_INT,
+            .data = value,
+            .line = line,
+        },
+        .consumed = i,
+    };
+}
+
+LexedToken lex_integer(u8 lead, u24 line){
+    u32 i = 1;
+
+    if(i < code_buffer_length){
+        u8 next_lead = code_buffer[i];
+
+        if(next_lead == 'x' || next_lead == 'X'){
+            return lex_hex_integer(i + 1, line);
+        } else {
+            return lex_dec_integer(i, lead, line);
+        }
+    }
+
+    return (LexedToken){
+        .token = (Token){
+            .kind = TOKEN_INT,
+            .data = lead - '0',
+            .line = line,
+        },
+        .consumed = i,
+    };
+}
+
 LexedToken lex_main(){
     LexedToken result = (LexedToken){
         .token = (Token){
@@ -10043,19 +10119,7 @@ LexedToken lex_main(){
 
     // Handle integers
     if(lead >= '0' && lead <= '9'){
-        u32 value = lead - '0';
-
-        u32 i = 1;
-        lead = code_buffer[i];
-        while(lead >= '0' && lead <= '9'){
-            value = 10 * value + lead - '0';
-            lead = code_buffer[++i];
-        }
-
-        result.token.kind = TOKEN_INT;
-        result.token.data = value;
-        result.consumed = i;
-        return result;
+        return lex_integer(lead, result.token.line);
     }
 
     // Handle identifiers
@@ -10468,7 +10532,7 @@ LexUnboundedResult lex_line_comment(u8 c){
     for(; read < code_buffer_length; read++){
         u8 comment_c = code_buffer[read];
 
-        if(comment_c == 0 || comment_c == '\n'){
+        if(comment_c == '\n' || comment_c == 0){
             break;
         }
     }
@@ -10479,6 +10543,7 @@ LexUnboundedResult lex_line_comment(u8 c){
         do {
             c = get();
         } while(!(c == 0 || c == '\n'));
+
     } else {
         // Advance code buffer
         for(u32 i = read; i < code_buffer_length; i++){
@@ -10547,6 +10612,10 @@ LexUnboundedResult lex_multiline_comment(u8 c){
 
         if(c == '/'){
             c = get();
+
+            if(c == '\n'){
+                lex_line_number++;
+            }
         }
     }
 
@@ -13483,7 +13552,7 @@ void emit_set_stack_pointer(){
 void emit_stack_driver_pre(u32 main_function_index){
     // Enable stack overflow checks
     emit_settings.stack_overflow_checks = true;
-    emit_settings.stack_overflow_message = aux_cstr_alloc((u8*) "---- STACK OVERFLOW!!! ----\n");
+    emit_settings.stack_overflow_message = aux_cstr_alloc( "---- STACK OVERFLOW!!! ----\n");
 
     // Initialize `in_basicblock`
     emit_settings.in_basicblock = false;
@@ -13557,7 +13626,7 @@ void emit_stack_driver_pre(u32 main_function_index){
     emit_end_basicblock();
 
     emit_start_basicblock(100);
-        u32 aux_cstr = aux_cstr_alloc((u8*) "Bye world!!!\n");
+        u32 aux_cstr = aux_cstr_alloc( "Bye world!!!\n");
         emit_print_aux_cstr(aux_cstr);
         emit_u32(basicblock_id_for_function(main_function_index));
         emit_stack_push_n(4);

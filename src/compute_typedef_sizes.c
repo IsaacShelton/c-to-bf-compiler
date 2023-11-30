@@ -15,8 +15,7 @@ ErrorCode compute_typedef_sizes(){
     TypeDependency dependencies[TYPE_DEPENDENCIES_CAPACITY];
     u32 num_dependencies = 0;
 
-    u32 outgoing[TYPEDEFS_CAPACITY];
-    memset(outgoing, 0, sizeof outgoing);
+    u32 outgoing[TYPEDEFS_CAPACITY] = {0};
 
     // Construct type dependencies
     for(u32 i = 0; i < num_typedefs; i++){

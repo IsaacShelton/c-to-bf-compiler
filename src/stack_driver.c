@@ -156,6 +156,12 @@ void emit_end_basicblock_jump_compatible(u32 target_basicblock_id, u32 expected_
 
     if(amount != expected_pushed_cells){
         printf("\ninternal error: emit_end_basicblock_jump_compatible - tried to end basicblock via incompatible jump (%d vs %d)\n", amount, expected_pushed_cells);
+
+        if(emit_context.function < FUNCTIONS_CAPACITY){
+            printf("\n  Inside of function: ");
+            print_aux_cstr(functions[emit_context.function].name);
+            printf("\n");
+        }
     }
 }
 

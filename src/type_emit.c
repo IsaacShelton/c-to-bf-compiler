@@ -36,9 +36,9 @@ u32 type_sizeof_or_max(u32 type_index, u24 line_on_error){
     }
 
     u32 dims[4];
-    memcpy(dims, dimensions[types[type_index].dimensions], sizeof(u32) * 4);
+    memcpy(dims, dimensions[types[type_index].dimensions], sizeof dims);
 
-    for(u8 i = 0; i < 4 && dims[i]; i++){
+    for(u8 i = 0; i < 4 && dims[i] != 0; i++){
         size *= dims[i];
     }
 

@@ -25,8 +25,10 @@ u32 expression_get_type_for_string(Expression expression){
     u32 len = aux_cstr_len(str);
 
     u32 dims[4];
-    memset(dims, 0, sizeof dims);
     dims[0] = len;
+    dims[1] = 0;
+    dims[2] = 0;
+    dims[3] = 0;
 
     u32 type_dimensions = add_dimensions(dims);
     if(type_dimensions >= UNIQUE_DIMENSIONS_CAPACITY) return TYPES_CAPACITY;
@@ -124,9 +126,11 @@ u32 expression_get_type(Expression expression, ExpressionGetTypeMode mode){
     case EXPRESSION_BIT_OR:
     case EXPRESSION_BIT_XOR: {
             u32 type = expression_get_type(expressions[operands[expression.ops]], mode);
-            if(type < TYPES_CAPACITY || !(mode & EXPRESSION_GET_TYPE_MODE_INFER)) return type;
+            if(type < TYPES_CAPACITY || !(mode & EXPRESSION_GET_TYPE_MODE_INFER)){
+                return type;
+            }
 
-            return  expression_get_type(expressions[operands[expression.ops + 1]], mode);
+            return expression_get_type(expressions[operands[expression.ops + 1]], mode);
         }
     case EXPRESSION_EQUALS:
     case EXPRESSION_NOT_EQUALS:
@@ -139,7 +143,7 @@ u32 expression_get_type(Expression expression, ExpressionGetTypeMode mode){
         return u1_type;
     case EXPRESSION_INDEX: {
             u32 array_type = expression_get_type(expressions[operands[expression.ops]], mode);
-            if(array_type >= TYPES_CAPACITY) return array_type;
+            if(array_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
             return get_item_type(types[array_type], expression.line, false);
         }
     case EXPRESSION_MEMBER: {
@@ -171,9 +175,9 @@ u32 expression_get_type(Expression expression, ExpressionGetTypeMode mode){
                 Expression field = expressions[statements[def.begin + i]];
                 if(field.kind != EXPRESSION_DECLARE) continue;
 
-                u32 field_name = operands[field.ops + 1];
+                u32 other_field_name = operands[field.ops + 1];
 
-                if(aux_cstr_equals(field_name, field_name)){
+                if(aux_cstr_equals(field_name, other_field_name)){
                     u32 field_type = operands[field.ops];
                     return field_type;
                 }

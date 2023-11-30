@@ -73,7 +73,7 @@ u32 add_type(Type type){
 u32 add_dimensions(u32 type_dimensions[4]){
     // Try to find existing slot with same value
     for(u32 i = 0; i < UNIQUE_DIMENSIONS_CAPACITY; i++){
-        u1 match = memcmp(dimensions[i], type_dimensions, sizeof(u32[4])) == 0;
+        u1 match = memcmp(dimensions[i], type_dimensions, sizeof dimensions[i]) == 0;
 
         if(match){
             return i;
@@ -373,7 +373,7 @@ u1 aux_cstr_equals_u16(u32 a){
 u32 aux_cstr_len(u32 str){
     u32 len = 0;
 
-    while(aux[str + len]){
+    while(aux[str + len] != 0){
         len++;
     }
 

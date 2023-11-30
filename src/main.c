@@ -22,6 +22,7 @@
 #include "../include/lex_context.h"
 #include "../include/emit_context.h"
 #include "../include/stack_driver.h"
+#include "../include/define_print.h"
 
 int main(void){
     if(lex()) return 1;
@@ -49,23 +50,17 @@ int main(void){
         typedef_print(typedefs[i]);
         printf("\n");
     }
-    */
     
-    /*
     for(u32 i = 0; i < num_type_aliases; i++){
         type_alias_print(type_aliases[i]);
         printf("\n");
     }
-    */
 
-    /*
     for(u32 i = 0; i < num_defines; i++){
         define_print(defines[i]);
         printf("\n");
     }
-    */
 
-    /*
     for(u32 i = 0; i < num_functions; i++){
         function_print(functions[i]);
         printf("\n");

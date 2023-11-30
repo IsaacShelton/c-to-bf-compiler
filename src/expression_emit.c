@@ -203,6 +203,36 @@ static u32 expression_emit_printf(Expression expression){
     return u0_type;
 }
 
+typedef struct {
+   u32 value;
+   u1 ok;
+} CompileTimeInteger;
+
+static CompileTimeInteger as_compile_time_integer(Expression bytes_argument){
+    u32 value;
+
+    if(bytes_argument.kind == EXPRESSION_INT){
+        // Integer
+        value = bytes_argument.ops;
+    } else if(bytes_argument.kind == EXPRESSION_SIZEOF_TYPE){
+        // sizeof(Type)
+        value = type_sizeof_or_max(bytes_argument.ops, bytes_argument.line);
+        if(value == -1) return (CompileTimeInteger){ .ok = false };
+    } else if(bytes_argument.kind == EXPRESSION_SIZEOF_VALUE){
+        // sizeof value
+        u32 type = expression_get_type(expressions[bytes_argument.ops], EXPRESSION_GET_TYPE_MODE_PRINT_ERROR);
+        if(type >= TYPES_CAPACITY) return (CompileTimeInteger){ .ok = false };
+
+        value = type_sizeof_or_max(type, bytes_argument.line);
+        if(value == -1) return (CompileTimeInteger){ .ok = false };
+    } else {
+        // Invalid
+        return (CompileTimeInteger){ .ok = false };
+    }
+
+    return (CompileTimeInteger){ .ok = true, .value = value };
+}
+
 static u32 expression_emit_memcmp(Expression expression){
     u32 arity = operands[expression.ops + 1];
 
@@ -212,12 +242,14 @@ static u32 expression_emit_memcmp(Expression expression){
     }
 
     Expression bytes_argument = expressions[operands[expression.ops + 2 + 2]];
-    if(bytes_argument.kind != EXPRESSION_INT){
-        printf("\nerror on line %d: Third argument to memcmp must be a compile-time known integer\n", u24_unpack(expression.line));
+    CompileTimeInteger integer = as_compile_time_integer(bytes_argument);
+
+    if(!integer.ok){
+        printf("\nerror on line %d: Third argument to memcmp must be a compile-time known integer\n", u24_unpack(bytes_argument.line));
         return TYPES_CAPACITY;
     }
 
-    u32 bytes = bytes_argument.ops;
+    u32 bytes = integer.value;
 
     if(bytes == 0){
         emit_u8(0);
@@ -237,7 +269,9 @@ static u32 expression_emit_memcmp(Expression expression){
 
     argument = expressions[operands[expression.ops + 2]];
     if(argument.kind == EXPRESSION_STRING){
-        expression_emit_string(argument);
+        if(expression_emit_string(argument) >= TYPES_CAPACITY){
+            return TYPES_CAPACITY;
+        }
     } else {
         destination = expression_get_destination(argument, emit_context.current_cell_index);
         if(destination.type >= TYPES_CAPACITY) return 1;
@@ -249,7 +283,9 @@ static u32 expression_emit_memcmp(Expression expression){
 
     argument = expressions[operands[expression.ops + 2 + 1]];
     if(argument.kind == EXPRESSION_STRING){
-        expression_emit_string(argument);
+        if(expression_emit_string(argument) >= TYPES_CAPACITY){
+            return TYPES_CAPACITY;
+        }
     } else {
         destination = expression_get_destination(argument, emit_context.current_cell_index);
         if(destination.type >= TYPES_CAPACITY) return TYPES_CAPACITY;
@@ -327,23 +363,14 @@ static u32 expression_emit_memcpy(Expression expression){
     }
 
     Expression bytes_argument = expressions[operands[expression.ops + 2 + 2]];
-    u32 bytes;
+    CompileTimeInteger integer = as_compile_time_integer(bytes_argument);
 
-    if(bytes_argument.kind == EXPRESSION_INT){
-        bytes = bytes_argument.ops;
-    } else if(bytes_argument.kind == EXPRESSION_SIZEOF_TYPE){
-        bytes = type_sizeof_or_max(bytes_argument.ops, bytes_argument.line);
-        if(bytes == -1) return TYPES_CAPACITY;
-    } else if(bytes_argument.kind == EXPRESSION_SIZEOF_VALUE){
-        u32 type = expression_get_type(expressions[bytes_argument.ops], EXPRESSION_GET_TYPE_MODE_PRINT_ERROR);
-        if(type >= TYPES_CAPACITY) return TYPES_CAPACITY;
-
-        bytes = type_sizeof_or_max(type, bytes_argument.line);
-        if(bytes == -1) return TYPES_CAPACITY;
-    } else {
-        printf("\nerror on line %d: Third argument to memcpy must be a compile-time known integer\n", u24_unpack(expression.line));
+    if(!integer.ok){
+        printf("\nerror on line %d: Third argument to memcpy must be a compile-time known integer\n", u24_unpack(bytes_argument.line));
         return TYPES_CAPACITY;
     }
+
+    u32 bytes = integer.value;
 
     if(bytes == 0){
         return u0_type;
@@ -362,7 +389,9 @@ static u32 expression_emit_memcpy(Expression expression){
     Expression argument;
     argument = expressions[operands[expression.ops + 2 + 1]];
     if(argument.kind == EXPRESSION_STRING){
-        expression_emit_string(argument);
+        if(expression_emit_string(argument) >= TYPES_CAPACITY){
+            return TYPES_CAPACITY;
+        }
     } else {
         destination = expression_get_destination(argument, emit_context.current_cell_index);
         if(destination.type >= TYPES_CAPACITY) return TYPES_CAPACITY;
@@ -468,7 +497,7 @@ static u32 expression_emit_call(Expression expression){
 
     if(function.is_recursive){
         u32 args_size = function_args_size(function);
-        u32 continuation_memory_count = emit_stack_driver_push_all() - args_size - 4;
+        u32 continuation_memory_count = emit_stack_driver_push_all() - args_size - 4 + return_size;
 
         emit_u32(basicblock_id_for_function(function_index));
         emit_stack_push_n(4);
@@ -568,6 +597,15 @@ static Destination destination_member(Destination destination, u32 name, u24 lin
         if(field_size == -1) return (Destination){ .type = TYPES_CAPACITY };
 
         destination.tape_location += field_size;
+    }
+
+    if(destination.type == TYPES_CAPACITY){
+        printf("\nerror on line %d: Field '", u24_unpack(line_on_error));
+        print_aux_cstr(name);
+        printf("' does not exist on type '");
+        type_print(type);
+        printf("'\n");
+        /* fall through */
     }
 
     // If successful, then .type will be less than TYPES_CAPACITY
@@ -1147,10 +1185,7 @@ static u32 emit_math_u32(ExpressionKind kind, u32 operand_type){
     return 0;
 }
 
-u32 expression_emit_unary(Expression expression){
-    u32 type = expression_emit(expressions[expression.ops]);
-    if(type >= TYPES_CAPACITY) return TYPES_CAPACITY;
-
+u32 expression_emit_unary_operation(Expression expression, u32 type){
     switch(expression.kind){
     case EXPRESSION_NOT:
         if(type == u1_type){
@@ -1249,10 +1284,59 @@ u32 expression_emit_unary(Expression expression){
         break;
     }
 
+    u32 enum_typedef = find_enum_from_type(type);
+
+    if(enum_typedef < TYPEDEFS_CAPACITY){
+        return expression_emit_unary_operation(expression, u8_type);
+    }
+
     printf("\nerror on line %d: Cannot ", u24_unpack(expression.line));
     expression_print_operation_name(expression.kind);
     printf(" value of type '");
     type_print(types[type]);
+    printf("'\n");
+    return TYPES_CAPACITY;
+}
+
+u32 expression_emit_unary(Expression expression){
+    u32 type = expression_emit(expressions[expression.ops]);
+    if(type >= TYPES_CAPACITY) return TYPES_CAPACITY;
+
+    return expression_emit_unary_operation(expression, type);
+}
+
+static u32 expression_emit_math_operation(Expression expression, u32 a_type){
+    if(a_type == u8_type){
+        return emit_math_u8(expression.kind, a_type);
+    }
+
+    if(a_type == u16_type){
+        return emit_math_u16(expression.kind, a_type);
+    }
+
+    if(a_type == u32_type){
+        return emit_math_u32(expression.kind, a_type);
+    }
+
+    // Allow bitwise operations on u1 types
+    if(a_type == u1_type && (
+        expression.kind == EXPRESSION_BIT_AND
+     || expression.kind == EXPRESSION_BIT_OR
+     || expression.kind == EXPRESSION_BIT_XOR
+    )){
+        return emit_math_u8(expression.kind, a_type);
+    }
+
+    u32 enum_typedef = find_enum_from_type(a_type);
+
+    if(enum_typedef < TYPEDEFS_CAPACITY){
+        return expression_emit_math_operation(expression, u8_type);
+    }
+
+    printf("\nerror on line %d: Cannot ", u24_unpack(expression.line));
+    expression_print_operation_name(expression.kind);
+    printf(" values of type '");
+    type_print(types[a_type]);
     printf("'\n");
     return TYPES_CAPACITY;
 }
@@ -1278,33 +1362,7 @@ static u32 expression_emit_math(Expression expression){
         return TYPES_CAPACITY;
     }
 
-    if(a_type == u8_type){
-        return emit_math_u8(expression.kind, a_type);
-    }
-
-    if(a_type == u16_type){
-        return emit_math_u16(expression.kind, a_type);
-    }
-
-    if(a_type == u32_type){
-        return emit_math_u32(expression.kind, a_type);
-    }
-
-    // Allow bitwise operations on u1 types
-    if(a_type == u1_type && (
-        expression.kind == EXPRESSION_BIT_AND
-     || expression.kind == EXPRESSION_BIT_OR
-     || expression.kind == EXPRESSION_BIT_XOR
-    )){
-        return emit_math_u8(expression.kind, a_type);
-    }
-
-    printf("\nerror on line %d: Cannot ", u24_unpack(expression.line));
-    expression_print_operation_name(expression.kind);
-    printf(" values of type '");
-    type_print(types[a_type]);
-    printf("'\n");
-    return TYPES_CAPACITY;
+    return expression_emit_math_operation(expression, a_type);
 }
 
 static u32 expression_emit_and(Expression expression){

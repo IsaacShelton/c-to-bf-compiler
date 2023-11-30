@@ -1,6 +1,7 @@
 
 # Features and bugs left
 
+- hex literals
 - `readu16()` 
 - `readu24()` 
 - `readu32()` 

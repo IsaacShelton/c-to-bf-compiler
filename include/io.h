@@ -15,11 +15,5 @@ static inline u8 get(void){
     return c != EOF ? c : 0;
 }
 
-static inline void putbuf(u8 *buffer, u32 length){
-    for(u32 i = 0; i < length; i++){
-        put(buffer[i]);
-    }
-}
-
 #endif // _PECK_IO_H
 

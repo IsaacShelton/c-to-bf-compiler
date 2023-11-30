@@ -86,6 +86,10 @@ ErrorCode parse_function(u32 symbol_name, u32 symbol_type, u24 line_number){
 
     parse_i++;
 
+    if(eat_token(TOKEN_SEMICOLON)){
+        return 0;
+    }
+
     if(!eat_token(TOKEN_BEGIN)){
         printf("error on line %d: Expected '{' after parameter list for function\n", current_line());
         instead_got();

@@ -1206,7 +1206,8 @@ u0 copy_cell_dynamic_u32(u32 start_index){
 u0 move_cell_static(u32 destination_index){
     u32 current_cell_index = emit_context.current_cell_index;
     u32 offset;
-    u8 towards, backwards;
+    u8 towards;
+    u8 backwards;
 
     if(destination_index <= current_cell_index){
         offset = current_cell_index - destination_index;

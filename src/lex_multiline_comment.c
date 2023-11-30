@@ -60,6 +60,10 @@ LexUnboundedResult lex_multiline_comment(u8 c){
 
         if(c == '/'){
             c = get();
+
+            if(c == '\n'){
+                lex_line_number++;
+            }
         }
     }
 

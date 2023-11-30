@@ -66,7 +66,8 @@ ErrorCode parse_statement(){
 
 static u1 eat_semicolon(){
     if(parse_trailing_semicolon && !eat_token(TOKEN_SEMICOLON)){
-        u32 last_line, this_line;
+        u32 last_line;
+        u32 this_line;
 
         if(parse_i > 0){
             parse_i--;
@@ -78,10 +79,12 @@ static u1 eat_semicolon(){
             this_line = last_line;
         }
 
-        printf("error on line %d: Expected ';' after statement\n", last_line);
 
         if(this_line == last_line){
+            printf("error on line %d: Expected ';' after statement\n", this_line);
             instead_got();
+        } else {
+            printf("error on line %d: Expected ';' after statement\n", last_line);
         }
 
         stop_parsing();

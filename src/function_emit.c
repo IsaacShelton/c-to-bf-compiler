@@ -988,8 +988,15 @@ static ErrorCode emit_for_stack(Expression expression){
         return 1;
     }
 
-    if(emit_end_basicblock_jump_conditional(body_block, continuation_block) != pushed){
-        printf("\ninternal error: emit_for_stack() got bad push amount for jumping to increment block\n");
+    u32 after_condition_pushed = emit_end_basicblock_jump_conditional(body_block, continuation_block);
+    if(after_condition_pushed != pushed){
+        printf("\ninternal error: emit_for_stack() got bad push amount for jumping to body/continuation blocks (%d vs %d)\n", after_condition_pushed, pushed);
+
+        if(emit_context.function < FUNCTIONS_CAPACITY){
+            printf("\n  Inside of function: ");
+            print_aux_cstr(functions[emit_context.function].name);
+            printf("\n");
+        }
         return 1;
     }
 

@@ -299,7 +299,7 @@ static u32 expression_emit_memcmp(Expression expression){
     printf(">[-]+>[-]<");
 
     for(u32 j = 0; j < bytes; j++){
-        int i = bytes - 1 - j;
+        u32 i = bytes - 1 - j;
         
         // If not done
         printf("[");
@@ -497,7 +497,7 @@ static u32 expression_emit_call(Expression expression){
 
     if(function.is_recursive){
         u32 args_size = function_args_size(function);
-        u32 continuation_memory_count = emit_stack_driver_push_all() - args_size - 4 + return_size;
+        u32 continuation_memory_count = emit_stack_driver_push_all() - args_size + return_size;
 
         emit_u32(basicblock_id_for_function(function_index));
         emit_stack_push_n(4);

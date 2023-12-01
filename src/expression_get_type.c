@@ -11,7 +11,7 @@
 
 u32 expression_get_type_for_call(Expression expression){
     u32 name = operands[expression.ops];
-    int function_index = find_function(name);
+    u32 function_index = find_function(name);
 
     if(function_index >= FUNCTIONS_CAPACITY){
         return TYPES_CAPACITY;
@@ -47,7 +47,7 @@ u32 expression_get_type_for_variable(Expression expression, ExpressionGetTypeMod
         return variable.type;
     }
 
-    if(mode & EXPRESSION_GET_TYPE_MODE_PRINT_ERROR){
+    if((u1)(mode & (u8) EXPRESSION_GET_TYPE_MODE_PRINT_ERROR)){
         printf("\nerror on line %d: Variable '", u24_unpack(expression.line));
         print_aux_cstr(name);
         printf("' is not defined\n");
@@ -126,7 +126,7 @@ u32 expression_get_type(Expression expression, ExpressionGetTypeMode mode){
     case EXPRESSION_BIT_OR:
     case EXPRESSION_BIT_XOR: {
             u32 type = expression_get_type(expressions[operands[expression.ops]], mode);
-            if(type < TYPES_CAPACITY || !(mode & EXPRESSION_GET_TYPE_MODE_INFER)){
+            if(type < TYPES_CAPACITY || !(u1)(mode & (u8) EXPRESSION_GET_TYPE_MODE_INFER)){
                 return type;
             }
 
@@ -198,7 +198,7 @@ u32 expression_get_type(Expression expression, ExpressionGetTypeMode mode){
     case EXPRESSION_STRING:
         return expression_get_type_for_string(expression);
     case EXPRESSION_SIZEOF_TYPE:
-        if(mode & EXPRESSION_GET_TYPE_MODE_INFER){
+        if((u1)(mode & (u8) EXPRESSION_GET_TYPE_MODE_INFER)){
             return TYPES_CAPACITY;
         } else {
             fprintf(stderr, "warning on line %d: assuming result type of sizeof_type to be u8\n", u24_unpack(expression.line));
@@ -213,7 +213,7 @@ u32 expression_get_type(Expression expression, ExpressionGetTypeMode mode){
     case EXPRESSION_SIZEOF_TYPE_U32:
         return u32_type;
     case EXPRESSION_SIZEOF_VALUE:
-        if(mode & EXPRESSION_GET_TYPE_MODE_INFER){
+        if((u1)(mode & (u8) EXPRESSION_GET_TYPE_MODE_INFER)){
             return TYPES_CAPACITY;
         } else {
             fprintf(stderr, "warning on line %d: assuming result type of sizeof_value to be u8\n", u24_unpack(expression.line));
@@ -235,7 +235,7 @@ u32 expression_get_type(Expression expression, ExpressionGetTypeMode mode){
 
 u32 get_item_type(Type type, u24 line_on_error, u1 show_error_message){
     u32 dims[4];
-    memcpy(dims, &dimensions[type.dimensions], sizeof(u32) * 4);
+    memcpy(dims, &dimensions[type.dimensions], sizeof dims);
 
     if(dims[0] == 0){
         if(show_error_message){

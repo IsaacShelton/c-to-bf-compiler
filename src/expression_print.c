@@ -66,7 +66,11 @@ u0 expression_print(Expression expression){
         printf("%d", expression.ops);
         break;
     case EXPRESSION_U1:
-        printf(expression.ops ? "true" : "false");
+        if(expression.ops != 0){
+            printf("true");
+        } else {
+            printf("false");
+        }
         break;
     case EXPRESSION_U8:
         printf("%du8", expression.ops);

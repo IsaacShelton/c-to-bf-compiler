@@ -7,8 +7,8 @@
 u32 function_args_size(Function function){
     u32 total_size = 0;
 
-    for(u32 i = 0; i < function.arity; i++){
-        Expression arg = expressions[statements[function.begin + i]];
+    for(u8 i = 0; i < function.arity; i++){
+        Expression arg = expressions[statements[function.begin + (u32) i]];
 
         if(arg.kind != EXPRESSION_DECLARE){
             printf("\ninternal error on line %d: Failed to compute arguments size\n", u24_unpack(function.line));

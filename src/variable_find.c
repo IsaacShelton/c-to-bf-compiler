@@ -470,10 +470,6 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement);
 static HoneInfo hone_for_body_or_skip(u32 current_statement, u32 target_statement, u32 num_pre, u32 num_post, u32 len, u32 inner_variable_offset){
     u32 pre_offset = 0;
 
-    if(emit_context.in_recursive_function){
-        fprintf(stderr, "warning: hone_for_body_or_skip is unimplemented for recursive functions\n");
-    }
-
     for(u32 i = current_statement + 1; i < current_statement + 1 + num_pre; i++){
         Expression expression = expressions[statements[i]];
 

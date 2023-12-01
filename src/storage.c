@@ -265,7 +265,7 @@ u32 add_define(Define define){
     return DEFINES_CAPACITY;
 }
 
-u32 try_resolve_define(u32 name){
+u32 try_resolve_define(u32 name, u1 use_preferred_type){
     for(u32 i = 0; i < num_defines; i++){
         if(aux_cstr_equals(defines[i].name, name)){
             return defines[i].expression;
@@ -507,7 +507,7 @@ u0 print_aux_cstr(u32 index){
 }
 
 u0 print_aux_cstr_escaped(u32 index){
-    for(u32 i = index; aux[i]; i++){
+    for(u32 i = index; (u1) aux[i]; i++){
         u8 c = aux[i];
         if(c == '\n'){
             printf("\\n");

@@ -79,7 +79,7 @@ u32 find_typedef(u32 name);
 u32 add_type_alias(TypeAlias alias);
 u32 try_resolve_type_alias(u32 name);
 u32 add_define(Define define);
-u32 try_resolve_define(u32 name);
+u32 try_resolve_define(u32 name, u1 use_preferred_type);
 u32 aux_cstr_alloc(u8 null_terminated_name[32]);
 u1 aux_cstr_equals(u32 a, u32 b);
 u1 aux_cstr_equals_string(u32 a, u8 string[32]);

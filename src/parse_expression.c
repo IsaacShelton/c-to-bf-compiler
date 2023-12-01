@@ -490,7 +490,7 @@ static Expression parse_primary_base_expression(){
         }
 
         // Resolve '#define' constants
-        u32 resolved = try_resolve_define(name);
+        u32 resolved = try_resolve_define(name, true);
         if(resolved < EXPRESSIONS_CAPACITY){
             return expressions[resolved];
         }

@@ -110,6 +110,8 @@ u0 expression_print_operation_name(ExpressionKind kind){
     case EXPRESSION_NOT_EQUALS:
     case EXPRESSION_LESS_THAN:
     case EXPRESSION_GREATER_THAN:
+    case EXPRESSION_LESS_THAN_OR_EQUAL:
+    case EXPRESSION_GREATER_THAN_OR_EQUAL:
         printf("compare");
         break;
     case EXPRESSION_LSHIFT:
@@ -151,7 +153,7 @@ u0 expression_print_operation_name(ExpressionKind kind){
         printf("decrement");
         break;
     default:
-        printf("<unknown math operation>");
+        printf("<unknown math operation of id %d>", (u8) kind);
     }
 }
 

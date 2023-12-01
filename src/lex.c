@@ -120,7 +120,7 @@ LexedToken lex_main(){
     LexedToken result = (LexedToken){
         .token = (Token){
             .kind = TOKEN_NONE,
-            .data = 0,
+            .data = (u32) 0,
             .line = u24_pack(lex_line_number),
         },
         .consumed = 0,
@@ -419,7 +419,7 @@ u32 lex(){
     // Lex
     while(true){
         // (Re)-fill buffer
-        while(code_buffer_length != CODE_BUFFER_CAPACITY && c){
+        while(code_buffer_length != CODE_BUFFER_CAPACITY && c != 0){
             c = get();
 
             if(c != 0){

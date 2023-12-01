@@ -7,17 +7,17 @@
 #include "../include/function_emit.h"
 #include "../include/type_emit.h"
 
-void emit_stack_pointer(){
+u0 emit_stack_pointer(){
     copy_cells_static(emit_settings.stack_pointer, 4);
 }
 
-void emit_set_stack_pointer(){
+u0 emit_set_stack_pointer(){
     printf("<");
     emit_context.current_cell_index--;
     move_cells_static(emit_settings.stack_pointer, 4);
 }
 
-void emit_stack_driver_pre(u32 main_function_index){
+u0 emit_stack_driver_pre(u32 main_function_index){
     // Enable stack overflow checks
     emit_settings.stack_overflow_checks = true;
     emit_settings.stack_overflow_message = aux_cstr_alloc((u8*) "---- STACK OVERFLOW!!! ----\n");
@@ -106,7 +106,7 @@ u32 basicblock_id_for_function(u32 function_id){
     return function_id + 1;
 }
 
-void emit_start_basicblock(u32 basicblock_id){
+u0 emit_start_basicblock(u32 basicblock_id){
     dupe_cells(4);
     emit_u32(basicblock_id);
     emit_eq_u32();
@@ -117,12 +117,12 @@ void emit_start_basicblock(u32 basicblock_id){
     emit_settings.in_basicblock = true;
 }
 
-void emit_end_basicblock(){
+u0 emit_end_basicblock(){
     printf("[-]]");
     emit_settings.in_basicblock = false;
 }
 
-void emit_start_basicblock_landing(u32 basicblock_id, u32 num_cells_to_pop){
+u0 emit_start_basicblock_landing(u32 basicblock_id, u32 num_cells_to_pop){
     emit_start_basicblock(basicblock_id);
     emit_stack_pop_n(num_cells_to_pop);
 }
@@ -151,7 +151,7 @@ u32 emit_end_basicblock_jump(u32 target_basicblock_id){
     return pushed;
 }
 
-void emit_end_basicblock_jump_compatible(u32 target_basicblock_id, u32 expected_pushed_cells){
+u0 emit_end_basicblock_jump_compatible(u32 target_basicblock_id, u32 expected_pushed_cells){
     u32 amount = emit_end_basicblock_jump(target_basicblock_id);
 
     if(amount != expected_pushed_cells){
@@ -233,7 +233,7 @@ u0 emit_end_basicblock_jump_to(JumpContext context){
     emit_end_basicblock_jump_compatible(context.basicblock_id, context.num_cells_input);
 }
 
-void emit_stack_driver_post(){
+u0 emit_stack_driver_post(){
     // Keep looping until basicblock id is zero
     emit_u32(0);
     emit_neq_u32();
@@ -241,7 +241,7 @@ void emit_stack_driver_post(){
     printf("]");
 }
 
-void emit_basicblock_pre(u32 basicblock_id){
+u0 emit_basicblock_pre(u32 basicblock_id){
     // Run basicblock if current basicblock id matches this basicblock id
     dupe_cells(4);
     emit_u32(basicblock_id);
@@ -249,7 +249,7 @@ void emit_basicblock_pre(u32 basicblock_id){
     printf("[");
 }
 
-void emit_basicblock_post(){
+u0 emit_basicblock_post(){
     if(emit_settings.stack_pointer != emit_settings.stack_driver_position){
         fprintf(stderr, "error: basicblock content corrupted stack driver position\n");
     }
@@ -264,7 +264,7 @@ u32 emit_stack_driver_push_all(){
     return count;
 }
 
-void emit_stack_driver_pop_all(){
+u0 emit_stack_driver_pop_all(){
     // Compute `stack_pointer - 4`
     copy_cells_static(emit_settings.stack_pointer, 4);
     emit_u32(4);
@@ -285,7 +285,7 @@ void emit_stack_driver_pop_all(){
     */
 }
 
-void emit_stack_push_n(u32 num_cells){
+u0 emit_stack_push_n(u32 num_cells){
     // data1 data2 data3 data4
     //                         ^
 
@@ -318,7 +318,7 @@ void emit_stack_push_n(u32 num_cells){
     }
 }
 
-void emit_stack_pop_n(u32 num_cells){
+u0 emit_stack_pop_n(u32 num_cells){
     if(num_cells != 0){
         // Compute `stack_pointer - n`
         emit_stack_pointer();
@@ -352,7 +352,7 @@ u32 emit_recursive_functions(){
         if(args_size == -1) return 1;
 
         emit_start_basicblock_landing(basicblock_id_for_function(function_i), args_size);
-        if(function_emit(function_i, emit_settings.stack_driver_position, emit_context.current_cell_index)){
+        if(function_emit(function_i, emit_settings.stack_driver_position, emit_context.current_cell_index) != 0){
             return 1;
         }
         if(emit_settings.in_basicblock){

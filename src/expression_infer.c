@@ -102,12 +102,21 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
     case EXPRESSION_SIZEOF_TYPE_U16:
     case EXPRESSION_SIZEOF_TYPE_U24:
     case EXPRESSION_SIZEOF_TYPE_U32:
-    case EXPRESSION_STRUCT_INITIALIZER:
-    case EXPRESSION_FIELD_INITIALIZER:
     case EXPRESSION_ENUM_VARIANT:
     case EXPRESSION_PANICLOOP:
         break;
 
+    case EXPRESSION_STRUCT_INITIALIZER: {
+            u32 length = operands[expression.ops + 1];
+
+            for(u32 i = 0; i < length; i++){
+                expression_infer(operands[expression.ops + 2 + i], EXPRESSION_NONE);
+            }
+        }
+        break;
+    case EXPRESSION_FIELD_INITIALIZER:
+        expression_infer(operands[expression.ops + 1], EXPRESSION_NONE);
+        break;
     case EXPRESSION_RETURN:
         if(expression.ops != EXPRESSIONS_CAPACITY){
             expression_infer(expression.ops, type_to_expression_kind(functions[emit_context.function].return_type));
@@ -187,7 +196,7 @@ u0 expression_infer(u32 expression_index, ExpressionKind preferred_int_kind){
         break;
     case EXPRESSION_TERNARY: {
             expression_infer(operands[expression.ops], EXPRESSION_U1);
-            u32 result_preferred_kind = expression_get_preferred_int_kind_or_none(operands[expression.ops + 1]);
+            ExpressionKind result_preferred_kind = expression_get_preferred_int_kind_or_none(operands[expression.ops + 1]);
             expression_infer(operands[expression.ops + 1], result_preferred_kind);
             expression_infer(operands[expression.ops + 2], result_preferred_kind);
         }

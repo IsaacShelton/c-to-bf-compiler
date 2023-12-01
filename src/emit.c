@@ -57,7 +57,7 @@ u0 emit_print_aux_cstr(u32 string){
     
     u8 previous_value = 0;
 
-    for(u32 i = string; aux[i]; i++){
+    for(u32 i = string; aux[i] != 0; i++){
         set_cell_to_value(aux[i], previous_value);
         printf(".");
         previous_value = aux[i];

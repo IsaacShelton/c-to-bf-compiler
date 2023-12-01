@@ -9,7 +9,7 @@ u0 print_lexed_construction(){
 
     printf("// Assume that num_aux + delta_aux < AUX_CAPACITY\n");
     for(u32 i = 0; i < num_aux; i++){
-        printf("aux[%d] = %d;\n", i, aux[i]);
+        printf("aux[(u32) %d] = %d;\n", i, aux[i]);
     }
     printf("num_aux += %d;\n", delta_aux);
 
@@ -17,8 +17,8 @@ u0 print_lexed_construction(){
     for(u32 i = 0; i < num_tokens; i++){
         u32 kind = tokens[i].kind;
         u32 data = tokens[i].data;
-        printf("tokens[%d] = (Token){ .kind = %d, .data = %d };\n", i, kind, data);
+        printf("tokens[(u32) %d] = (Token){ .kind = (TokenKind) %d, .data = (u32) %u };\n", i, kind, (u32) data);
     }
-    printf("num_tokens += %d;\n", delta_tokens);
+    printf("num_tokens += (u32) %d;\n", delta_tokens);
 }
 

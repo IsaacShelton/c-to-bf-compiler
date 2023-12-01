@@ -14,7 +14,9 @@ static u0 indent(u32 indentation){
 
 static u0 print_body(u32 start_i, u32 stop_i, u32 indentation, u1 print_trailing_semicolon){
     for(u32 i = start_i; i < stop_i; i++){
-        printf(" %02d ", i);
+        printf(" ");
+        if(i < 10) printf("0");
+        printf("%d ", i);
         if(indentation > 1){
             indent(indentation - 1);
         }
@@ -155,11 +157,11 @@ u0 function_print(Function function){
 
     u32 i = 0;
 
-    while(i < function.num_stmts && i < function.arity){
+    while(i < function.num_stmts && i < (u32) function.arity){
         expression_print(expressions[statements[function.begin + i]]);
         i++;
 
-        if(i != function.arity){
+        if(i != (u32) function.arity){
             printf(", ");
         }
     }

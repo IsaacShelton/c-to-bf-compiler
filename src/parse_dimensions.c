@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 #include "../include/parse_context.h"
+#include "../include/parse_macro.h"
 #include "../include/storage.h"
+#include "../include/expression_print.h"
 
 u32 parse_add_dimensions(u32 type_dimensions[4]){
     u32 dims = add_dimensions(type_dimensions);
@@ -44,7 +46,7 @@ u32 parse_dimensions(u32 start_type_dimensions[4]){
         } else if(is_token(TOKEN_WORD)){
             u32 definition_name = eat_word();
 
-            u32 resolved = try_resolve_define(definition_name);
+            u32 resolved = try_resolve_define(definition_name, false);
             if(resolved >= EXPRESSIONS_CAPACITY){
                 printf("\nerror on line %d: Undeclared compile-time definition '", current_line());
                 print_aux_cstr(definition_name);
@@ -54,10 +56,11 @@ u32 parse_dimensions(u32 start_type_dimensions[4]){
             }
 
             Expression expression = expressions[resolved];
-            if(expression.kind != EXPRESSION_INT){
+            if(!is_expression_kind_int_like(expression.kind)){
                 printf("\nerror on line %d: Cannot use non-integer from compile-time definition '", current_line());
                 print_aux_cstr(definition_name);
-                printf("' as type dimension\n");
+                printf("' as type dimension (is %d", resolved);
+                printf(")\n");
                 stop_parsing();
                 return UNIQUE_DIMENSIONS_CAPACITY;
             }

@@ -358,31 +358,31 @@ static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i, u1 allow
         // Skip over contained statements
         switch(expression.kind){
         case EXPRESSION_IF:
-            if(emit_if_like(expression)) return 1;
+            if(emit_if_like(expression) != 0) return 1;
             i += operands[expression.ops + 1];
             break;
         case EXPRESSION_IF_ELSE:
-            if(emit_if_like(expression)) return 1;
+            if(emit_if_like(expression) != 0) return 1;
             i += operands[expression.ops + 1] + operands[expression.ops + 2];
             break;
         case EXPRESSION_WHILE:
-            if(emit_while(expression)) return 1;
+            if(emit_while(expression) != 0) return 1;
             i += operands[expression.ops + 1];
             break;
         case EXPRESSION_FOR:
-            if(emit_for(expression)) return 1;
+            if(emit_for(expression) != 0) return 1;
             i += operands[expression.ops] + operands[expression.ops + 2] + operands[expression.ops + 3];
             break;
         case EXPRESSION_DO_WHILE:
-            if(emit_do_while(expression)) return 1;
+            if(emit_do_while(expression) != 0) return 1;
             i += operands[expression.ops + 1];
             break;
         case EXPRESSION_CONDITIONLESS_BLOCK:
-            if(emit_conditionless_block(expression)) return 1;
+            if(emit_conditionless_block(expression) != 0) return 1;
             i += expression.ops;
             break;
         case EXPRESSION_SWITCH:
-            if(emit_switch(expression)) return 1;
+            if(emit_switch(expression) != 0) return 1;
             i += operands[expression.ops + 1];
             break;
         case EXPRESSION_CASE:
@@ -390,7 +390,7 @@ static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i, u1 allow
                 expression_print_cannot_use_case_here_error(expression);
                 return 1;
             }
-            if(emit_case(expression)) return 1;
+            if(emit_case(expression) != 0) return 1;
             i += operands[expression.ops + 1];
             break;
         default: {
@@ -416,7 +416,7 @@ static ErrorCode emit_body_scoped(u32 start_statement_i, u32 stop_statement_i, u
     u32 starting_cell_index = emit_context.current_cell_index;
 
     // Emit body
-    if(emit_body(start_statement_i, stop_statement_i, allow_cases)){
+    if(emit_body(start_statement_i, stop_statement_i, allow_cases) != 0){
         return 1;
     }
 
@@ -462,7 +462,7 @@ static ErrorCode emit_if_like_stack(Expression expression){
     emit_start_basicblock_landing(then_block, pushed);
 
     // Emit 'if' body
-    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false)){
+    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false) != 0){
         return 1;
     }
 
@@ -475,7 +475,7 @@ static ErrorCode emit_if_like_stack(Expression expression){
         emit_start_basicblock_landing(else_block, pushed);
 
         // Emit 'else' body
-        if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 2] + 1, false)){
+        if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 2] + 1, false) != 0){
             return 1;
         }
 
@@ -518,7 +518,7 @@ static ErrorCode emit_if_like_tape(Expression expression){
     printf("[");
 
     // Emit 'if' body
-    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false)){
+    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false) != 0){
         return 1;
     }
 
@@ -541,7 +541,7 @@ static ErrorCode emit_if_like_tape(Expression expression){
         printf("[");
 
         // Emit 'else' body
-        if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 2] + 1, false)){
+        if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 2] + 1, false) != 0){
             return 1;
         }
 
@@ -553,7 +553,7 @@ static ErrorCode emit_if_like_tape(Expression expression){
         emit_context.current_cell_index--;
     }
 
-    return emit_break_check() || emit_continue_check() || emit_early_return_check();
+    return (ErrorCode) (emit_break_check() != 0 || emit_continue_check() != 0 || emit_early_return_check() != 0);
 }
 
 static u0 emit_reset_didnt_continue(){
@@ -669,11 +669,11 @@ static ErrorCode emit_while_stack(Expression expression){
         emit_start_basicblock_landing(condition_block, pushed);
 
         // Re-evaluate condition (this should never fail)
-        expression_emit(expressions[operands[expression.ops]]);
+        (u0) expression_emit(expressions[operands[expression.ops]]);
 
         // Either redo or continue onwards
         if(emit_settings.in_basicblock){
-            emit_end_basicblock_jump_conditional(then_block, continuation_block);
+            (u0) emit_end_basicblock_jump_conditional(then_block, continuation_block);
         }
 
         emit_settings.continue_basicblock_context = (JumpContext){
@@ -686,16 +686,16 @@ static ErrorCode emit_while_stack(Expression expression){
     emit_start_basicblock_landing(then_block, pushed);
 
     // Emit 'while' body
-    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false)){
+    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false) != 0){
         return 1;
     }
 
     // Either redo or continue onwards
     if(emit_settings.in_basicblock){
         // Re-evaluate condition (this should never fail)
-        expression_emit(expressions[operands[expression.ops]]);
+        (u0) expression_emit(expressions[operands[expression.ops]]);
 
-        emit_end_basicblock_jump_conditional(then_block, continuation_block);
+        (u0) emit_end_basicblock_jump_conditional(then_block, continuation_block);
     }
 
     // Continuation block
@@ -737,14 +737,14 @@ static ErrorCode emit_while_tape(Expression expression){
     emit_reset_didnt_continue();
 
     // Emit 'while' body
-    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false)){
+    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false) != 0){
         return 1;
     }
 
     // Re-evaluate condition (should never fail)
     emit_pre_loop_condition_early_return_check();
     emit_pre_loop_condition_break_check();
-    expression_emit(expressions[operands[expression.ops]]);
+    (u0) expression_emit(expressions[operands[expression.ops]]);
     emit_post_loop_condition_break_check();
     emit_post_loop_condition_early_return_check();
 
@@ -762,7 +762,7 @@ static ErrorCode emit_while_tape(Expression expression){
     emit_context.didnt_break_cell = old_didnt_break_cell;
     emit_context.didnt_continue_cell = old_didnt_continue_cell;
 
-    return emit_break_check() || emit_continue_check() || emit_early_return_check();
+    return (ErrorCode) (emit_break_check() != 0 || emit_continue_check() != 0 || emit_early_return_check() != 0);
 }
 
 static ErrorCode emit_do_while(Expression expression){
@@ -813,7 +813,7 @@ static ErrorCode emit_do_while_stack(Expression expression){
 
         // Either redo or continue onwards
         if(emit_settings.in_basicblock){
-            emit_end_basicblock_jump_conditional(then_block, continuation_block);
+            (u0) emit_end_basicblock_jump_conditional(then_block, continuation_block);
         }
 
         emit_settings.continue_basicblock_context = (JumpContext){
@@ -826,7 +826,7 @@ static ErrorCode emit_do_while_stack(Expression expression){
     emit_start_basicblock_landing(then_block, pushed);
 
     // Emit 'do-while' body
-    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false)){
+    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false) != 0){
         return 1;
     }
 
@@ -843,7 +843,7 @@ static ErrorCode emit_do_while_stack(Expression expression){
             return 1;
         }
 
-        emit_end_basicblock_jump_conditional(then_block, continuation_block);
+        (u0) emit_end_basicblock_jump_conditional(then_block, continuation_block);
     }
 
     // Continuation block
@@ -873,7 +873,7 @@ static ErrorCode emit_do_while_tape(Expression expression){
     emit_reset_didnt_continue();
     
     // Emit 'do-while' body
-    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false)){
+    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, false) != 0){
         return 1;
     }
 
@@ -912,7 +912,7 @@ static ErrorCode emit_do_while_tape(Expression expression){
     emit_context.didnt_break_cell = old_didnt_break_cell;
     emit_context.didnt_continue_cell = old_didnt_continue_cell;
 
-    return emit_break_check() || emit_continue_check() || emit_early_return_check();
+    return (ErrorCode) (emit_break_check() != 0 || emit_continue_check() != 0 || emit_early_return_check() != 0);
 }
 
 static ErrorCode emit_for(Expression expression){
@@ -948,7 +948,7 @@ static ErrorCode emit_for_stack(Expression expression){
     emit_settings.can_continue = can_loop_continue(emit_context.current_statement);
 
     // Emit pre-statements
-    if(emit_body(pre_start_statement, pre_start_statement + num_pre, false)){
+    if(emit_body(pre_start_statement, pre_start_statement + num_pre, false) != 0){
         return 1;
     }
     if(!emit_settings.in_basicblock){
@@ -1002,7 +1002,7 @@ static ErrorCode emit_for_stack(Expression expression){
 
     emit_start_basicblock_landing(body_block, pushed);
     // Emit 'for' body
-    if(emit_body_scoped(inside_start_statement, inside_start_statement + num_inside, false)){
+    if(emit_body_scoped(inside_start_statement, inside_start_statement + num_inside, false) != 0){
         return 1;
     }
     if(emit_settings.in_basicblock){
@@ -1017,7 +1017,7 @@ static ErrorCode emit_for_stack(Expression expression){
 
     emit_start_basicblock_landing(increment_block, pushed);
     // Emit post-statements
-    if(emit_body_scoped(post_start_statement, post_start_statement + num_post, false)){
+    if(emit_body_scoped(post_start_statement, post_start_statement + num_post, false) != 0){
         return 1;
     }
     if(emit_settings.in_basicblock){
@@ -1064,7 +1064,7 @@ static ErrorCode emit_for_tape(Expression expression){
     u32 for_statement_index = emit_context.current_statement;
 
     // Emit pre-statements
-    if(emit_body(pre_start_statement, pre_start_statement + num_pre, false)){
+    if(emit_body(pre_start_statement, pre_start_statement + num_pre, false) != 0){
         return 1;
     }
 
@@ -1096,17 +1096,17 @@ static ErrorCode emit_for_tape(Expression expression){
     emit_reset_didnt_continue();
 
     // Emit 'for' body
-    if(emit_body(inside_start_statement, inside_start_statement + num_inside, false)){
+    if(emit_body(inside_start_statement, inside_start_statement + num_inside, false) != 0){
         return 1;
     }
 
     // Emit post-statements
     u32 post_statements_closes_needed_waterline = num_closes_needed;
 
-    if( emit_break_check()
-     || emit_early_return_check()
-     || emit_body(post_start_statement, post_start_statement + num_post, false)
-     || emit_close_checks_until(post_statements_closes_needed_waterline)
+    if( emit_break_check() != 0
+     || emit_early_return_check() != 0
+     || emit_body(post_start_statement, post_start_statement + num_post, false) != 0
+     || emit_close_checks_until(post_statements_closes_needed_waterline) != 0
     ){
         return 1;
     }
@@ -1120,7 +1120,7 @@ static ErrorCode emit_for_tape(Expression expression){
     // Re-evaluate condition (should never fail)
     emit_pre_loop_condition_early_return_check();
     emit_pre_loop_condition_break_check();
-    expression_emit(expressions[operands[expression.ops + 1]]);
+    (u0) expression_emit(expressions[operands[expression.ops + 1]]);
     emit_post_loop_condition_break_check();
     emit_post_loop_condition_early_return_check();
 
@@ -1144,12 +1144,12 @@ static ErrorCode emit_for_tape(Expression expression){
     emit_context.didnt_break_cell = old_didnt_break_cell;
     emit_context.didnt_continue_cell = old_didnt_continue_cell;
 
-    return emit_break_check() || emit_continue_check() || emit_early_return_check();
+    return (ErrorCode) (emit_break_check() != 0 || emit_continue_check() != 0 || emit_early_return_check() != 0);
 }
 
 static ErrorCode emit_conditionless_block(Expression expression){
     // Emit body
-    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + expression.ops + 1, false)){
+    if(emit_body_scoped(emit_context.current_statement + 1, emit_context.current_statement + expression.ops + 1, false) != 0){
         return 1;
     }
 
@@ -1379,7 +1379,7 @@ static ErrorCode emit_switch_stack(Expression expression){
         .pushed = pushed,
         .first_case_test_basicblock_id = first_case_test_basicblock_id,
         .first_case_body_basicblock_id = first_case_body_basicblock_id,
-        .next_case = 0,
+        .next_case = (u32) 0,
         .default_basicblock_id = default_block,
         .continuation_basicblock_id = continuation_block,
     };
@@ -1389,7 +1389,7 @@ static ErrorCode emit_switch_stack(Expression expression){
     };
 
     // Emit 'switch' body
-    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, true)){
+    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, true) != 0){
         return 1;
     }
 
@@ -1481,7 +1481,7 @@ static ErrorCode emit_switch_tape(Expression expression){
     }
 
     // Emit 'switch' body
-    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, true)){
+    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + operands[expression.ops + 1] + 1, true) != 0){
         return 1;
     }
 
@@ -1500,7 +1500,7 @@ static ErrorCode emit_switch_tape(Expression expression){
     emit_context.switch_start_cell_index = old_switch_start_cell_index;
     emit_context.fell_through_cell = old_fell_through_cell;
 
-    return emit_break_check() || emit_continue_check() || emit_early_return_check();
+    return (ErrorCode) (emit_break_check() != 0 || emit_continue_check() != 0 || emit_early_return_check() != 0);
 }
 
 static ErrorCode emit_case(Expression expression){
@@ -1595,18 +1595,18 @@ static ErrorCode emit_case_stack(Expression case_expression){
         // Dupe switch value
         copy_cells_static(emit_context.current_cell_index - emit_context.switch_value_type_cached_size, emit_context.switch_value_type_cached_size);
 
-        if(emit_case_value_test(value_expression)){
+        if(emit_case_value_test(value_expression) != 0){
             return 1;
         }
 
-        emit_end_basicblock_jump_conditional(body_block, else_block);
+        (u0) emit_end_basicblock_jump_conditional(body_block, else_block);
     }
 
     emit_start_basicblock_landing(body_block, emit_settings.switch_basicblock_context.pushed);
 
     // Emit 'case' body
     u32 len = operands[case_expression.ops + 1];
-    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + len + 1, false)){
+    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + len + 1, false) != 0){
         return 1;
     }
 
@@ -1631,7 +1631,7 @@ static ErrorCode emit_case_tape(Expression expression){
         // Dupe switch value
         copy_cells_static(emit_context.switch_start_cell_index, emit_context.switch_value_type_cached_size);
 
-        if(emit_case_value_test(value_expression)){
+        if(emit_case_value_test(value_expression) != 0){
             return 1;
         }
 
@@ -1647,7 +1647,7 @@ static ErrorCode emit_case_tape(Expression expression){
 
     // Emit 'case' body
     u32 len = operands[expression.ops + 1];
-    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + len + 1, false)){
+    if(emit_body(emit_context.current_statement + 1, emit_context.current_statement + len + 1, false) != 0){
         return 1;
     }
 
@@ -1658,7 +1658,7 @@ static ErrorCode emit_case_tape(Expression expression){
     }
 
     if(value_expression != EXPRESSIONS_CAPACITY){
-        u32 termination = expressions[statements[emit_context.current_statement]].kind;
+        ExpressionKind termination = expressions[statements[emit_context.current_statement]].kind;
 
         if(len == 0 || !(termination == EXPRESSION_BREAK || termination == EXPRESSION_CONTINUE || termination == EXPRESSION_RETURN)){
             // Fall through
@@ -1670,7 +1670,7 @@ static ErrorCode emit_case_tape(Expression expression){
         printf("[-]]");
     }
 
-    return emit_break_check() || emit_continue_check() || emit_early_return_check();
+    return (ErrorCode) (emit_break_check() != 0 || emit_continue_check() != 0 || emit_early_return_check() != 0);
 }
 
 u1 has_return_in_region(u32 start_statement_i, u32 stop_statement_i){
@@ -1975,12 +1975,16 @@ static ErrorCode emit_globals_initialization(){
             if(type >= TYPES_CAPACITY) return 1;
 
             if(type != global.type){
-                printf("\nerror on line %d: Cannot '", u24_unpack(global.line));
-                type_print(types[type]);
-                printf("' to '");
-                type_print(types[global.type]);
-                printf("'\n");
-                return 1;
+                if(grow_type(type, global.type, 0) != 0){
+                    printf("\nerror on line %d: Cannot assign '", u24_unpack(global.line));
+                    type_print(types[type]);
+                    printf("' to '");
+                    type_print(types[global.type]);
+                    printf("'\n");
+                    return 1;
+                }
+
+                type = global.type;
             }
 
             printf("<");
@@ -2008,13 +2012,13 @@ ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 s
         .current_statement = function.begin,
         .in_recursive_function = function.is_recursive,
         .can_function_early_return = can_early_return,
-        .incomplete_cell = -1,
-        .didnt_break_cell = -1,
-        .didnt_continue_cell = -1,
+        .incomplete_cell = -(u32) 1,
+        .didnt_break_cell = -(u32) 1,
+        .didnt_continue_cell = -(u32) 1,
         .switch_value_type = TYPES_CAPACITY,
-        .switch_value_type_cached_size = -1,
-        .switch_start_cell_index = -1,
-        .fell_through_cell = -1,
+        .switch_value_type_cached_size = -(u32) 1,
+        .switch_start_cell_index = -(u32) 1,
+        .fell_through_cell = -(u32) 1,
     };
     
     // Allocate 'incomplete' cell if function can return early
@@ -2029,12 +2033,12 @@ ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 s
             return 1;
         }
 
-        if(emit_globals_initialization()){
+        if(emit_globals_initialization() != 0){
             return 1;
         }
     }
 
-    if(emit_body(function.begin + function.arity, function.begin + function.num_stmts, false)){
+    if(emit_body(function.begin + (u32) function.arity, function.begin + function.num_stmts, false) != 0){
         return 1;
     }
 

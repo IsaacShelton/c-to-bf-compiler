@@ -20,7 +20,7 @@
 
 static u32 expression_emit_string(Expression expression);
 
-static u0 print_nth_argument_label(u32 number){
+static u0 print_nth_argument_label(u8 number){
     switch(number){
     case 0:
         printf("Zeroth");
@@ -59,7 +59,7 @@ static u0 print_nth_argument_label(u32 number){
     }
 }
 
-static ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u32 offset_size){
+ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u8 offset_size){
     Type from_type = types[from_type_index];
     Type to_type = types[to_type_index];
 
@@ -102,9 +102,9 @@ static ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u32 offset_si
             printf("<");
             emit_context.current_cell_index--;
 
-            u32 new_offset_position = emit_context.current_cell_index - offset_size + 1 + difference;
+            u32 new_offset_position = emit_context.current_cell_index - (u32) offset_size + 1 + difference;
 
-            move_cells_static(new_offset_position, offset_size);
+            move_cells_static(new_offset_position, (u32) offset_size);
         }
 
         // Zero extend array
@@ -116,7 +116,7 @@ static ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u32 offset_si
 
         if(offset_size > 0){
             printf("%d>", offset_size);
-            emit_context.current_cell_index += offset_size;
+            emit_context.current_cell_index += (u32) offset_size;
         }
 
         return 0;
@@ -126,7 +126,7 @@ static ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u32 offset_si
 }
 
 static u32 expression_emit_printf(Expression expression){
-    u32 arity = operands[expression.ops + 1];
+    u8 arity = (u8) operands[expression.ops + 1];
 
     if(arity < 1){
         printf("\nerror on line %d: printf requires at least one argument\n", u24_unpack(expression.line));
@@ -141,7 +141,7 @@ static u32 expression_emit_printf(Expression expression){
     }
 
     u32 format = format_argument.ops;
-    u32 next_argument_i = 1;
+    u8 next_argument_i = 1;
     u8 c = aux[format];
 
     while(c != 0){
@@ -155,6 +155,9 @@ static u32 expression_emit_printf(Expression expression){
                 c = aux[++format];
 
                 if(c == 'd'){
+                    format++;
+                    break;
+                } else if(c == 'c'){
                     format++;
                     break;
                 } else if(c != '%'){
@@ -171,27 +174,41 @@ static u32 expression_emit_printf(Expression expression){
             c = aux[++format];
         }
 
-        if(c == 'd'){
-            Expression argument = expressions[operands[expression.ops + 2 + next_argument_i++]];
+        if(c != 0){
+            if(next_argument_i == arity){
+                printf("\nerror on line %d: No value specified for printf format '%%%c'", u24_unpack(expression.line), c);
+                return TYPES_CAPACITY;
+            }
+
+            Expression argument = expressions[operands[expression.ops + 2 + (u32) next_argument_i++]];
             u32 argument_type = expression_emit(argument);
             if(argument_type >= TYPES_CAPACITY) return TYPES_CAPACITY;
 
-            if(argument_type == u1_type){
-                emit_printu1();
-            } else if(argument_type == u8_type){
-                emit_printu8();
-            } else if(argument_type == u16_type){
-                emit_printu16();
-            } else if(argument_type == u32_type){
-                emit_printu32();
-            } else {
-                printf("\nerror on line %d: Cannot print '", u24_unpack(expression.line));
-                type_print(types[argument_type]);
-                printf("' with printf format specifier '%%d'\n");
-                return TYPES_CAPACITY;
+            if(c == 'd'){
+                if(argument_type == u1_type){
+                    emit_printu1();
+                } else if(argument_type == u8_type){
+                    emit_printu8();
+                } else if(argument_type == u16_type){
+                    emit_printu16();
+                } else if(argument_type == u32_type){
+                    emit_printu32();
+                } else {
+                    printf("\nerror on line %d: Cannot print '", u24_unpack(expression.line));
+                    type_print(types[argument_type]);
+                    printf("' with printf format specifier '%%d'\n");
+                    return TYPES_CAPACITY;
+                }
+                
+                c = aux[format];
+            } else if(c == 'c'){
+                if(argument_type != u8_type){
+                    printf("\nerror on line %d: Cannot print '", u24_unpack(expression.line));
+                    type_print(types[argument_type]);
+                    printf("' with printf format specifier '%%c'\n");
+                    return TYPES_CAPACITY;
+                }
             }
-            
-            c = aux[format];
         }
     }
 
@@ -234,7 +251,7 @@ static CompileTimeInteger as_compile_time_integer(Expression bytes_argument){
 }
 
 static u32 expression_emit_memcmp(Expression expression){
-    u32 arity = operands[expression.ops + 1];
+    u8 arity = (u8) operands[expression.ops + 1];
 
     if(arity != 3){
         printf("\nerror on line %d: memcmp requires three arguments\n", u24_unpack(expression.line));
@@ -355,7 +372,7 @@ static u32 expression_emit_memcmp(Expression expression){
 }
 
 static u32 expression_emit_memcpy(Expression expression){
-    u32 arity = operands[expression.ops + 1];
+    u8 arity = (u8) operands[expression.ops + 1];
 
     if(arity != 3){
         printf("\nerror on line %d: memcpy requires three arguments\n", u24_unpack(expression.line));
@@ -412,9 +429,9 @@ static u32 expression_emit_memcpy(Expression expression){
 
 static u32 expression_emit_call(Expression expression){
     u32 name = operands[expression.ops];
-    u32 arity = operands[expression.ops + 1];
+    u8 arity = (u8) operands[expression.ops + 1];
 
-    int function_index = find_function(name);
+    u32 function_index = find_function(name);
 
     if(function_index >= FUNCTIONS_CAPACITY){
         printf("\nerror on line %d: Undeclared function '", u24_unpack(expression.line));
@@ -465,8 +482,8 @@ static u32 expression_emit_call(Expression expression){
     u32 start_function_cell_index = emit_context.current_cell_index;
 
     // Push Arguments
-    for(u32 i = 0; i < arity; i++){
-        Expression argument = expressions[operands[expression.ops + 2 + i]];
+    for(u8 i = 0; i < arity; i++){
+        Expression argument = expressions[operands[expression.ops + 2 + (u32) i]];
 
         u32 type = expression_emit(argument);
         if(type >= TYPES_CAPACITY) return TYPES_CAPACITY;
@@ -475,10 +492,10 @@ static u32 expression_emit_call(Expression expression){
         if(type_size == -1) return TYPES_CAPACITY;
 
         // Ensure type matches expected type
-        u32 expected_type = operands[expressions[statements[function.begin + i]].ops];
+        u32 expected_type = operands[expressions[statements[function.begin + (u32) i]].ops];
 
         if(type != expected_type){
-            if(grow_type(type, expected_type, false)){
+            if(grow_type(type, expected_type, 0) != 0){
                 printf("\nerror on line %d: ", u24_unpack(expression.line));
                 print_nth_argument_label(i + 1);
                 printf(" argument to function '");
@@ -506,7 +523,7 @@ static u32 expression_emit_call(Expression expression){
         emit_start_basicblock(continuation_basicblock_id);
         emit_stack_pop_n(continuation_memory_count);
     } else {
-        if(function_emit(function_index, start_function_cell_index, emit_context.current_cell_index)){
+        if(function_emit(function_index, start_function_cell_index, emit_context.current_cell_index) != 0){
             return TYPES_CAPACITY;
         }
     }
@@ -558,15 +575,15 @@ static Destination destination_member(Destination destination, u32 name, u24 lin
     if(!is_struct_type){
         if(destination.type == u16_type && aux[name] == '_' && in_range_inclusive(aux[name + 1], '0', '1') && aux[name + 2] == '\0'){
             destination.type = u8_type;
-            destination.tape_location += aux[name + 1] - '0';
+            destination.tape_location += (u32) (aux[name + 1] - '0');
             return destination;
         } else if(destination.type == u32_type && aux[name] == '_' && in_range_inclusive(aux[name + 1], '0', '3') && aux[name + 2] == '\0'){
             destination.type = u8_type;
-            destination.tape_location += aux[name + 1] - '0';
+            destination.tape_location += (u32)(aux[name + 1] - '0');
             return destination;
         } else if(destination.type == u32_type && aux[name] == '_' && in_range_inclusive(aux[name + 1], '0', '1') && aux[name + 2] == 'u' && aux[name + 3] == '1' && aux[name + 4] == '6' && aux[name + 5] == '\0'){
             destination.type = u16_type;
-            destination.tape_location += 2 * (aux[name + 1] - '0');
+            destination.tape_location += (u32) (2 * (aux[name + 1] - '0'));
             return destination;
         } else {
             printf("\nerror on line %d: Cannot get '", u24_unpack(line_on_error));
@@ -633,11 +650,11 @@ static Destination destination_index(
     }
 
     // Get size of new index
-    u32 index_type_size = 0;
+    u8 index_type_size = 0;
 
     if(index_type == u8_type || index_type == u16_type || index_type == u24_type || index_type == u32_type){
-        index_type_size = type_sizeof_or_max(index_type, u24_pack(0));
-        if(index_type_size == -1) return (Destination){ .type = TYPES_CAPACITY };
+        index_type_size = (u8) type_sizeof_or_max(index_type, u24_pack(0));
+        if(index_type_size == (u8) -1) return (Destination){ .type = TYPES_CAPACITY };
     } else {
         printf("\nerror on line %d: Cannot use index of type '", u24_unpack(index_expression.line));
         type_print(types[index_type]);
@@ -695,7 +712,7 @@ static Destination destination_index(
     if(offset_size == 1){
         // Multiply index by item size (unless item size is 1)
         if(item_size != 1){
-            emit_u8(item_size);
+            emit_u8((u8) item_size);
             emit_multiply_u8();
         }
 
@@ -705,7 +722,7 @@ static Destination destination_index(
     } else if(offset_size == 2){
         // Multiply index by item size (unless item size is 1)
         if(item_size != 1){
-            emit_u16(item_size);
+            emit_u16((u16) item_size);
             emit_multiply_u16();
         }
 
@@ -718,7 +735,7 @@ static Destination destination_index(
     } else if(offset_size == 4){
         // Multiply index by item size (unless item size is 1)
         if(item_size != 1){
-            emit_u32(item_size);
+            emit_u32((u32) item_size);
             emit_multiply_u32();
         }
 
@@ -802,7 +819,7 @@ Destination expression_get_destination(Expression expression, u32 tape_anchor){
 
 u32 write_destination(u32 new_value_type, Destination destination, u24 error_line_number){
     if(new_value_type != destination.type){
-        if(grow_type(new_value_type, destination.type, destination.offset_size)){
+        if(grow_type(new_value_type, destination.type, destination.offset_size) != 0){
             printf("\nerror on line %d: Cannot assign '", u24_unpack(error_line_number));
             type_print(types[new_value_type]);
             printf("' to '");
@@ -878,13 +895,13 @@ u32 expression_emit_variable(Expression expression){
 
     if(variable.location.kind == VARIABLE_LOCATION_IMMUTABLE){
         if(size == 1){
-            emit_u8(variable.location.location);
+            emit_u8((u8) variable.location.location);
         } else if(size == 2){
-            emit_u16(variable.location.location);
+            emit_u16((u16) variable.location.location);
         } else if(size == 3){
             emit_u24(u24_pack(variable.location.location));
         } else if(size == 4){
-            emit_u32(variable.location.location);
+            emit_u32((u32) variable.location.location);
         } else {
             printf("\nerror on line %d: Cannot emit immutable value of size %d\n", u24_unpack(expression.line), size);
             return TYPES_CAPACITY;
@@ -1003,6 +1020,34 @@ u32 expression_emit_cast(Expression expression){
         return to_type;
     }
 
+    if(to_type == u8_type){
+        if(from_type == u16_type){
+            printf("<");
+            emit_context.current_cell_index -= 1;
+            return to_type;
+        } else if(from_type == u24_type){
+            printf("2<");
+            emit_context.current_cell_index -= 2;
+            return to_type;
+        } else if(from_type == u32_type){
+            printf("3<");
+            emit_context.current_cell_index -= 3;
+            return to_type;
+        }
+    }
+
+    if(to_type == u16_type){
+        if(from_type == u24_type){
+            printf("<");
+            emit_context.current_cell_index -= 1;
+            return to_type;
+        } else if(from_type == u32_type){
+            printf("2<");
+            emit_context.current_cell_index -= 2;
+            return to_type;
+        }
+    }
+
     printf("\nerror on line %d: Cannot cast '", u24_unpack(expression.line));
     type_print(types[from_type]);
     printf("' to '");
@@ -1062,7 +1107,7 @@ static u32 emit_math_u8(ExpressionKind kind, u32 operand_type){
         emit_bit_xor_u8();
         return operand_type;
     default:
-        printf("\nerror: Could not perform unknown math operation for expression kind %d\n", kind);
+        printf("\nerror: Could not perform unknown math operation for expression kind %d\n", (u8) kind);
         return TYPES_CAPACITY;
     }
 
@@ -1120,7 +1165,7 @@ static u32 emit_math_u16(ExpressionKind kind, u32 operand_type){
         emit_bit_xor_u16();
         return operand_type;
     default:
-        printf("\nerror: Could not perform unknown math operation for expression kind %d\n", kind);
+        printf("\nerror: Could not perform unknown math operation for expression kind %d\n", (u8) kind);
         return TYPES_CAPACITY;
     }
 
@@ -1178,7 +1223,7 @@ static u32 emit_math_u32(ExpressionKind kind, u32 operand_type){
         emit_bit_xor_u32();
         return operand_type;
     default:
-        printf("\nerror: Could not perform unknown math operation for expression kind %d\n", kind);
+        printf("\nerror: Could not perform unknown math operation for expression kind %d\n", (u8) kind);
         return TYPES_CAPACITY;
     }
 
@@ -1223,19 +1268,25 @@ u32 expression_emit_unary_operation(Expression expression, u32 type){
             emit_u8(1);
             emit_additive_u8(expression.kind == EXPRESSION_PRE_INCREMENT);
             dupe_cell();
-            write_destination_expression(u8_type, expressions[expression.ops], expression.line);
+            if(write_destination_expression(u8_type, expressions[expression.ops], expression.line) == TYPES_CAPACITY){
+                return TYPES_CAPACITY;
+            }
             return type;
         } else if(type == u16_type){
             emit_u16(1);
             emit_additive_u16(expression.kind == EXPRESSION_PRE_INCREMENT);
             dupe_cells(2);
-            write_destination_expression(u16_type, expressions[expression.ops], expression.line);
+            if(write_destination_expression(u16_type, expressions[expression.ops], expression.line) == TYPES_CAPACITY){
+                return TYPES_CAPACITY;
+            }
             return type;
         } else if(type == u32_type){
             emit_u32(1);
             emit_additive_u32(expression.kind == EXPRESSION_PRE_INCREMENT);
             dupe_cells(4);
-            write_destination_expression(u32_type, expressions[expression.ops], expression.line);
+            if(write_destination_expression(u32_type, expressions[expression.ops], expression.line) == TYPES_CAPACITY){
+                return TYPES_CAPACITY;
+            }
             return type;
         }
         break;
@@ -1245,19 +1296,25 @@ u32 expression_emit_unary_operation(Expression expression, u32 type){
             dupe_cell();
             emit_u8(1);
             emit_additive_u8(expression.kind == EXPRESSION_POST_INCREMENT);
-            write_destination_expression(u8_type, expressions[expression.ops], expression.line);
+            if(write_destination_expression(u8_type, expressions[expression.ops], expression.line) == TYPES_CAPACITY){
+                return TYPES_CAPACITY;
+            }
             return type;
         } else if(type == u16_type){
             dupe_cells(2);
             emit_u16(1);
             emit_additive_u16(expression.kind == EXPRESSION_POST_INCREMENT);
-            write_destination_expression(u16_type, expressions[expression.ops], expression.line);
+            if(write_destination_expression(u16_type, expressions[expression.ops], expression.line) == TYPES_CAPACITY){
+                return TYPES_CAPACITY;
+            }
             return type;
         } else if(type == u32_type){
             dupe_cells(4);
             emit_u32(1);
             emit_additive_u32(expression.kind == EXPRESSION_POST_INCREMENT);
-            write_destination_expression(u32_type, expressions[expression.ops], expression.line);
+            if(write_destination_expression(u32_type, expressions[expression.ops], expression.line) == TYPES_CAPACITY){
+                return TYPES_CAPACITY;
+            }
             return type;
         }
         break;
@@ -1266,17 +1323,23 @@ u32 expression_emit_unary_operation(Expression expression, u32 type){
         if(type == u8_type){
             emit_u8(1);
             emit_additive_u8(expression.kind == EXPRESSION_NO_RESULT_INCREMENT);
-            write_destination_expression(u8_type, expressions[expression.ops], expression.line);
+            if(write_destination_expression(u8_type, expressions[expression.ops], expression.line) == TYPES_CAPACITY){
+                return TYPES_CAPACITY;
+            }
             return u0_type;
         } else if(type == u16_type){
             emit_u16(1);
             emit_additive_u16(expression.kind == EXPRESSION_NO_RESULT_INCREMENT);
-            write_destination_expression(u16_type, expressions[expression.ops], expression.line);
+            if(write_destination_expression(u16_type, expressions[expression.ops], expression.line) == TYPES_CAPACITY){
+                return TYPES_CAPACITY;
+            }
             return u0_type;
         } else if(type == u32_type){
             emit_u32(1);
             emit_additive_u32(expression.kind == EXPRESSION_NO_RESULT_INCREMENT);
-            write_destination_expression(u32_type, expressions[expression.ops], expression.line);
+            if(write_destination_expression(u32_type, expressions[expression.ops], expression.line) == TYPES_CAPACITY){
+                return TYPES_CAPACITY;
+            }
             return u0_type;
         }
         break;
@@ -1565,7 +1628,10 @@ ErrorCode print_array_reference(Destination destination, u32 max_length, u24 lin
         // TODO: Optimize this
         // Ignore reference and just copy and print the value
 
-        read_destination(destination, line_on_error);
+        if(read_destination(destination, line_on_error) == TYPES_CAPACITY){
+            return 1;
+        }
+
         emit_print_array_value(max_length);
     }
 
@@ -1766,7 +1832,7 @@ static u32 expression_emit_return(Expression expression){
     }
 
     if(value_type != return_type){
-        if(grow_type(value_type, return_type, false)){
+        if(grow_type(value_type, return_type, 0) != 0){
             printf("\nerror on line %d: ", u24_unpack(expression.line));
             printf("Expected '");
             type_print(types[return_type]);
@@ -1859,11 +1925,11 @@ static u32 emit_sizeof_size(u32 type_index, u8 integer_cells, u24 line_on_error)
     if(size == -1) return TYPES_CAPACITY;
 
     u32 max_values[5] = {
-        0,
-        255,
-        65535,
-        16777215,
-        4294967295,
+        (u32) 0,
+        (u32) 255,
+        (u32) 65535,
+        (u32) 16777215,
+        (u32) 4294967295,
     };
 
     if(!in_range_inclusive(integer_cells, 1, 4) || size > max_values[integer_cells]){
@@ -1875,10 +1941,10 @@ static u32 emit_sizeof_size(u32 type_index, u8 integer_cells, u24 line_on_error)
 
     switch(integer_cells){
     case 1:
-        emit_u8(size);
+        emit_u8((u8) size);
         return u8_type;
     case 2:
-        emit_u16(size);
+        emit_u16((u16) size);
         return u16_type;
     case 3:
         emit_u24(u24_pack(size));
@@ -2045,7 +2111,7 @@ u32 expression_emit(Expression expression){
                 }
 
                 u32 max_length = dimensions[types[destination.type].dimensions][0];
-                if(print_array_reference(destination, max_length, expression.line)){
+                if(print_array_reference(destination, max_length, expression.line) != 0){
                     return TYPES_CAPACITY;
                 }
             } else {
@@ -2089,18 +2155,18 @@ u32 expression_emit(Expression expression){
         printf("<[-]>[-]+[[-]>[-],[+[11-[>[-]6+[<6->-]<--<<[->>10+<<]>>[-<<+>>]<+>]]]<]");
         return u0_type;
     case EXPRESSION_U1:
-        emit_u1(expression.ops);
+        emit_u1((u1) expression.ops);
         return u1_type;
     case EXPRESSION_INT:
         if(expression.ops >= 256){
-            printf("\nerror on line %d: Cannot fit integer literal value into assumed type 'u8', must be explicitly casted to correct type", u24_unpack(expression.line));
+            printf("\nerror on line %d: Cannot fit integer literal value into assumed type 'u8', must be explicitly casted to correct type\n", u24_unpack(expression.line));
             return TYPES_CAPACITY;
         }
     case EXPRESSION_U8:
-        emit_u8(expression.ops);
+        emit_u8((u8) expression.ops);
         return u8_type;
     case EXPRESSION_U16:
-        emit_u16(expression.ops);
+        emit_u16((u16) expression.ops);
         return u16_type;
     case EXPRESSION_U24:
         emit_u24(u24_pack(expression.ops));
@@ -2183,14 +2249,14 @@ u32 expression_emit(Expression expression){
     case EXPRESSION_CASE:
     case EXPRESSION_FIELD_INITIALIZER:
     case EXPRESSION_ENUM_VARIANT:
-        printf("\nerror: Invalid expression kind %d during expression_emit\n", expression.kind);
+        printf("\nerror: Invalid expression kind %d during expression_emit\n", (u8) expression.kind);
         return TYPES_CAPACITY;
     case EXPRESSION_PANICLOOP:
         printf("[-]+[]");
         return u0_type;
     }
 
-    printf("\nerror: Unknown expression kind %d during expression_emit\n", expression.kind);
+    printf("\nerror: Unknown expression kind %d during expression_emit\n", (u8) expression.kind);
     return TYPES_CAPACITY;
 }
 

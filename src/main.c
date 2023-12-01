@@ -67,6 +67,10 @@ int main(void){
     }
     */
 
+    fprintf(stderr, "num_functions = %d\n", num_functions);
+    fprintf(stderr, "num_types = %d\n", num_types);
+    fprintf(stderr, "num_expressions = %d\n", num_expressions);
+
     // Write
 
     // Find main function

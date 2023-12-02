@@ -506,6 +506,12 @@ u0 print_aux_cstr(u32 index){
     }
 }
 
+u0 print_aux_cstr_err(u32 index){
+    for(u32 i = index; (u1) aux[i]; i++){
+        fputc(aux[i], stderr);
+    }
+}
+
 u0 print_aux_cstr_escaped(u32 index){
     for(u32 i = index; (u1) aux[i]; i++){
         u8 c = aux[i];

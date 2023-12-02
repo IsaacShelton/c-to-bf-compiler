@@ -6,6 +6,7 @@
 #include "../include/type_emit.h"
 #include "../include/expression_emit.h"
 #include "../include/emit_context.h"
+#include "../include/expression_print.h"
 
 typedef struct {
     u32 self_statement;

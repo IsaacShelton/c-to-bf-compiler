@@ -103,6 +103,7 @@ u1 aux_cstr_equals_memcmp(u32 a);
 u1 aux_cstr_equals_memcpy(u32 a);
 u32 aux_cstr_len(u32 str);
 u0 print_aux_cstr(u32 index);
+u0 print_aux_cstr_err(u32 index);
 u0 print_aux_cstr_escaped(u32 index);
 u32 find_enum_from_type(u32 type_index);
 u1 in_range_inclusive(u8 value, u8 min_inclusive, u8 max_inclusive);

@@ -280,7 +280,7 @@ u0 expression_print(Expression expression){
        }
        break;
     default:
-        printf("<unknown expression>");
+        printf("<unknown expression with id %d>", (u8) expression.kind);
     }
 }
 

@@ -25,7 +25,7 @@
 #include "../include/define_print.h"
 
 int main(void){
-    if(lex()) return 1;
+    if(lex() != 0) return 1;
 
     if(lex_peck_print_tokens){
         for(u32 i = 0; i < num_tokens; i++){
@@ -40,10 +40,10 @@ int main(void){
         return 0;
     }
 
-    if(parse()) return 1;
-    if(compute_typedef_sizes()) return 1;
-    if(infer()) return 1;
-    if(mark_recursive_functions()) return 1;
+    if(parse() != 0) return 1;
+    if(compute_typedef_sizes() != 0) return 1;
+    if(infer() != 0) return 1;
+    if(mark_recursive_functions() != 0) return 1;
 
     /*
     for(u32 i = 0; i < num_typedefs; i++){
@@ -70,6 +70,8 @@ int main(void){
     fprintf(stderr, "num_functions = %d\n", num_functions);
     fprintf(stderr, "num_types = %d\n", num_types);
     fprintf(stderr, "num_expressions = %d\n", num_expressions);
+    fprintf(stderr, "num_tokens = %d\n", num_tokens);
+    fprintf(stderr, "num_aux = %d\n", num_aux);
 
     // Write
 
@@ -126,7 +128,7 @@ int main(void){
 
     // Otherwise, continue as normal and use stack
     emit_stack_driver_pre(main_function_index);
-    if(emit_recursive_functions()) return 1;
+    if(emit_recursive_functions() != 0) return 1;
     emit_stack_driver_post();
     return 0;
 }

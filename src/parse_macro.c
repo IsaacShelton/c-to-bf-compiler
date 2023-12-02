@@ -199,20 +199,20 @@ static Expression perform_compile_time_cast(Expression expression){
 
     if(is_expression_kind_int_like(value.kind)){
         if(type == u1_type){
-            expression.kind = EXPRESSION_U1;
-            return expression;
+            value.kind = EXPRESSION_U1;
+            return value;
         } else if(type == u8_type){
-            expression.kind = EXPRESSION_U8;
-            return expression;
+            value.kind = EXPRESSION_U8;
+            return value;
         } else if(type == u16_type){
-            expression.kind = EXPRESSION_U16;
-            return expression;
+            value.kind = EXPRESSION_U16;
+            return value;
         } else if(type == u24_type){
-            expression.kind = EXPRESSION_U24;
-            return expression;
+            value.kind = EXPRESSION_U24;
+            return value;
         } else if(type == u32_type){
-            expression.kind = EXPRESSION_U32;
-            return expression;
+            value.kind = EXPRESSION_U32;
+            return value;
         }
     }
 

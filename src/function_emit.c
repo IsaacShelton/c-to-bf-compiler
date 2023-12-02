@@ -191,7 +191,7 @@ static ErrorCode emit_early_return_check(){
 }
 
 static ErrorCode emit_break_check(){
-    if(emit_settings.can_break){
+    if(emit_context.can_break){
         u32 offset = emit_context.current_cell_index - emit_context.didnt_break_cell;
 
         // Allocate temporary cell, and ensure 'didnt_break_cell' cell is still true
@@ -204,7 +204,7 @@ static ErrorCode emit_break_check(){
 }
 
 static ErrorCode emit_continue_check(){
-    if(emit_settings.can_continue){
+    if(emit_context.can_continue){
         u32 offset = emit_context.current_cell_index - emit_context.didnt_continue_cell;
 
         // Allocate temporary cell, and ensure 'didnt_continue_cell' cell is still true
@@ -245,7 +245,7 @@ static u0 emit_post_loop_condition_early_return_check(){
 }
 
 static u0 emit_pre_loop_condition_break_check(){
-    if(emit_settings.can_break){
+    if(emit_context.can_break){
         // Allocate 1 cell for default condition value of false or eventual evaluated condition
         printf("[-]>");
         emit_context.current_cell_index++;
@@ -264,7 +264,7 @@ static u0 emit_pre_loop_condition_break_check(){
 }
 
 static u0 emit_post_loop_condition_break_check(){
-    if(emit_settings.can_break){
+    if(emit_context.can_break){
         // Remain pointing at next available cell
 
         // Close if
@@ -557,7 +557,7 @@ static ErrorCode emit_if_like_tape(Expression expression){
 }
 
 static u0 emit_reset_didnt_continue(){
-    if(emit_settings.can_continue){
+    if(emit_context.can_continue){
         u32 offset = emit_context.current_cell_index - emit_context.didnt_continue_cell;
 
         // Set 'didnt_continue_cell' to true
@@ -566,12 +566,12 @@ static u0 emit_reset_didnt_continue(){
 }
 
 static u0 enter_maybe_breakable_continuable_loop_tape(Expression expression, u32 inner_variable_offset_ops_offset){
-    emit_settings.can_break = can_loop_break(emit_context.current_statement);
-    emit_settings.can_continue = can_loop_continue(emit_context.current_statement);
+    emit_context.can_break = can_loop_break(emit_context.current_statement);
+    emit_context.can_continue = can_loop_continue(emit_context.current_statement);
 
     operands[expression.ops + inner_variable_offset_ops_offset] = 0;
 
-    if(emit_settings.can_break){
+    if(emit_context.can_break){
         // Allocate 'didnt_break_cell'
         printf("[-]+>");
         emit_context.didnt_break_cell = emit_context.current_cell_index++;
@@ -580,7 +580,7 @@ static u0 enter_maybe_breakable_continuable_loop_tape(Expression expression, u32
         operands[expression.ops + inner_variable_offset_ops_offset]++;
     }
 
-    if(emit_settings.can_continue){
+    if(emit_context.can_continue){
         // Allocate 'didnt_continue_cell'
         printf("[-]+>");
         emit_context.didnt_continue_cell = emit_context.current_cell_index++;
@@ -592,20 +592,20 @@ static u0 enter_maybe_breakable_continuable_loop_tape(Expression expression, u32
 
 static u0 exit_maybe_breakable_continuable_loop(){
     // Deallocate 'didnt_continue_cell' if used
-    if(emit_settings.can_continue){
+    if(emit_context.can_continue){
         printf("<");
         emit_context.current_cell_index--;
     }
 
     // Deallocate 'didnt_break_cell' if used
-    if(emit_settings.can_break){
+    if(emit_context.can_break){
         printf("<");
         emit_context.current_cell_index--;
     }
 }
 
 static u0 enter_switch(){
-    emit_settings.can_break = true;
+    emit_context.can_break = true;
 
     // Allocate 'didnt_break_cell'
     printf("[-]+>");
@@ -631,8 +631,8 @@ static ErrorCode emit_while(Expression expression){
 }
 
 static ErrorCode emit_while_stack(Expression expression){
-    u1 was_breakable = emit_settings.can_break;
-    u1 was_continuable = emit_settings.can_continue;
+    u1 was_breakable = emit_context.can_break;
+    u1 was_continuable = emit_context.can_continue;
     JumpContext old_break_context = emit_settings.break_basicblock_context;
     JumpContext old_continue_context = emit_settings.continue_basicblock_context;
 
@@ -651,17 +651,17 @@ static ErrorCode emit_while_stack(Expression expression){
     u32 continuation_block = emit_settings.next_basicblock_id++;
     u32 pushed = emit_end_basicblock_jump_conditional(then_block, continuation_block);
 
-    emit_settings.can_break = can_loop_break(emit_context.current_statement);
-    emit_settings.can_continue = can_loop_continue(emit_context.current_statement);
+    emit_context.can_break = can_loop_break(emit_context.current_statement);
+    emit_context.can_continue = can_loop_continue(emit_context.current_statement);
 
-    if(emit_settings.can_break){
+    if(emit_context.can_break){
         emit_settings.break_basicblock_context = (JumpContext){
             .basicblock_id = continuation_block,
             .num_cells_input = pushed,
         };
     }
 
-    if(emit_settings.can_continue){
+    if(emit_context.can_continue){
         // Create special separate block if using `continue`
         u32 condition_block = emit_settings.next_basicblock_id++;
 
@@ -702,14 +702,14 @@ static ErrorCode emit_while_stack(Expression expression){
     emit_start_basicblock_landing(continuation_block, pushed);
     emit_settings.break_basicblock_context = old_break_context;
     emit_settings.continue_basicblock_context = old_continue_context;
-    emit_settings.can_break = was_breakable;
-    emit_settings.can_continue = was_continuable;
+    emit_context.can_break = was_breakable;
+    emit_context.can_continue = was_continuable;
     return 0;
 }
 
 static ErrorCode emit_while_tape(Expression expression){
-    u1 was_breakable = emit_settings.can_break;
-    u1 was_continuable = emit_settings.can_continue;
+    u1 was_breakable = emit_context.can_break;
+    u1 was_continuable = emit_context.can_continue;
     u32 old_didnt_break_cell = emit_context.didnt_break_cell;
     u32 old_didnt_continue_cell = emit_context.didnt_continue_cell;
 
@@ -757,8 +757,8 @@ static ErrorCode emit_while_tape(Expression expression){
 
     exit_maybe_breakable_continuable_loop();
 
-    emit_settings.can_break = was_breakable;
-    emit_settings.can_continue = was_continuable;
+    emit_context.can_break = was_breakable;
+    emit_context.can_continue = was_continuable;
     emit_context.didnt_break_cell = old_didnt_break_cell;
     emit_context.didnt_continue_cell = old_didnt_continue_cell;
 
@@ -774,8 +774,8 @@ static ErrorCode emit_do_while(Expression expression){
 }
 
 static ErrorCode emit_do_while_stack(Expression expression){
-    u1 was_breakable = emit_settings.can_break;
-    u1 was_continuable = emit_settings.can_continue;
+    u1 was_breakable = emit_context.can_break;
+    u1 was_continuable = emit_context.can_continue;
     JumpContext old_break_context = emit_settings.break_basicblock_context;
     JumpContext old_continue_context = emit_settings.continue_basicblock_context;
 
@@ -783,17 +783,17 @@ static ErrorCode emit_do_while_stack(Expression expression){
     u32 continuation_block = emit_settings.next_basicblock_id++;
     u32 pushed = emit_end_basicblock_jump(then_block);
 
-    emit_settings.can_break = can_loop_break(emit_context.current_statement);
-    emit_settings.can_continue = can_loop_continue(emit_context.current_statement);
+    emit_context.can_break = can_loop_break(emit_context.current_statement);
+    emit_context.can_continue = can_loop_continue(emit_context.current_statement);
 
-    if(emit_settings.can_break){
+    if(emit_context.can_break){
         emit_settings.break_basicblock_context = (JumpContext){
             .basicblock_id = continuation_block,
             .num_cells_input = pushed,
         };
     }
 
-    if(emit_settings.can_continue){
+    if(emit_context.can_continue){
         // Create special separate block if using `continue`
         u32 condition_block = emit_settings.next_basicblock_id++;
 
@@ -850,14 +850,14 @@ static ErrorCode emit_do_while_stack(Expression expression){
     emit_start_basicblock_landing(continuation_block, pushed);
     emit_settings.break_basicblock_context = old_break_context;
     emit_settings.continue_basicblock_context = old_continue_context;
-    emit_settings.can_break = was_breakable;
-    emit_settings.can_continue = was_continuable;
+    emit_context.can_break = was_breakable;
+    emit_context.can_continue = was_continuable;
     return 0;
 }
 
 static ErrorCode emit_do_while_tape(Expression expression){
-    u1 was_breakable = emit_settings.can_break;
-    u1 was_continuable = emit_settings.can_continue;
+    u1 was_breakable = emit_context.can_break;
+    u1 was_continuable = emit_context.can_continue;
     u32 old_didnt_break_cell = emit_context.didnt_break_cell;
     u32 old_didnt_continue_cell = emit_context.didnt_continue_cell;
 
@@ -907,8 +907,8 @@ static ErrorCode emit_do_while_tape(Expression expression){
     
     exit_maybe_breakable_continuable_loop();
 
-    emit_settings.can_break = was_breakable;
-    emit_settings.can_continue = was_continuable;
+    emit_context.can_break = was_breakable;
+    emit_context.can_continue = was_continuable;
     emit_context.didnt_break_cell = old_didnt_break_cell;
     emit_context.didnt_continue_cell = old_didnt_continue_cell;
 
@@ -924,8 +924,8 @@ static ErrorCode emit_for(Expression expression){
 }
 
 static ErrorCode emit_for_stack(Expression expression){
-    u1 was_breakable = emit_settings.can_break;
-    u1 was_continuable = emit_settings.can_continue;
+    u1 was_breakable = emit_context.can_break;
+    u1 was_continuable = emit_context.can_continue;
     JumpContext old_break_context = emit_settings.break_basicblock_context;
     JumpContext old_continue_context = emit_settings.continue_basicblock_context;
 
@@ -944,8 +944,8 @@ static ErrorCode emit_for_stack(Expression expression){
     u32 increment_block = emit_settings.next_basicblock_id++;
     u32 continuation_block = emit_settings.next_basicblock_id++;
 
-    emit_settings.can_break = can_loop_break(emit_context.current_statement);
-    emit_settings.can_continue = can_loop_continue(emit_context.current_statement);
+    emit_context.can_break = can_loop_break(emit_context.current_statement);
+    emit_context.can_continue = can_loop_continue(emit_context.current_statement);
 
     // Emit pre-statements
     if(emit_body(pre_start_statement, pre_start_statement + num_pre, false) != 0){
@@ -954,22 +954,22 @@ static ErrorCode emit_for_stack(Expression expression){
     if(!emit_settings.in_basicblock){
         emit_settings.break_basicblock_context = old_break_context;
         emit_settings.continue_basicblock_context = old_continue_context;
-        emit_settings.can_break = was_breakable;
-        emit_settings.can_continue = was_continuable;
+        emit_context.can_break = was_breakable;
+        emit_context.can_continue = was_continuable;
         return 0;
     }
 
     u32 pre_num_cells = emit_context.current_cell_index - pre_starting_cell_index;
     u32 pushed = emit_end_basicblock_jump(condition_block);
 
-    if(emit_settings.can_break){
+    if(emit_context.can_break){
         emit_settings.break_basicblock_context = (JumpContext){
             .basicblock_id = continuation_block,
             .num_cells_input = pushed,
         };
     }
 
-    if(emit_settings.can_continue){
+    if(emit_context.can_continue){
         emit_settings.continue_basicblock_context = (JumpContext){
             .basicblock_id = increment_block,
             .num_cells_input = pushed,
@@ -1010,8 +1010,8 @@ static ErrorCode emit_for_stack(Expression expression){
     } else {
         emit_settings.break_basicblock_context = old_break_context;
         emit_settings.continue_basicblock_context = old_continue_context;
-        emit_settings.can_break = was_breakable;
-        emit_settings.can_continue = was_continuable;
+        emit_context.can_break = was_breakable;
+        emit_context.can_continue = was_continuable;
         return 0;
     }
 
@@ -1025,8 +1025,8 @@ static ErrorCode emit_for_stack(Expression expression){
     } else {
         emit_settings.break_basicblock_context = old_break_context;
         emit_settings.continue_basicblock_context = old_continue_context;
-        emit_settings.can_break = was_breakable;
-        emit_settings.can_continue = was_continuable;
+        emit_context.can_break = was_breakable;
+        emit_context.can_continue = was_continuable;
         return 0;
     }
 
@@ -1040,14 +1040,14 @@ static ErrorCode emit_for_stack(Expression expression){
 
     emit_settings.break_basicblock_context = old_break_context;
     emit_settings.continue_basicblock_context = old_continue_context;
-    emit_settings.can_break = was_breakable;
-    emit_settings.can_continue = was_continuable;
+    emit_context.can_break = was_breakable;
+    emit_context.can_continue = was_continuable;
     return 0;
 }
 
 static ErrorCode emit_for_tape(Expression expression){
-    u1 was_breakable = emit_settings.can_break;
-    u1 was_continuable = emit_settings.can_continue;
+    u1 was_breakable = emit_context.can_break;
+    u1 was_continuable = emit_context.can_continue;
     u32 old_didnt_break_cell = emit_context.didnt_break_cell;
     u32 old_didnt_continue_cell = emit_context.didnt_continue_cell;
 
@@ -1139,8 +1139,8 @@ static ErrorCode emit_for_tape(Expression expression){
         emit_context.current_cell_index = pre_starting_cell_index;
     }
 
-    emit_settings.can_break = was_breakable;
-    emit_settings.can_continue = was_continuable;
+    emit_context.can_break = was_breakable;
+    emit_context.can_continue = was_continuable;
     emit_context.didnt_break_cell = old_didnt_break_cell;
     emit_context.didnt_continue_cell = old_didnt_continue_cell;
 
@@ -1357,7 +1357,7 @@ static ErrorCode emit_switch_stack(Expression expression){
     u32 first_case_body_basicblock_id = emit_settings.next_basicblock_id;
     emit_settings.next_basicblock_id += num_cases;
 
-    u1 was_breakable = emit_settings.can_break;
+    u1 was_breakable = emit_context.can_break;
     u32 old_switch_value_type = emit_context.switch_value_type;
     u32 old_switch_value_type_cached_size = emit_context.switch_value_type_cached_size;
     SwitchContext old_switch_context = emit_settings.switch_basicblock_context;
@@ -1372,7 +1372,7 @@ static ErrorCode emit_switch_stack(Expression expression){
     u32 pushed = emit_end_basicblock_jump(first_case_test_basicblock_id);
 
     // Setup how-to-break information
-    emit_settings.can_break = true;
+    emit_context.can_break = true;
     emit_settings.switch_basicblock_context = (SwitchContext){
         .num_cases = num_cases,
         .has_default_case = has_default_case,
@@ -1411,7 +1411,7 @@ static ErrorCode emit_switch_stack(Expression expression){
     printf("%d<", condition_type_size);
     emit_context.current_cell_index -= condition_type_size;
 
-    emit_settings.can_break = was_breakable;
+    emit_context.can_break = was_breakable;
     emit_context.switch_value_type = old_switch_value_type;
     emit_context.switch_value_type_cached_size = old_switch_value_type_cached_size;
     emit_settings.switch_basicblock_context = old_switch_context;
@@ -1462,7 +1462,7 @@ static ErrorCode emit_switch_tape(Expression expression){
         }
     */
 
-    u1 was_breakable = emit_settings.can_break;
+    u1 was_breakable = emit_context.can_break;
     u32 old_didnt_break_cell = emit_context.didnt_break_cell;
     u32 old_switch_value_type = emit_context.switch_value_type;
     u32 old_switch_value_type_cached_size = emit_context.switch_value_type_cached_size;
@@ -1493,7 +1493,7 @@ static ErrorCode emit_switch_tape(Expression expression){
 
     exit_switch();
 
-    emit_settings.can_break = was_breakable;
+    emit_context.can_break = was_breakable;
     emit_context.didnt_break_cell = old_didnt_break_cell;
     emit_context.switch_value_type = old_switch_value_type;
     emit_context.switch_value_type_cached_size = old_switch_value_type_cached_size;
@@ -2019,6 +2019,8 @@ ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 s
         .switch_value_type_cached_size = -(u32) 1,
         .switch_start_cell_index = -(u32) 1,
         .fell_through_cell = -(u32) 1,
+        .can_break = false,
+        .can_continue = false,
     };
     
     // Allocate 'incomplete' cell if function can return early

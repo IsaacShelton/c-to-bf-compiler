@@ -34,6 +34,8 @@ typedef struct {
     u32 switch_value_type_cached_size;
     u32 switch_start_cell_index;
     u32 fell_through_cell;
+    u1 can_break;
+    u1 can_continue;
 } EmitContext;
 
 typedef struct {
@@ -46,8 +48,6 @@ typedef struct {
     u32 stack_overflow_message;
     u32 stack_size;
     u1 in_basicblock;
-    u1 can_break;
-    u1 can_continue;
     JumpContext break_basicblock_context;
     JumpContext continue_basicblock_context;
     SwitchContext switch_basicblock_context;

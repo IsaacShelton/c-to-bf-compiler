@@ -351,6 +351,10 @@ u32 emit_recursive_functions(){
         u32 args_size = function_args_size(function);
         if(args_size == -1) return 1;
 
+        fprintf(stderr, "Emitting Function %d (", function_i);
+        print_aux_cstr_err(functions[function_i].name);
+        fprintf(stderr, ")\n");
+
         emit_start_basicblock_landing(basicblock_id_for_function(function_i), args_size);
         if(function_emit(function_i, emit_settings.stack_driver_position, emit_context.current_cell_index) != 0){
             return 1;

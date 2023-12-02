@@ -47,11 +47,11 @@ LexedToken lex_hex_integer(u32 i, u24 line){
         u8 lead = code_buffer[i];
 
         if(lead >= '0' && lead <= '9'){
-            value = 16 * value + lead - '0';
+            value = 16 * value + (u32) (lead - '0');
         } else if(lead >= 'A' && lead <= 'F'){
-            value = 16 * value + 10 + lead - 'A';
+            value = 16 * value + (u32) (10 + lead - 'A');
         } else if(lead >= 'a' && lead <= 'f'){
-            value = 16 * value + 10 + lead - 'a';
+            value = 16 * value + (u32) (10 + lead - 'a');
         } else {
             break;
         }
@@ -69,8 +69,8 @@ LexedToken lex_hex_integer(u32 i, u24 line){
     };
 }
 
-LexedToken lex_dec_integer(u32 i, u32 lead, u24 line){
-    u32 value = lead - '0';
+LexedToken lex_dec_integer(u32 i, u8 lead, u24 line){
+    u32 value = (u32) (lead - '0');
 
     while(i < code_buffer_length){
         lead = code_buffer[i];
@@ -79,7 +79,7 @@ LexedToken lex_dec_integer(u32 i, u32 lead, u24 line){
             break;
         }
 
-        value = 10 * value + lead - '0';
+        value = 10 * value + (u32) (lead - '0');
         i++;
     }
 
@@ -109,7 +109,7 @@ LexedToken lex_integer(u8 lead, u24 line){
     return (LexedToken){
         .token = (Token){
             .kind = TOKEN_INT,
-            .data = lead - '0',
+            .data = (u32) (lead - '0'),
             .line = line,
         },
         .consumed = i,
@@ -123,7 +123,7 @@ LexedToken lex_main(){
             .data = (u32) 0,
             .line = u24_pack(lex_line_number),
         },
-        .consumed = 0,
+        .consumed = (u32) 0,
     };
 
     // Handle empty
@@ -144,7 +144,7 @@ LexedToken lex_main(){
         }
     }
 
-    if(whitespace){
+    if(whitespace != 0){
         result.consumed = whitespace;
         return result;
     }

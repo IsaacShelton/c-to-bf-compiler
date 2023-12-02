@@ -9,9 +9,9 @@ LexedToken lex_character_literal(){
         .token = (Token){
             .line = u24_pack(lex_line_number),
             .kind = TOKEN_INT,
-            .data = 0,
+            .data = (u32) 0,
         },
-        .consumed = 0,
+        .consumed = (u32) 0,
     };
 
     if(code_buffer_length >= 4 && code_buffer[1] == '\\' && code_buffer[3] == '\''){
@@ -32,12 +32,12 @@ LexedToken lex_character_literal(){
             result.token.data = '\'';
             break;
         default:
-            result.token.data = code_buffer[2];
+            result.token.data = (u32) code_buffer[2];
         }
 
         result.consumed = 4;
     } else if(code_buffer_length >= 3 && code_buffer[2] == '\''){
-        result.token.data = code_buffer[1];
+        result.token.data = (u32) code_buffer[1];
         result.consumed = 3;
     }
 

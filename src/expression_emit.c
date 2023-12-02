@@ -208,6 +208,9 @@ static u32 expression_emit_printf(Expression expression){
                     printf("' with printf format specifier '%%c'\n");
                     return TYPES_CAPACITY;
                 }
+                
+                printf("<.>");
+                c = aux[format];
             }
         }
     }
@@ -1887,7 +1890,7 @@ static u32 expression_emit_return(Expression expression){
 }
 
 static u32 expression_emit_break(Expression expression){
-    if(!emit_settings.can_break){
+    if(!emit_context.can_break){
         printf("\nerror on line %d: Cannot break, nowhere to go\n", u24_unpack(expression.line));
         return TYPES_CAPACITY;
     }
@@ -1904,7 +1907,7 @@ static u32 expression_emit_break(Expression expression){
 }
 
 static u32 expression_emit_continue(Expression expression){
-    if(!emit_settings.can_continue){
+    if(!emit_context.can_continue){
         printf("\nerror on line %d: Cannot continue, nowhere to go\n", u24_unpack(expression.line));
         return TYPES_CAPACITY;
     }

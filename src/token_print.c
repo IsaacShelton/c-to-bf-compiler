@@ -218,7 +218,7 @@ u0 token_print(Token token, u1 safe){
         printf("#");
         break;
     default:
-        printf("<unknown %d>", (u32) token.kind);
+        printf("<unknown %d>", (u8) token.kind);
     }
 }
 

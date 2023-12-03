@@ -168,7 +168,7 @@ static u1 can_statements_continue_current_level(u32 start_statement_i, u32 stop_
 static u1 can_loop_continue(u32 statement_index);
 
 static ErrorCode add_close_needed(CloseNeeded close_needed){
-    if(num_closes_needed >= CLOSES_NEEDED_CAPCAITY){
+    if(num_closes_needed >= CLOSES_NEEDED_CAPACITY){
         printf("\nout of memory: Exceeded maximum number of pending check closes\n");
         return 1;
     }
@@ -406,6 +406,10 @@ static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i, u1 allow
                     i = stop_statement_i;
                 }
             }
+        }
+
+        if(emit_context.current_cell_index == -1){
+            fprintf(stderr, "Here %d\n", expression.kind);
         }
     }
 
@@ -990,7 +994,7 @@ static ErrorCode emit_for_stack(Expression expression){
 
     u32 after_condition_pushed = emit_end_basicblock_jump_conditional(body_block, continuation_block);
     if(after_condition_pushed != pushed){
-        printf("\ninternal error: emit_for_stack() got bad push amount for jumping to body/continuation blocks (%d vs %d)\n", after_condition_pushed, pushed);
+        fprintf(stderr, "\ninternal error: emit_for_stack() got bad push amount for jumping to body/continuation blocks (%d vs %d)\n", after_condition_pushed, pushed);
 
         if(emit_context.function < FUNCTIONS_CAPACITY){
             printf("\n  Inside of function: ");
@@ -1986,9 +1990,6 @@ static ErrorCode emit_globals_initialization(){
 
                 type = global.type;
             }
-
-            printf("<");
-            emit_context.current_cell_index--;
 
             move_cells_static(global_variable_cell_offset, size);
         }

@@ -11,7 +11,7 @@ u32 function_args_size(Function function){
         Expression arg = expressions[statements[function.begin + (u32) i]];
 
         if(arg.kind != EXPRESSION_DECLARE){
-            printf("\ninternal error on line %d: Failed to compute arguments size\n", u24_unpack(function.line));
+            fprintf(stderr, "internal error on line %d: Failed to compute arguments size\n", u24_unpack(function.line));
             return -1;
         }
 

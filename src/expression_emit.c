@@ -99,11 +99,7 @@ ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u8 offset_size){
 
         // If we have an offset, then move it forward
         if(offset_size > 0){
-            printf("<");
-            emit_context.current_cell_index--;
-
-            u32 new_offset_position = emit_context.current_cell_index - (u32) offset_size + 1 + difference;
-
+            u32 new_offset_position = emit_context.current_cell_index - (u32) offset_size + 2 + difference;
             move_cells_static(new_offset_position, (u32) offset_size);
         }
 
@@ -517,7 +513,8 @@ static u32 expression_emit_call(Expression expression){
 
     if(function.is_recursive){
         u32 args_size = function_args_size(function);
-        u32 continuation_memory_count = emit_stack_driver_push_all() - args_size + return_size;
+        u32 pushed = emit_stack_driver_push_all();
+        u32 continuation_memory_count = pushed - args_size - 4;
 
         emit_u32(basicblock_id_for_function(function_index));
         emit_stack_push_n(4);
@@ -840,10 +837,6 @@ u32 write_destination(u32 new_value_type, Destination destination, u24 error_lin
 u32 write_destination_unsafe(u32 new_value_type, Destination destination, u24 error_line_number){
     u32 type_size = type_sizeof_or_max(new_value_type, error_line_number);
     if(type_size == -1) return TYPES_CAPACITY;
-
-    // Point to last cell of new-value/index combination
-    printf("<");
-    emit_context.current_cell_index--;
 
     if(destination.offset_size == 0){
         move_cells_static(destination.tape_location, type_size);
@@ -1856,10 +1849,6 @@ static u32 expression_emit_return(Expression expression){
         emit_u32(4 + return_type_size);
         emit_additive_u32(false);
 
-        // Point to last cell of data value
-        printf("<");
-        emit_context.current_cell_index--;
-
         // Move data value into return value location
         move_cells_dynamic_u32(emit_settings.stack_begin, return_type_size);
 
@@ -1870,10 +1859,6 @@ static u32 expression_emit_return(Expression expression){
         // End basicblock
         emit_end_basicblock();
     } else {
-        // Point to last cell of data value
-        printf("<");
-        emit_context.current_cell_index--;
-
         u32 return_value_location = emit_context.function_cell_index - return_type_size;
 
         // Move data value into return value location

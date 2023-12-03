@@ -51,7 +51,7 @@ u32 num_type_aliases = 0;
 Define defines[DEFINES_CAPACITY];
 u32 num_defines;
 
-CloseNeeded closes_needed[CLOSES_NEEDED_CAPCAITY];
+CloseNeeded closes_needed[CLOSES_NEEDED_CAPACITY];
 u32 num_closes_needed = 0;
 
 u32 add_type(Type type){
@@ -73,7 +73,7 @@ u32 add_type(Type type){
 u32 add_dimensions(u32 type_dimensions[4]){
     // Try to find existing slot with same value
     for(u32 i = 0; i < UNIQUE_DIMENSIONS_CAPACITY; i++){
-        u1 match = memcmp(dimensions[i], type_dimensions, sizeof dimensions[i]) == 0;
+        u1 match = memcmp(dimensions[i], type_dimensions, sizeof(u32[4])) == 0;
 
         if(match){
             return i;

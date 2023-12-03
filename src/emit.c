@@ -1245,18 +1245,16 @@ u0 move_cell_static(u32 destination_index){
 
 u0 move_cells_static(u32 destination_index, u32 size){
     // data1 data2 data3 data4
-    //                     ^
+    //                         ^
 
     // ?
     // ^
 
     for(u32 i = 0; i < size; i++){
-        move_cell_static(destination_index + size - i - 1);
+        printf("<");
+        emit_context.current_cell_index--;
 
-        if(i + 1 < size){
-            printf("<");
-            emit_context.current_cell_index--;
-        }
+        move_cell_static(destination_index + size - i - 1);
     }
 }
 
@@ -2220,10 +2218,19 @@ u0 move_cell_dynamic_u32(u32 destination_start_index){
 
 u0 move_cells_dynamic_u8(u32 destination_index, u32 size){
     // value1 value2 value3 index
-    //                        ^
+    //                            ^
 
     // index
     //   ^
+
+    if(size == 0){
+        printf("<");
+        emit_context.current_cell_index--;
+        return;
+    }
+
+    printf("<");
+    emit_context.current_cell_index--;
 
     for(u32 i = 0; i < size; i++){
         move_cell_dynamic_u8(destination_index + size - 1 - i);
@@ -2232,10 +2239,19 @@ u0 move_cells_dynamic_u8(u32 destination_index, u32 size){
 
 u0 move_cells_dynamic_u16(u32 destination_index, u32 size){
     // value1 value2 value3 minor_index major_index
-    //                                       ^
+    //                                              ^
 
     // minor_index major_index
     //      ^
+
+    if(size == 0){
+        printf("2<");
+        emit_context.current_cell_index -= 2;
+        return;
+    }
+
+    printf("<");
+    emit_context.current_cell_index--;
 
     for(u32 i = 0; i < size; i++){
         move_cell_dynamic_u16(destination_index + size - 1 - i);
@@ -2249,10 +2265,19 @@ u0 move_cells_dynamic_u16(u32 destination_index, u32 size){
 
 u0 move_cells_dynamic_u24(u32 destination_index, u32 size){
     // value1 value2 value3 minor_index major_index major_major_index
-    //                                                      ^
+    //                                                                ^
 
     // minor_index major_index major_major_index
     //      ^
+
+    if(size == 0){
+        printf("3<");
+        emit_context.current_cell_index -= 3;
+        return;
+    }
+
+    printf("<");
+    emit_context.current_cell_index--;
 
     for(u32 i = 0; i < size; i++){
         move_cell_dynamic_u24(destination_index + size - 1 - i);
@@ -2266,10 +2291,19 @@ u0 move_cells_dynamic_u24(u32 destination_index, u32 size){
 
 u0 move_cells_dynamic_u32(u32 destination_index, u32 size){
     // value1 value2 value3 minor_minor_index minor_major_index major_minor_index major_major_index
-    //                                                                                    ^
+    //                                                                                              ^
 
     // minor_minor_index minor_major_index major_minor_index major_major_index
     //      ^
+
+    if(size == 0){
+        printf("4<");
+        emit_context.current_cell_index -= 4;
+        return;
+    }
+
+    printf("<");
+    emit_context.current_cell_index--;
 
     for(u32 i = 0; i < size; i++){
         move_cell_dynamic_u32(destination_index + size - 1 - i);

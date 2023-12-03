@@ -58,7 +58,7 @@ extern u32 num_type_aliases;
 extern Define defines[DEFINES_CAPACITY];
 extern u32 num_defines;
 
-extern CloseNeeded closes_needed[CLOSES_NEEDED_CAPCAITY];
+extern CloseNeeded closes_needed[CLOSES_NEEDED_CAPACITY];
 extern u32 num_closes_needed;
 
 u32 add_type(Type type);

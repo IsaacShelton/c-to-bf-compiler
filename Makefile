@@ -4,7 +4,7 @@ SRCDIR=src
 OBJDIR=obj
 C_SOURCES=$(wildcard $(SRCDIR)/*.c)
 C_OBJECTS=$(C_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-CFLAGS=-c -Wall
+CFLAGS=-c -Wall -g
 PECKC=peckc
 
 release: directories $(PECKC)

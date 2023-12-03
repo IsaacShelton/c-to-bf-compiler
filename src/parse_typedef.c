@@ -153,7 +153,7 @@ static ErrorCode parse_typedef_alias(u24 line_number){
     Expression expression = expressions[--num_expressions];
 
     if(expression.kind != EXPRESSION_DECLARE){
-        printf("\ninternal error on line %d: Expected declaration for typedef alias\n", u24_unpack(line_number));
+        fprintf(stderr, "internal error on line %d: Expected declaration for typedef alias\n", u24_unpack(line_number));
         return 1;
     }
 

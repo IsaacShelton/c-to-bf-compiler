@@ -12,8 +12,6 @@ u0 emit_stack_pointer(){
 }
 
 u0 emit_set_stack_pointer(){
-    printf("<");
-    emit_context.current_cell_index--;
     move_cells_static(emit_settings.stack_pointer, 4);
 }
 
@@ -31,14 +29,10 @@ u0 emit_stack_driver_pre(u32 main_function_index){
 
     // Add exit (basicblock 0) to stack
     emit_u32(0);
-    printf("<");
-    emit_context.current_cell_index--;
     move_cells_static(emit_settings.stack_begin, 4);
 
     // Add entry point to stack
     emit_u32(basicblock_id_for_function(main_function_index));
-    printf("<");
-    emit_context.current_cell_index--;
     move_cells_static(emit_settings.stack_begin + 4, 4);
 
     // Do while
@@ -138,7 +132,7 @@ u32 emit_jump_compatible(u32 target_basicblock_id, u32 expected_pushed_cells){
     u32 pushed = emit_jump(target_basicblock_id);
 
     if(pushed != expected_pushed_cells){
-        printf("\ninternal error: emit_jump_compatible - tried to do incompatible jump (%d vs %d)\n", pushed, expected_pushed_cells);
+        fprintf(stderr, "internal error: emit_jump_compatible - tried to do incompatible jump (%d vs %d)\n", pushed, expected_pushed_cells);
     }
 
     return pushed;
@@ -155,7 +149,7 @@ u0 emit_end_basicblock_jump_compatible(u32 target_basicblock_id, u32 expected_pu
     u32 amount = emit_end_basicblock_jump(target_basicblock_id);
 
     if(amount != expected_pushed_cells){
-        printf("\ninternal error: emit_end_basicblock_jump_compatible - tried to end basicblock via incompatible jump (%d vs %d)\n", amount, expected_pushed_cells);
+        fprintf(stderr, "internal error: emit_end_basicblock_jump_compatible - tried to end basicblock via incompatible jump to %d (%d vs %d)\n", target_basicblock_id, amount, expected_pushed_cells);
 
         if(emit_context.function < FUNCTIONS_CAPACITY){
             printf("\n  Inside of function: ");
@@ -261,6 +255,11 @@ u0 emit_basicblock_post(){
 u32 emit_stack_driver_push_all(){
     u32 count = emit_context.current_cell_index - emit_settings.stack_driver_position;
     emit_stack_push_n(count);
+
+    if(emit_context.current_cell_index != emit_settings.stack_driver_position){
+        fprintf(stderr, "internal error: emit_stack_driver_push_all() failed to pushed all\n");
+    }
+
     return count;
 }
 
@@ -306,8 +305,6 @@ u0 emit_stack_push_n(u32 num_cells){
 
         // Move bytes onto stack
         emit_stack_pointer();
-        printf("<");
-        emit_context.current_cell_index--;
         move_cells_dynamic_u32(emit_settings.stack_begin, num_cells);
 
         // Increase stack pointer
@@ -344,16 +341,18 @@ u32 emit_recursive_functions(){
 
         if(emit_settings.stack_driver_position != emit_context.current_cell_index){
             int off_by = (int) emit_context.current_cell_index - (int) emit_settings.stack_driver_position;
-            printf("\ninternal error on line %d: Failed to generate recursive function as final resting cell index does not match expected stack driver position (%d cells off)\n", u24_unpack(function.line), off_by);
+            fprintf(stderr, "internal error on line %d: Failed to generate recursive function as final resting cell index does not match expected stack driver position (%d cells off)\n", u24_unpack(function.line), off_by);
             return 1;
         }
 
         u32 args_size = function_args_size(function);
         if(args_size == -1) return 1;
 
+        /*
         fprintf(stderr, "Emitting Function %d (", function_i);
         print_aux_cstr_err(functions[function_i].name);
         fprintf(stderr, ")\n");
+        */
 
         emit_start_basicblock_landing(basicblock_id_for_function(function_i), args_size);
         if(function_emit(function_i, emit_settings.stack_driver_position, emit_context.current_cell_index) != 0){

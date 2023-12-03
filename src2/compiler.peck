@@ -2513,18 +2513,16 @@ u0 move_cell_static(u32 destination_index){
 
 u0 move_cells_static(u32 destination_index, u32 size){
     // data1 data2 data3 data4
-    //                     ^
+    //                         ^
 
     // ?
     // ^
 
     for(u32 i = 0; i < size; i++){
-        move_cell_static(destination_index + size - i - 1);
+        printf("<");
+        emit_context.current_cell_index--;
 
-        if(i + 1 < size){
-            printf("<");
-            emit_context.current_cell_index--;
-        }
+        move_cell_static(destination_index + size - i - 1);
     }
 }
 
@@ -3488,10 +3486,19 @@ u0 move_cell_dynamic_u32(u32 destination_start_index){
 
 u0 move_cells_dynamic_u8(u32 destination_index, u32 size){
     // value1 value2 value3 index
-    //                        ^
+    //                            ^
 
     // index
     //   ^
+
+    if(size == 0){
+        printf("<");
+        emit_context.current_cell_index--;
+        return;
+    }
+
+    printf("<");
+    emit_context.current_cell_index--;
 
     for(u32 i = 0; i < size; i++){
         move_cell_dynamic_u8(destination_index + size - 1 - i);
@@ -3500,10 +3507,19 @@ u0 move_cells_dynamic_u8(u32 destination_index, u32 size){
 
 u0 move_cells_dynamic_u16(u32 destination_index, u32 size){
     // value1 value2 value3 minor_index major_index
-    //                                       ^
+    //                                              ^
 
     // minor_index major_index
     //      ^
+
+    if(size == 0){
+        printf("2<");
+        emit_context.current_cell_index -= 2;
+        return;
+    }
+
+    printf("<");
+    emit_context.current_cell_index--;
 
     for(u32 i = 0; i < size; i++){
         move_cell_dynamic_u16(destination_index + size - 1 - i);
@@ -3517,10 +3533,19 @@ u0 move_cells_dynamic_u16(u32 destination_index, u32 size){
 
 u0 move_cells_dynamic_u24(u32 destination_index, u32 size){
     // value1 value2 value3 minor_index major_index major_major_index
-    //                                                      ^
+    //                                                                ^
 
     // minor_index major_index major_major_index
     //      ^
+
+    if(size == 0){
+        printf("3<");
+        emit_context.current_cell_index -= 3;
+        return;
+    }
+
+    printf("<");
+    emit_context.current_cell_index--;
 
     for(u32 i = 0; i < size; i++){
         move_cell_dynamic_u24(destination_index + size - 1 - i);
@@ -3534,10 +3559,19 @@ u0 move_cells_dynamic_u24(u32 destination_index, u32 size){
 
 u0 move_cells_dynamic_u32(u32 destination_index, u32 size){
     // value1 value2 value3 minor_minor_index minor_major_index major_minor_index major_major_index
-    //                                                                                    ^
+    //                                                                                              ^
 
     // minor_minor_index minor_major_index major_minor_index major_major_index
     //      ^
+
+    if(size == 0){
+        printf("4<");
+        emit_context.current_cell_index -= 4;
+        return;
+    }
+
+    printf("<");
+    emit_context.current_cell_index--;
 
     for(u32 i = 0; i < size; i++){
         move_cell_dynamic_u32(destination_index + size - 1 - i);
@@ -4995,11 +5029,7 @@ ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u8 offset_size){
 
         // If we have an offset, then move it forward
         if(offset_size > 0){
-            printf("<");
-            emit_context.current_cell_index--;
-
-            u32 new_offset_position = emit_context.current_cell_index - (u32) offset_size + 1 + difference;
-
+            u32 new_offset_position = emit_context.current_cell_index - (u32) offset_size + 2 + difference;
             move_cells_static(new_offset_position, (u32) offset_size);
         }
 
@@ -5413,7 +5443,8 @@ u32 expression_emit_call(Expression expression){
 
     if(function.is_recursive){
         u32 args_size = function_args_size(function);
-        u32 continuation_memory_count = emit_stack_driver_push_all() - args_size + return_size;
+        u32 pushed = emit_stack_driver_push_all();
+        u32 continuation_memory_count = pushed - args_size - 4;
 
         emit_u32(basicblock_id_for_function(function_index));
         emit_stack_push_n(4);
@@ -5736,10 +5767,6 @@ u32 write_destination(u32 new_value_type, Destination destination, u24 error_lin
 u32 write_destination_unsafe(u32 new_value_type, Destination destination, u24 error_line_number){
     u32 type_size = type_sizeof_or_max(new_value_type, error_line_number);
     if(type_size == -1) return TYPES_CAPACITY;
-
-    // Point to last cell of new-value/index combination
-    printf("<");
-    emit_context.current_cell_index--;
 
     if(destination.offset_size == 0){
         move_cells_static(destination.tape_location, type_size);
@@ -6752,10 +6779,6 @@ u32 expression_emit_return(Expression expression){
         emit_u32(4 + return_type_size);
         emit_additive_u32(false);
 
-        // Point to last cell of data value
-        printf("<");
-        emit_context.current_cell_index--;
-
         // Move data value into return value location
         move_cells_dynamic_u32(emit_settings.stack_begin, return_type_size);
 
@@ -6766,10 +6789,6 @@ u32 expression_emit_return(Expression expression){
         // End basicblock
         emit_end_basicblock();
     } else {
-        // Point to last cell of data value
-        printf("<");
-        emit_context.current_cell_index--;
-
         u32 return_value_location = emit_context.function_cell_index - return_type_size;
 
         // Move data value into return value location
@@ -8378,6 +8397,10 @@ ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i, u1 allow_cases)
                 }
             }
         }
+
+        if(emit_context.current_cell_index == -1){
+            printf("\nHere %d\n", expression.kind);
+        }
     }
 
     return emit_close_checks_until(closes_needed_waterline);
@@ -8961,7 +8984,7 @@ ErrorCode emit_for_stack(Expression expression){
 
     u32 after_condition_pushed = emit_end_basicblock_jump_conditional(body_block, continuation_block);
     if(after_condition_pushed != pushed){
-        printf("\ninternal error: emit_for_stack() got bad push amount for jumping to body/continuation blocks (%d vs %d)\n", after_condition_pushed, pushed);
+        printf("\n\ninternal error: emit_for_stack() got bad push amount for jumping to body/continuation blocks (%d vs %d)\n", after_condition_pushed, pushed);
 
         if(emit_context.function < FUNCTIONS_CAPACITY){
             printf("\n  Inside of function: ");
@@ -9958,9 +9981,6 @@ ErrorCode emit_globals_initialization(){
                 type = global.type;
             }
 
-            printf("<");
-            emit_context.current_cell_index--;
-
             move_cells_static(global_variable_cell_offset, size);
         }
 
@@ -10339,8 +10359,6 @@ LexedToken lex_integer(u8 lead, u24 line){
 }
 
 LexedToken lex_main(){
-    printf("lex_main(%c)\n", code_buffer[0]);
-
     LexedToken result = (LexedToken){
         .token = (Token){
             .kind = TOKEN_NONE,
@@ -10352,6 +10370,7 @@ LexedToken lex_main(){
 
     // Handle empty
     if(code_buffer_length == 0){
+        printf("Code buffer is empty\n");
         result.token.kind = TOKEN_DONE;
         return result;
     }
@@ -10410,8 +10429,6 @@ LexedToken lex_main(){
                 break;
             }
         }
-
-        print("Returning word\n");
 
         // NOTE: Anything words longer than code buffer size will be split in two
         result.consumed = i;
@@ -10487,24 +10504,19 @@ LexedToken lex_main(){
 
     // Handle divide or line comment
     if(lead == '/'){
-        print("000000000000000000000 GOT DIVIDE CHAR\n");
         if(code_buffer_length > 1 && code_buffer[1] == '/'){
-            print("000000000000000000000 LINE COMMENT\n");
             result.token.kind = TOKEN_LINE_COMMENT;
             result.consumed = 2;
             return result;
         } else if(code_buffer_length > 1 && code_buffer[1] == '*'){
-            print("000000000000000000000 MULTILINE COMMENT\n");
             result.token.kind = TOKEN_MULTILINE_COMMENT;
             result.consumed = 2;
             return result;
         } else if(code_buffer_length > 1 && code_buffer[1] == '='){
-            print("000000000000000000000 DIVIDE ASSIGN COMMENT\n");
             result.token.kind = TOKEN_DIVIDE_ASSIGN;
             result.consumed = 2;
             return result;
         } else {
-            print("000000000000000000000 DIVIDE\n");
             result.token.kind = TOKEN_DIVIDE;
             result.consumed = 1;
             return result;
@@ -10616,11 +10628,11 @@ LexedToken lex_main(){
     return result;
 }
 
-u32 lex(){
+ErrorCode lex(){
     lex_line_number = 1;
     u8 c = 0;
 
-    print("A\n");
+    print("Entered lex()\n");
 
     // Fill buffer
     while(code_buffer_length != CODE_BUFFER_CAPACITY){
@@ -10632,8 +10644,6 @@ u32 lex(){
 
         code_buffer[code_buffer_length++] = c;
     }
-
-    print("B\n");
 
     if(code_buffer_length >= 8 && memcmp(code_buffer, "`stdlib\n", 8) == 0){
         // ---- memmove(code_buffer, &code_buffer[8], code_buffer_length - 8); ----
@@ -10651,12 +10661,8 @@ u32 lex(){
         //inject_standard_library();
     }
 
-    print("C\n");
-
     // Lex
     while(true){
-        print("Re-filling buffer\n");
-
         // (Re)-fill buffer
         while(code_buffer_length != CODE_BUFFER_CAPACITY && c != 0){
             c = get();
@@ -10666,13 +10672,9 @@ u32 lex(){
             }
         }
 
-        printf("Preparing for lex_main, character '%c'\n", code_buffer[0]);
-
         // Process one token
         LexedToken lexed = lex_main();
         Token token = lexed.token;
-
-        printf("Got back from lex_main with kind %d %d\n", (u8) token.kind, (u8) lexed.token.kind);
 
         if(token.kind != TOKEN_DONE){
             if(token.kind == TOKEN_ERROR) return 1;
@@ -10683,11 +10685,8 @@ u32 lex(){
                     printf("Out of memory: Too many tokens\n");
                     return 1;
                 }
-                //tokens[num_tokens++] = token;
-                tokens[0] = token;
-                num_tokens = 1;
+                tokens[num_tokens++] = token;
             } else {
-                printf("Consuming %d characters for comment/whitespace\n", lexed.consumed);
                 // Increase line number by skipped newlines
                 for(u32 i = 0; i < lexed.consumed; i++){
                     if(code_buffer[i] == '\n') lex_line_number++;
@@ -10731,7 +10730,6 @@ u32 lex(){
                 } else if(lexed.consumed == 4 && memcmp(code_buffer, "enum", 4) == 0){
                     tokens[num_tokens - 1].kind = TOKEN_ENUM;
                 } else {
-                    /*
                     tokens[num_tokens - 1].data = num_aux;
 
                     if(num_aux + lexed.consumed + 1 >= AUX_CAPACITY){
@@ -10739,13 +10737,6 @@ u32 lex(){
                         return 1;
                     }
 
-                    for(u32 i = 0; i < lexed.consumed; i++){
-                        aux[num_aux++] = code_buffer[i];
-                    }
-                    aux[num_aux++] = '\0';
-                    */
-
-                    num_aux = 0;
                     for(u32 i = 0; i < lexed.consumed; i++){
                         aux[num_aux++] = code_buffer[i];
                     }
@@ -10766,7 +10757,6 @@ u32 lex(){
             if(result.error) return 1;
             c = result.new_c;
         } else if(token.kind == TOKEN_MULTILINE_COMMENT){
-            print("Consuming rest of multiline comment\n");
             // Special code for multi-line comments
             LexUnboundedResult result = lex_multiline_comment(c);
             if(result.error) return 1;
@@ -10776,25 +10766,20 @@ u32 lex(){
             LexUnboundedResult result = lex_string(c);
             if(result.error) return 1;
             c = result.new_c;
+        } else if(token.kind != TOKEN_NONE){
+            if(num_tokens > 0){
+                print("Value ");
+                token_print(tokens[num_tokens - 1], true);
+                printf("\n");
+            }
         }
 
         if(c == 0 && token.kind == TOKEN_DONE){
-            print("Got done token, breaking...\n");
             break;
         }
-
-        token_print(tokens[0], true);
-        print("\n");
     }
 
-    print("Preparing to exit from lex\n");
-
-    for(u32 i = 0; i < num_tokens; i++){
-        token_print(tokens[i], true);
-        printf("\n");
-    }
-
-    print("Returning from lex...\n");
+    printf("Returning from lex!!!\n");
     return 0;
 } 
 
@@ -10885,36 +10870,9 @@ LexUnboundedResult lex_multiline_comment(u8 c){
     u32 start_line = lex_line_number;
     u8 comment_c = '\0';
 
-    printf("lex_multiline_comment Called!\n");
-    printf("read = %d, code_buffer_length = %d!\n", read, code_buffer_length);
-    printf("read < code_buffer_length == %d!\n", read < code_buffer_length);
-
-    if(read < code_buffer_length){
-        printf("YEP CONFIRMED\n");
-    } else {
-        printf("NO WHAT\n");
-    }
-
-    if(read < code_buffer_length){
-        printf("STILL WORKS\n");
-    } else {
-        printf("NO LONGER WORKS\n");
-    }
-
-    printf("CONTINUATION\n");
-
-    while(false){
-        //return (LexUnboundedResult){ .error = false, .new_c = c };   <--------------------
-    }
-    
-    /*
-    while(read < code_buffer_length){
-        printf("LOOPING IN FIRST FOR\n");
-
+    for(; read < code_buffer_length; read++){
         comment_c = code_buffer[read];
         
-        printf("MULTLINE CHECKING CHARACTER '%c'\n", comment_c);
-
         if(comment_c == 0){
             printf("\nerror on line %d: Multi-line comment never closed\n", start_line);
             return (LexUnboundedResult){ .error = true, .new_c = c };
@@ -10929,7 +10887,6 @@ LexUnboundedResult lex_multiline_comment(u8 c){
         }
 
         prev = comment_c;
-        read++;
     }
 
     if(read < code_buffer_length){
@@ -10968,7 +10925,6 @@ LexUnboundedResult lex_multiline_comment(u8 c){
             }
         }
     }
-    */
 
     return (LexUnboundedResult){ .error = false, .new_c = c };
 } 
@@ -11059,7 +11015,7 @@ LexUnboundedResult lex_string(u8 c){
     }
 
     if(num_aux == AUX_CAPACITY){
-        printf("Out of memor: Auxiliary memory used up\n");
+        printf("Out of memory: Auxiliary memory used up\n");
         return (LexUnboundedResult){ .error = true };
     }
 
@@ -11071,20 +11027,26 @@ LexUnboundedResult lex_string(u8 c){
 
 
 u0 main(){
-    print("Starting\n");
-    if(lex() != 0) return;
-
-    print("Back in main\n");
-
     /*
-    if(lex_peck_print_tokens || true){
+    if(lex() != 0){
+        printf("Lex had an error\n");
+        return;
+    }
+    */
+    ErrorCode result = lex();
+
+    printf("Back from lex!!! with errorcode %d\n", (u8) result);
+
+    //if(lex_peck_print_tokens){
         for(u32 i = 0; i < num_tokens; i++){
+            printf("tokens[%d] = ", i);
             token_print(tokens[i], true);
             printf("\n");
         }
         printf("\n");
-    }
+    //}
 
+    /*
     if(lex_peck_print_lexed_construction){
         print_lexed_construction();
         return 0;
@@ -11095,6 +11057,7 @@ u0 main(){
     if(infer() != 0) return 1;
     if(mark_recursive_functions() != 0) return 1;
 
+    /*
     for(u32 i = 0; i < num_typedefs; i++){
         typedef_print(typedefs[i]);
         printf("\n");
@@ -13991,8 +13954,6 @@ u0 emit_stack_pointer(){
 }
 
 u0 emit_set_stack_pointer(){
-    printf("<");
-    emit_context.current_cell_index--;
     move_cells_static(emit_settings.stack_pointer, 4);
 }
 
@@ -14010,14 +13971,10 @@ u0 emit_stack_driver_pre(u32 main_function_index){
 
     // Add exit (basicblock 0) to stack
     emit_u32(0);
-    printf("<");
-    emit_context.current_cell_index--;
     move_cells_static(emit_settings.stack_begin, 4);
 
     // Add entry point to stack
     emit_u32(basicblock_id_for_function(main_function_index));
-    printf("<");
-    emit_context.current_cell_index--;
     move_cells_static(emit_settings.stack_begin + 4, 4);
 
     // Do while
@@ -14134,7 +14091,7 @@ u0 emit_end_basicblock_jump_compatible(u32 target_basicblock_id, u32 expected_pu
     u32 amount = emit_end_basicblock_jump(target_basicblock_id);
 
     if(amount != expected_pushed_cells){
-        printf("\ninternal error: emit_end_basicblock_jump_compatible - tried to end basicblock via incompatible jump (%d vs %d)\n", amount, expected_pushed_cells);
+        printf("\ninternal error: emit_end_basicblock_jump_compatible - tried to end basicblock via incompatible jump to %d (%d vs %d)\n", target_basicblock_id, amount, expected_pushed_cells);
 
         if(emit_context.function < FUNCTIONS_CAPACITY){
             printf("\n  Inside of function: ");
@@ -14240,6 +14197,11 @@ u0 emit_basicblock_post(){
 u32 emit_stack_driver_push_all(){
     u32 count = emit_context.current_cell_index - emit_settings.stack_driver_position;
     emit_stack_push_n(count);
+
+    if(emit_context.current_cell_index != emit_settings.stack_driver_position){
+        printf("\ninternal error: emit_stack_driver_push_all() failed to pushed all\n");
+    }
+
     return count;
 }
 
@@ -14285,8 +14247,6 @@ u0 emit_stack_push_n(u32 num_cells){
 
         // Move bytes onto stack
         emit_stack_pointer();
-        printf("<");
-        emit_context.current_cell_index--;
         move_cells_dynamic_u32(emit_settings.stack_begin, num_cells);
 
         // Increase stack pointer
@@ -14330,9 +14290,11 @@ u32 emit_recursive_functions(){
         u32 args_size = function_args_size(function);
         if(args_size == -1) return 1;
 
+        /*
         printf("\nEmitting Function %d (", function_i);
         print_aux_cstr_err(functions[function_i].name);
         printf("\n)\n");
+        */
 
         emit_start_basicblock_landing(basicblock_id_for_function(function_i), args_size);
         if(function_emit(function_i, emit_settings.stack_driver_position, emit_context.current_cell_index) != 0){
@@ -25069,7 +25031,7 @@ u32 add_type(Type type){
 u32 add_dimensions(u32 type_dimensions[4]){
     // Try to find existing slot with same value
     for(u32 i = 0; i < UNIQUE_DIMENSIONS_CAPACITY; i++){
-        u1 match = memcmp(dimensions[i], type_dimensions, sizeof dimensions[i]) == 0;
+        u1 match = memcmp(dimensions[i], type_dimensions, sizeof(u32[4])) == 0;
 
         if(match){
             return i;

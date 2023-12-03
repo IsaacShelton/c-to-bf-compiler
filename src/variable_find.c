@@ -652,12 +652,13 @@ Variable get_variable_location_from_declaration_statement(u32 statement_index){
     u32 function_begin = functions[emit_context.function].begin;
     u32 function_arity = functions[emit_context.function].arity;
 
+    // Account for 'incomplete_cell'
+    if(!emit_context.in_recursive_function && emit_context.can_function_early_return && statement_index >= function_begin + function_arity){
+        offset++;
+    }
+
     for(u32 i = function_begin; i < statement_index; i++){
         Expression expression = expressions[statements[i]];
-
-        if(emit_context.can_function_early_return && i == function_begin + function_arity){
-            offset++;
-        }
 
         if(expression.kind == EXPRESSION_DECLARE){
             u32 type_size = type_sizeof_or_max(operands[expression.ops], expression.line);

@@ -385,7 +385,7 @@ LexedToken lex_main(){
     return result;
 }
 
-u32 lex(){
+ErrorCode lex(){
     lex_line_number = 1;
     u8 c = 0;
 

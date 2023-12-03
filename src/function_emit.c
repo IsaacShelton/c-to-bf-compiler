@@ -2025,6 +2025,7 @@ ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 s
     };
     
     // Allocate 'incomplete' cell if function can return early
+    // (After function arguments)
     if(can_early_return){
         printf("[-]+>");
         emit_context.incomplete_cell = emit_context.current_cell_index++;

@@ -18,7 +18,7 @@ static ErrorCode parse_typedef_struct(u24 line_number){
     u32 begin = num_statements;
 
     while(parse_i < num_tokens && !is_token(TOKEN_END)){
-        if(parse_statement()) return 1;
+        if(parse_statement() != 0) return 1;
     }
 
     if(!eat_token(TOKEN_END)){
@@ -50,10 +50,10 @@ static ErrorCode parse_typedef_struct(u24 line_number){
         .name = name,
         .begin = begin,
         .num_fields = num_statements - begin,
-        .computed_size = -1,
+        .computed_size = -(u32) 1,
     });
 
-    return def >= TYPEDEFS_CAPACITY;
+    return (ErrorCode) (def >= TYPEDEFS_CAPACITY);
 }
 
 static ErrorCode parse_typedef_enum(u24 line_number){
@@ -90,7 +90,7 @@ static ErrorCode parse_typedef_enum(u24 line_number){
         }
 
         // Optionally eat ','
-        eat_token(TOKEN_NEXT);
+        (u0) eat_token(TOKEN_NEXT);
     }
 
     if(!eat_token(TOKEN_END)){
@@ -138,14 +138,14 @@ static ErrorCode parse_typedef_enum(u24 line_number){
         .computed_size = size,
     });
 
-    return def >= TYPEDEFS_CAPACITY;
+    return (ErrorCode) (def >= TYPEDEFS_CAPACITY);
 }
 
 static ErrorCode parse_typedef_alias(u24 line_number){
     // typedef substitution_type alias_name;
     //                 ^
 
-    if(parse_declaration(false)){
+    if(parse_declaration(false) != 0){
         return 1;
     }
 
@@ -166,7 +166,7 @@ static ErrorCode parse_typedef_alias(u24 line_number){
         .rewritten_type = type,
     });
 
-    return alias >= TYPE_ALIASES_CAPACITY;
+    return (ErrorCode) (alias >= TYPE_ALIASES_CAPACITY);
 }
 
 ErrorCode parse_typedef(){

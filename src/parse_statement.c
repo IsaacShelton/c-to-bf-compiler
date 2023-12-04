@@ -25,29 +25,29 @@ static ErrorCode parse_default();
 
 ErrorCode parse_statement(){
     if(is_type_followed_by(TOKEN_WORD)){
-        if(parse_declaration(true)) return 1;
+        if(parse_declaration(true) != 0) return 1;
     } else if(eat_token(TOKEN_IF)){
-        if(parse_if()) return 1;
+        if(parse_if() != 0) return 1;
     } else if(eat_token(TOKEN_WHILE)){
-        if(parse_while()) return 1;
+        if(parse_while() != 0) return 1;
     } else if(eat_token(TOKEN_DO)){
-        if(parse_do_while()) return 1;
+        if(parse_do_while() != 0) return 1;
     } else if(eat_token(TOKEN_FOR)){
-        if(parse_for()) return 1;
+        if(parse_for() != 0) return 1;
     } else if(eat_token(TOKEN_RETURN)){
-        if(parse_return()) return 1;
+        if(parse_return() != 0) return 1;
     } else if(eat_token(TOKEN_BREAK)){
-        if(parse_break()) return 1;
+        if(parse_break() != 0) return 1;
     } else if(eat_token(TOKEN_CONTINUE)){
-        if(parse_continue()) return 1;
+        if(parse_continue() != 0) return 1;
     } else if(eat_token(TOKEN_SWITCH)){
-        if(parse_switch()) return 1;
+        if(parse_switch() != 0) return 1;
     } else if(eat_token(TOKEN_CASE)){
-        if(parse_case()) return 1;
+        if(parse_case() != 0) return 1;
     } else if(eat_token(TOKEN_DEFAULT)){
-        if(parse_default()) return 1;
+        if(parse_default() != 0) return 1;
     } else if(is_token(TOKEN_BEGIN)){
-        if(parse_conditionless_block()) return 1;
+        if(parse_conditionless_block() != 0) return 1;
     } else {
         Expression statement = parse_expression();
         if(had_parse_error) return 1;
@@ -141,7 +141,7 @@ static ErrorCode parse_declaration_assignment(u32 variable_name, u24 line_number
         .ops = ops,
     };
 
-    return !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
+    return (ErrorCode) (!eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY);
 }
 
 ErrorCode parse_declaration(u1 allow_assignment){
@@ -182,9 +182,9 @@ ErrorCode parse_declaration(u1 allow_assignment){
     };
 
     if(allow_assignment && is_token(TOKEN_ASSIGN)){
-        return add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY || parse_declaration_assignment(variable_name, line_number);
+        return (ErrorCode) (add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY || parse_declaration_assignment(variable_name, line_number));
     } else {
-        return !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
+        return (ErrorCode) (!eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY);
     }
 }
 
@@ -200,7 +200,7 @@ static u32 parse_block(u1 allow_cases){
     // Traditional block
     if(eat_token(TOKEN_BEGIN)){
         while(parse_i < num_tokens && !is_token(TOKEN_END)){
-            if(parse_statement()) return STATEMENTS_CAPACITY;
+            if(parse_statement() != 0) return STATEMENTS_CAPACITY;
 
             Expression expression = expressions[statements[num_statements - 1]];
 
@@ -239,7 +239,7 @@ static u32 parse_block(u1 allow_cases){
         }
 
         // Single statement block
-        if(parse_statement()) return STATEMENTS_CAPACITY;
+        if(parse_statement() != 0) return STATEMENTS_CAPACITY;
     }
 
     parse_trailing_semicolon = previous_parse_trailing_semicolon;
@@ -276,7 +276,7 @@ static ErrorCode parse_if(){
     Expression statement = (Expression){
         .kind = EXPRESSION_IF,
         .line = line,
-        .ops = 0,
+        .ops = (u32) 0,
     };
 
     u32 begin = add_statement_else_print_error(statement);
@@ -372,7 +372,7 @@ static ErrorCode parse_do_while(){
     Expression statement = (Expression){
         .kind = EXPRESSION_DO_WHILE,
         .line = line,
-        .ops = 0,
+        .ops = (u32) 0,
     };
 
     u32 begin = add_statement_else_print_error(statement);
@@ -450,7 +450,7 @@ static ErrorCode parse_for(){
     }
 
     if(!eat_token(TOKEN_SEMICOLON)){
-        if(parse_statement()) return 1;
+        if(parse_statement() != 0) return 1;
 
         // Set number of pre-statements to be 1
         operands[ops] = num_statements - begin - 1;
@@ -462,7 +462,7 @@ static ErrorCode parse_for(){
         condition_expression = (Expression){
             .kind = EXPRESSION_U1,
             .line = current_line_packed(),
-            .ops = 1,
+            .ops = (u32) 1,
         };
     } else {
         condition_expression = parse_expression();
@@ -488,7 +488,7 @@ static ErrorCode parse_for(){
         u1 previous_parse_trailing_semicolon = parse_trailing_semicolon;
         parse_trailing_semicolon = false;
 
-        if(parse_statement()) return 1;
+        if(parse_statement() != 0) return 1;
 
         // Restore previous trailing semicolon parsing setting
         parse_trailing_semicolon = previous_parse_trailing_semicolon;
@@ -518,7 +518,7 @@ static ErrorCode parse_conditionless_block(){
     Expression statement = (Expression){
         .kind = EXPRESSION_CONDITIONLESS_BLOCK,
         .line = current_line_packed(),
-        .ops = 0,
+        .ops = (u32) 0,
     };
 
     u32 block = add_statement_else_print_error(statement);
@@ -561,7 +561,7 @@ static ErrorCode parse_return(){
         .ops = value,
     };
 
-    return !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
+    return (ErrorCode) (!eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY);
 }
 
 static ErrorCode parse_break(){
@@ -571,10 +571,10 @@ static ErrorCode parse_break(){
     Expression statement = (Expression){
         .kind = EXPRESSION_BREAK,
         .line = tokens[parse_i - 1].line,
-        .ops = 0,
+        .ops = (u32) 0,
     };
 
-    return !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
+    return (ErrorCode) (!eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY);
 }
 
 static ErrorCode parse_continue(){
@@ -584,10 +584,10 @@ static ErrorCode parse_continue(){
     Expression statement = (Expression){
         .kind = EXPRESSION_CONTINUE,
         .line = tokens[parse_i - 1].line,
-        .ops = 0,
+        .ops = (u32) 0,
     };
 
-    return !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
+    return (ErrorCode) (!eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY);
 }
 
 static ErrorCode parse_switch(){
@@ -673,7 +673,7 @@ static ErrorCode parse_case(){
         return 1;
     }
 
-    return add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
+    return (ErrorCode) (add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY);
 }
 
 static ErrorCode parse_default(){
@@ -701,6 +701,6 @@ static ErrorCode parse_default(){
         return 1;
     }
 
-    return add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
+    return (ErrorCode) (add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY);
 }
 

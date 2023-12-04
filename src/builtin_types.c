@@ -17,7 +17,7 @@ static u32 make_simple_type(u8 raw_name[16]){
     // Create type
     return add_type((Type){
         .name = name,
-        .dimensions = 0,
+        .dimensions = (u32) 0,
     });
 }
 

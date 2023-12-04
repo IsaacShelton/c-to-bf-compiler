@@ -197,7 +197,7 @@ u32 emit_end_basicblock_jump_conditional(u32 then_basicblock_id, u32 else_basicb
         printf("<");
         emit_context.current_cell_index -= 1;
 
-        emit_jump_compatible(else_basicblock_id, pushed);
+        (u0) emit_jump_compatible(else_basicblock_id, pushed);
 
         // Go back to 'condition' cell
         printf("%d>", else_cell - emit_context.current_cell_index);

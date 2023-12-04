@@ -353,9 +353,9 @@ typedef struct {
 u32 expression_emit(Expression expression);
 Destination expression_get_destination(Expression expression, u32 tape_anchor);
 u32 read_destination(Destination destination, u24 line_on_error);
-u32 write_destination(u32 new_value_type, Destination destination, u24 error_line_number);
-u32 write_destination_unsafe(u32 new_value_type, Destination destination, u24 error_line_number);
-ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u8 offset_size);
+u32 write_destination(u32 new_value_type, Destination destination, u24 line_on_error);
+u32 write_destination_unsafe(u32 new_value_type, Destination destination, u24 line_on_error);
+ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u8 offset_size, u24 line_on_error);
 
 
 
@@ -464,7 +464,7 @@ u32 infer();
 
 
 
-u32 lex();
+ErrorCode lex();
 
 
 
@@ -925,7 +925,7 @@ ErrorCode add_put_function(){
     u32 implementation = add_statement_from_new((Expression){
         .kind = EXPRESSION_IMPLEMENT_PUT,
         .line = u24_pack(0),
-        .ops = 0,
+        .ops = (u32) 0,
     });
 
     if(implementation >= STATEMENTS_CAPACITY) return 1;
@@ -935,7 +935,7 @@ ErrorCode add_put_function(){
         .arity = 1,
         .return_type = u0_type,
         .begin = argument,
-        .num_stmts = 2,
+        .num_stmts = (u32) 2,
         .is_recursive = false,
         .line = u24_pack(0),
     };
@@ -965,7 +965,7 @@ ErrorCode add_printu1_function(){
     u32 implementation = add_statement_from_new((Expression){
         .kind = EXPRESSION_IMPLEMENT_PRINTU1,
         .line = u24_pack(0),
-        .ops = 0,
+        .ops = (u32) 0,
     });
 
     if(implementation >= STATEMENTS_CAPACITY) return 1;
@@ -975,7 +975,7 @@ ErrorCode add_printu1_function(){
         .arity = 1,
         .return_type = u0_type,
         .begin = argument,
-        .num_stmts = 2,
+        .num_stmts = (u32) 2,
         .is_recursive = false,
         .line = u24_pack(0),
     };
@@ -1005,7 +1005,7 @@ ErrorCode add_printu8_function(){
     u32 implementation = add_statement_from_new((Expression){
         .kind = EXPRESSION_IMPLEMENT_PRINTU8,
         .line = u24_pack(0),
-        .ops = 0,
+        .ops = (u32) 0,
     });
 
     if(implementation >= STATEMENTS_CAPACITY) return 1;
@@ -1015,7 +1015,7 @@ ErrorCode add_printu8_function(){
         .arity = 1,
         .return_type = u0_type,
         .begin = argument,
-        .num_stmts = 2,
+        .num_stmts = (u32) 2,
         .is_recursive = false,
         .line = u24_pack(0),
     };
@@ -1033,7 +1033,7 @@ ErrorCode add_get_function(){
     u32 implementation = add_statement_from_new((Expression){
         .kind = EXPRESSION_IMPLEMENT_GET,
         .line = u24_pack(0),
-        .ops = 0,
+        .ops = (u32) 0,
     });
 
     if(implementation >= STATEMENTS_CAPACITY) return 1;
@@ -1043,7 +1043,7 @@ ErrorCode add_get_function(){
         .arity = 0,
         .return_type = u8_type,
         .begin = implementation,
-        .num_stmts = 1,
+        .num_stmts = (u32) 1,
         .is_recursive = false,
         .line = u24_pack(0),
     };
@@ -1061,7 +1061,7 @@ ErrorCode add_readu8_function(){
     u32 implementation = add_statement_from_new((Expression){
         .kind = EXPRESSION_IMPLEMENT_READU8,
         .line = u24_pack(0),
-        .ops = 0,
+        .ops = (u32) 0,
     });
 
     if(implementation >= STATEMENTS_CAPACITY) return 1;
@@ -1071,7 +1071,7 @@ ErrorCode add_readu8_function(){
         .arity = 0,
         .return_type = u8_type,
         .begin = implementation,
-        .num_stmts = 1,
+        .num_stmts = (u32) 1,
         .is_recursive = false,
         .line = u24_pack(0),
     };
@@ -1081,11 +1081,11 @@ ErrorCode add_readu8_function(){
 }
 
 ErrorCode add_builtin_functions(){
-    if(add_put_function()) return 1;
-    if(add_printu1_function()) return 1;
-    if(add_printu8_function()) return 1;
-    if(add_get_function()) return 1;
-    if(add_readu8_function()) return 1;
+    if(add_put_function() != 0) return 1;
+    if(add_printu1_function() != 0) return 1;
+    if(add_printu8_function() != 0) return 1;
+    if(add_get_function() != 0) return 1;
+    if(add_readu8_function() != 0) return 1;
     return 0;
 }
 
@@ -1106,7 +1106,7 @@ u32 make_simple_type(u8 raw_name[16]){
     // Create type
     return add_type((Type){
         .name = name,
-        .dimensions = 0,
+        .dimensions = (u32) 0,
     });
 }
 
@@ -1155,7 +1155,7 @@ ErrorCode compute_typedef_sizes(){
     TypeDependency dependencies[TYPE_DEPENDENCIES_CAPACITY];
     u32 num_dependencies = 0;
 
-    u32 outgoing[TYPEDEFS_CAPACITY] = {0};
+    u32 outgoing[TYPEDEFS_CAPACITY];
 
     // Construct type dependencies
     for(u32 i = 0; i < num_typedefs; i++){
@@ -4989,7 +4989,7 @@ u0 print_nth_argument_label(u8 number){
     }
 }
 
-ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u8 offset_size){
+ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u8 offset_size, u24 line_on_error){
     Type from_type = types[from_type_index];
     Type to_type = types[to_type_index];
 
@@ -5000,6 +5000,15 @@ ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u8 offset_size){
     if(from_type.dimensions == 0 || to_type.dimensions == 0){
         return 1;
     }
+
+    u32 base_type_index = add_type((Type){
+        .name = from_type.name,
+        .dimensions = (u32) 0,
+    });
+    if(base_type_index == TYPES_CAPACITY) return 1;
+
+    u32 base_type_size = type_sizeof_or_max(base_type_index, line_on_error);
+    if(base_type_size == -1) return 1;
 
     u32 f[4];
     u32 t[4];
@@ -5035,8 +5044,10 @@ ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u8 offset_size){
 
         // Zero extend array
         while(f_len < t_len){
-            printf("[-]>");
-            emit_context.current_cell_index++;
+            for(u32 i = 0; i < base_type_size; i++){
+                printf("[-]>");
+                emit_context.current_cell_index++;
+            }
             f_len++;
         }
 
@@ -5424,7 +5435,7 @@ u32 expression_emit_call(Expression expression){
         u32 expected_type = operands[expressions[statements[function.begin + (u32) i]].ops];
 
         if(type != expected_type){
-            if(grow_type(type, expected_type, 0) != 0){
+            if(grow_type(type, expected_type, 0, argument.line) != 0){
                 printf("\nerror on line %d: ", u24_unpack(expression.line));
                 print_nth_argument_label(i + 1);
                 printf(" argument to function '");
@@ -5747,10 +5758,10 @@ Destination expression_get_destination(Expression expression, u32 tape_anchor){
     }
 }
 
-u32 write_destination(u32 new_value_type, Destination destination, u24 error_line_number){
+u32 write_destination(u32 new_value_type, Destination destination, u24 line_on_error){
     if(new_value_type != destination.type){
-        if(grow_type(new_value_type, destination.type, destination.offset_size) != 0){
-            printf("\nerror on line %d: Cannot assign '", u24_unpack(error_line_number));
+        if(grow_type(new_value_type, destination.type, destination.offset_size, line_on_error) != 0){
+            printf("\nerror on line %d: Cannot assign '", u24_unpack(line_on_error));
             type_print(types[new_value_type]);
             printf("' to '");
             type_print(types[destination.type]);
@@ -5761,11 +5772,11 @@ u32 write_destination(u32 new_value_type, Destination destination, u24 error_lin
         new_value_type = destination.type;
     }
 
-    return write_destination_unsafe(new_value_type, destination, error_line_number);
+    return write_destination_unsafe(new_value_type, destination, line_on_error);
 }
 
-u32 write_destination_unsafe(u32 new_value_type, Destination destination, u24 error_line_number){
-    u32 type_size = type_sizeof_or_max(new_value_type, error_line_number);
+u32 write_destination_unsafe(u32 new_value_type, Destination destination, u24 line_on_error){
+    u32 type_size = type_sizeof_or_max(new_value_type, line_on_error);
     if(type_size == -1) return TYPES_CAPACITY;
 
     if(destination.offset_size == 0){
@@ -5784,7 +5795,7 @@ u32 write_destination_unsafe(u32 new_value_type, Destination destination, u24 er
         move_cells_dynamic_u32(destination.tape_location, type_size);
         return u0_type;
     } else {
-        printf("\nerror on line %d: Cannot assign to destination with u%d offset\n", u24_unpack(error_line_number), 8*destination.offset_size);
+        printf("\nerror on line %d: Cannot assign to destination with u%d offset\n", u24_unpack(line_on_error), 8*destination.offset_size);
         return TYPES_CAPACITY;
     }
 }
@@ -6758,7 +6769,7 @@ u32 expression_emit_return(Expression expression){
     }
 
     if(value_type != return_type){
-        if(grow_type(value_type, return_type, 0) != 0){
+        if(grow_type(value_type, return_type, 0, expression.line) != 0){
             printf("\nerror on line %d: ", u24_unpack(expression.line));
             printf("Expected '");
             type_print(types[return_type]);
@@ -8397,10 +8408,6 @@ ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i, u1 allow_cases)
                 }
             }
         }
-
-        if(emit_context.current_cell_index == -1){
-            printf("\nHere %d\n", expression.kind);
-        }
     }
 
     return emit_close_checks_until(closes_needed_waterline);
@@ -9969,7 +9976,7 @@ ErrorCode emit_globals_initialization(){
             if(type == TYPES_CAPACITY) return 1;
 
             if(type != global.type){
-                if(grow_type(type, global.type, 0) != 0){
+                if(grow_type(type, global.type, 0, global.line) != 0){
                     printf("\nerror on line %d: Cannot assign '", u24_unpack(global.line));
                     type_print(types[type]);
                     printf("' to '");
@@ -10015,6 +10022,7 @@ ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 s
     };
     
     // Allocate 'incomplete' cell if function can return early
+    // (After function arguments)
     if(can_early_return){
         printf("[-]+>");
         emit_context.incomplete_cell = emit_context.current_cell_index++;
@@ -10037,6 +10045,8 @@ ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 s
 
     if(emit_context.current_cell_index > start_function_cell_index){
         printf("%d<", emit_context.current_cell_index - start_function_cell_index);
+    } else if (emit_context.current_cell_index != start_function_cell_index){
+        printf("\nFailed to deallocate function locals (%d vs %d)\n", emit_context.current_cell_index, start_function_cell_index);
     }
 
     emit_context = old_emit_context;
@@ -10370,7 +10380,6 @@ LexedToken lex_main(){
 
     // Handle empty
     if(code_buffer_length == 0){
-        printf("Code buffer is empty\n");
         result.token.kind = TOKEN_DONE;
         return result;
     }
@@ -10632,8 +10641,6 @@ ErrorCode lex(){
     lex_line_number = 1;
     u8 c = 0;
 
-    print("Entered lex()\n");
-
     // Fill buffer
     while(code_buffer_length != CODE_BUFFER_CAPACITY){
         c = get();
@@ -10658,7 +10665,7 @@ ErrorCode lex(){
         lex_peck_print_lexed_construction = true;
     } else {
         // Normal compilation
-        //inject_standard_library();
+        inject_standard_library();
     }
 
     // Lex
@@ -10766,12 +10773,6 @@ ErrorCode lex(){
             LexUnboundedResult result = lex_string(c);
             if(result.error) return 1;
             c = result.new_c;
-        } else if(token.kind != TOKEN_NONE){
-            if(num_tokens > 0){
-                print("Value ");
-                token_print(tokens[num_tokens - 1], true);
-                printf("\n");
-            }
         }
 
         if(c == 0 && token.kind == TOKEN_DONE){
@@ -10779,7 +10780,6 @@ ErrorCode lex(){
         }
     }
 
-    printf("Returning from lex!!!\n");
     return 0;
 } 
 
@@ -11027,35 +11027,48 @@ LexUnboundedResult lex_string(u8 c){
 
 
 u0 main(){
-    /*
     if(lex() != 0){
-        printf("Lex had an error\n");
+        print("\nERROR LEXING\n");
         return;
     }
-    */
-    ErrorCode result = lex();
 
-    printf("Back from lex!!! with errorcode %d\n", (u8) result);
+    print("\nDONE LEXING\n");
 
     //if(lex_peck_print_tokens){
         for(u32 i = 0; i < num_tokens; i++){
-            printf("tokens[%d] = ", i);
             token_print(tokens[i], true);
             printf("\n");
         }
         printf("\n");
     //}
 
-    /*
+    print("\nDONE NOT PRINT TOKENS\n");
+
     if(lex_peck_print_lexed_construction){
         print_lexed_construction();
-        return 0;
+        return;
     }
 
-    if(parse() != 0) return 1;
-    if(compute_typedef_sizes() != 0) return 1;
-    if(infer() != 0) return 1;
-    if(mark_recursive_functions() != 0) return 1;
+    if(parse() != 0){
+        print("\nERROR PARSING\n");
+        return;
+    }
+    print("\nDONE PARSING\n");
+    if(compute_typedef_sizes() != 0){
+        print("\nERROR COMPUTING TYPEDEF SIZES\n");
+        return;
+    }
+    print("\nDONE COMPUTING TYPEDEF SIZES\n");
+    if(infer() != 0){
+        print("\nERROR INFERING TYPES\n");
+        return;
+    }
+    print("\nDONE INFERING TYPES\n");
+    if(mark_recursive_functions() != 0){
+        print("\nERROR MARKING RECURSIVE FUNCTIONS\n");
+        return;
+    }
+    print("\nDONE MARKING RECURSIVE FUNCTIONS\n");
 
     /*
     for(u32 i = 0; i < num_typedefs; i++){
@@ -11077,12 +11090,15 @@ u0 main(){
         function_print(functions[i]);
         printf("\n");
     }
+    */
 
+    /*
     printf("\nnum_functions = %d\n", num_functions);
     printf("\nnum_types = %d\n", num_types);
     printf("\nnum_expressions = %d\n", num_expressions);
     printf("\nnum_tokens = %d\n", num_tokens);
     printf("\nnum_aux = %d\n", num_aux);
+    */
 
     // Write
 
@@ -11098,7 +11114,7 @@ u0 main(){
     // Require main function
     if(main_function_index == FUNCTIONS_CAPACITY){
         printf("\nerror: No main function\n");
-        return 1;
+        return;
     }
 
     // Determine if recursion necessary
@@ -11106,14 +11122,18 @@ u0 main(){
         emit_settings.enable_stack = true;
     }
 
+    print("\nDONE FINDING MAIN\n");
+
     // Emit globals
     u32 global_variables_cells = 0;
     for(u32 i = 0; i < num_globals; i++){
         u32 size = type_sizeof_or_max(globals[i].type, globals[i].line);
-        if(size == -1) return 1;
+        if(size == -1) return;
 
         global_variables_cells += size;
     }
+
+    print("\nDONE ALLOCATING GLOBALS\n");
 
     // Set stack size
     emit_settings.stack_size = DEFAULT_STACK_SIZE;
@@ -11134,15 +11154,21 @@ u0 main(){
 
     // If stack is disabled, just emit the `main` function
     if(!emit_settings.enable_stack){
-        return function_emit(main_function_index, start_cell_index, start_cell_index);
+        (u0) function_emit(main_function_index, start_cell_index, start_cell_index);
+        return;
     }
+
+    print("\nSTARTING EMITTING BASIBLOCKS\n");
 
     // Otherwise, continue as normal and use stack
     emit_stack_driver_pre(main_function_index);
-    if(emit_recursive_functions() != 0) return 1;
+    if(emit_recursive_functions() != 0){
+        print("\nERROR EMITTING BASIBLOCKS\n");
+        return;
+    }
     emit_stack_driver_post();
-    return 0;
-    */
+
+    print("\nCOMPILATION COMPLETE\n");
 }
 
 
@@ -11169,7 +11195,7 @@ ErrorCode mark_recursive_functions(){
         if(!function.is_recursive) continue;
 
         u32 function_arrows_begin = num_arrows;
-        u32 statements_start = function.begin + function.arity;
+        u32 statements_start = function.begin + (u32) function.arity;
         u32 statements_end = function.begin + function.num_stmts;
         u32 statement_i = statements_start;
 
@@ -11338,7 +11364,7 @@ ErrorCode mark_recursive_functions(){
     }
     */
 
-    u16 outgoing[FUNCTIONS_CAPACITY] = {0};
+    u16 outgoing[FUNCTIONS_CAPACITY];
 
     // Tally outgoing arrows for each function
     for(u32 i = 0; i < num_arrows; i++){
@@ -11407,7 +11433,7 @@ u32 parse_function_body(Function function){
     //   ^  starting token index
 
     while(parse_i < num_tokens && !is_token(TOKEN_END)){
-        if(parse_statement()) return 1;
+        if(parse_statement() != 0) return 1;
     }
 
     return (u32) had_parse_error;
@@ -11479,15 +11505,15 @@ ErrorCode parse_function(u32 symbol_name, u32 symbol_type, u24 line_number){
 
     Function function = (Function){
         .name = symbol_name,
-        .arity = num_statements - begin,
+        .arity = (u8) (num_statements - begin),
         .begin = begin,
-        .num_stmts = 0,
+        .num_stmts = (u32) 0,
         .return_type = symbol_type,
         .is_recursive = true, // assume recursive until we prove otherwise
         .line = line_number,
     };
 
-    if(parse_function_body(function)){
+    if(parse_function_body(function) != 0){
         return 1;
     }
 
@@ -11511,19 +11537,19 @@ u32 parse(){
     had_parse_error = false;
     parse_trailing_semicolon = true;
     
-    if(add_builtin_types()) return 1;
-    if(add_builtin_functions()) return 1;
+    if(add_builtin_types() != 0) return 1;
+    if(add_builtin_functions() != 0) return 1;
 
     while(parse_i < num_tokens){
         u24 line_number = tokens[parse_i].line;
 
         if(eat_token(TOKEN_TYPEDEF)){
-            if(parse_typedef()) return 1;
+            if(parse_typedef() != 0) return 1;
             continue;
         }
 
         if(eat_token(TOKEN_HASH)){
-            if(parse_macro()) return 1;
+            if(parse_macro() != 0) return 1;
             continue;
         }
 
@@ -11575,7 +11601,7 @@ u32 parse(){
             if(symbol_type == TYPES_CAPACITY) return 1;
 
             // Function
-            if(parse_function(symbol_name, symbol_type, line_number)){
+            if(parse_function(symbol_name, symbol_type, line_number) != 0){
                 return 1;
             }
         }
@@ -11670,7 +11696,7 @@ u32 parse_dimensions(u32 start_type_dimensions[4]){
     // Unless some dimensions for the type already exist.
 
     u32 type_dimensions[4];
-    memcpy(type_dimensions, start_type_dimensions, sizeof(u32) * 4);
+    memcpy(type_dimensions, start_type_dimensions, sizeof(u32[4]));
 
     u32 next_dim = 0;
 
@@ -11905,7 +11931,7 @@ Expression parse_expression_panicloop(u24 line_number){
     return (Expression){
         .kind = EXPRESSION_PANICLOOP,
         .line = line_number,
-        .ops = 0,
+        .ops = (u32) 0,
     };
 }
 
@@ -11913,7 +11939,7 @@ Expression parse_expression_call(u32 name, u24 line_number){
     Expression expression = (Expression){
         .kind = EXPRESSION_CALL,
         .line = line_number,
-        .ops = 0,
+        .ops = (u32) 0,
     };
 
     if(aux_cstr_equals_printf(name)){
@@ -11970,7 +11996,7 @@ Expression parse_expression_call(u32 name, u24 line_number){
         return expression;
     }
 
-    u32 arity_location = add_operand(arity);
+    u32 arity_location = add_operand((u32) arity);
     if(arity_location >= OPERANDS_CAPACITY){
         stop_parsing();
         return expression;
@@ -12255,7 +12281,7 @@ Expression parse_primary_base_expression(){
         return (Expression){
             .kind = EXPRESSION_U1,
             .line = line_number,
-            .ops = 1,
+            .ops = (u32) 1,
         };
     }
 
@@ -12263,7 +12289,7 @@ Expression parse_primary_base_expression(){
         return (Expression){
             .kind = EXPRESSION_U1,
             .line = line_number,
-            .ops = 0,
+            .ops = (u32) 0,
         };
     }
 
@@ -12374,7 +12400,7 @@ u1 is_terminating_token(TokenKind token_kind){
     }
 }
 
-u8 parse_get_precedence(u32 token_kind){
+u8 parse_get_precedence(TokenKind token_kind){
     switch(token_kind){
     case TOKEN_OPEN:
     case TOKEN_OPEN_BRACKET:
@@ -12444,7 +12470,7 @@ u1 is_right_associative(TokenKind operator){
     }
 }
 
-Expression parse_rhs(u32 operator_precedence){
+Expression parse_rhs(u8 operator_precedence){
     // Returns right hand side of expression
 
     // Skip over operator token
@@ -12461,7 +12487,7 @@ Expression parse_rhs(u32 operator_precedence){
     TokenKind next_operator = tokens[parse_i].kind;
     u8 next_precedence = parse_get_precedence(next_operator);
 
-    if(!(next_precedence + is_right_associative(next_operator) < operator_precedence)){
+    if(!(next_precedence + (u8) is_right_associative(next_operator) < operator_precedence)){
         rhs = parse_operator_expression(operator_precedence + 1, rhs);
         if(had_parse_error) return rhs;
     }
@@ -12672,7 +12698,7 @@ Expression parse_operator_expression(u8 precedence, Expression lhs){
         u8 next_precedence = parse_get_precedence(operator);
         u24 line_number = current_line_packed();
 
-        if(is_terminating_token(operator) || next_precedence + is_right_associative(operator) < precedence){
+        if(is_terminating_token(operator) || next_precedence + (u8) is_right_associative(operator) < precedence){
             return lhs;
         }
 
@@ -12997,29 +13023,29 @@ ErrorCode parse_default();
 
 ErrorCode parse_statement(){
     if(is_type_followed_by(TOKEN_WORD)){
-        if(parse_declaration(true)) return 1;
+        if(parse_declaration(true) != 0) return 1;
     } else if(eat_token(TOKEN_IF)){
-        if(parse_if()) return 1;
+        if(parse_if() != 0) return 1;
     } else if(eat_token(TOKEN_WHILE)){
-        if(parse_while()) return 1;
+        if(parse_while() != 0) return 1;
     } else if(eat_token(TOKEN_DO)){
-        if(parse_do_while()) return 1;
+        if(parse_do_while() != 0) return 1;
     } else if(eat_token(TOKEN_FOR)){
-        if(parse_for()) return 1;
+        if(parse_for() != 0) return 1;
     } else if(eat_token(TOKEN_RETURN)){
-        if(parse_return()) return 1;
+        if(parse_return() != 0) return 1;
     } else if(eat_token(TOKEN_BREAK)){
-        if(parse_break()) return 1;
+        if(parse_break() != 0) return 1;
     } else if(eat_token(TOKEN_CONTINUE)){
-        if(parse_continue()) return 1;
+        if(parse_continue() != 0) return 1;
     } else if(eat_token(TOKEN_SWITCH)){
-        if(parse_switch()) return 1;
+        if(parse_switch() != 0) return 1;
     } else if(eat_token(TOKEN_CASE)){
-        if(parse_case()) return 1;
+        if(parse_case() != 0) return 1;
     } else if(eat_token(TOKEN_DEFAULT)){
-        if(parse_default()) return 1;
+        if(parse_default() != 0) return 1;
     } else if(is_token(TOKEN_BEGIN)){
-        if(parse_conditionless_block()) return 1;
+        if(parse_conditionless_block() != 0) return 1;
     } else {
         Expression statement = parse_expression();
         if(had_parse_error) return 1;
@@ -13113,7 +13139,7 @@ ErrorCode parse_declaration_assignment(u32 variable_name, u24 line_number){
         .ops = ops,
     };
 
-    return !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
+    return (ErrorCode) (!eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY);
 }
 
 ErrorCode parse_declaration(u1 allow_assignment){
@@ -13154,9 +13180,9 @@ ErrorCode parse_declaration(u1 allow_assignment){
     };
 
     if(allow_assignment && is_token(TOKEN_ASSIGN)){
-        return add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY || parse_declaration_assignment(variable_name, line_number);
+        return (ErrorCode) (add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY || parse_declaration_assignment(variable_name, line_number));
     } else {
-        return !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
+        return (ErrorCode) (!eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY);
     }
 }
 
@@ -13172,7 +13198,7 @@ u32 parse_block(u1 allow_cases){
     // Traditional block
     if(eat_token(TOKEN_BEGIN)){
         while(parse_i < num_tokens && !is_token(TOKEN_END)){
-            if(parse_statement()) return STATEMENTS_CAPACITY;
+            if(parse_statement() != 0) return STATEMENTS_CAPACITY;
 
             Expression expression = expressions[statements[num_statements - 1]];
 
@@ -13211,7 +13237,7 @@ u32 parse_block(u1 allow_cases){
         }
 
         // Single statement block
-        if(parse_statement()) return STATEMENTS_CAPACITY;
+        if(parse_statement() != 0) return STATEMENTS_CAPACITY;
     }
 
     parse_trailing_semicolon = previous_parse_trailing_semicolon;
@@ -13248,7 +13274,7 @@ ErrorCode parse_if(){
     Expression statement = (Expression){
         .kind = EXPRESSION_IF,
         .line = line,
-        .ops = 0,
+        .ops = (u32) 0,
     };
 
     u32 begin = add_statement_else_print_error(statement);
@@ -13344,7 +13370,7 @@ ErrorCode parse_do_while(){
     Expression statement = (Expression){
         .kind = EXPRESSION_DO_WHILE,
         .line = line,
-        .ops = 0,
+        .ops = (u32) 0,
     };
 
     u32 begin = add_statement_else_print_error(statement);
@@ -13422,7 +13448,7 @@ ErrorCode parse_for(){
     }
 
     if(!eat_token(TOKEN_SEMICOLON)){
-        if(parse_statement()) return 1;
+        if(parse_statement() != 0) return 1;
 
         // Set number of pre-statements to be 1
         operands[ops] = num_statements - begin - 1;
@@ -13434,7 +13460,7 @@ ErrorCode parse_for(){
         condition_expression = (Expression){
             .kind = EXPRESSION_U1,
             .line = current_line_packed(),
-            .ops = 1,
+            .ops = (u32) 1,
         };
     } else {
         condition_expression = parse_expression();
@@ -13460,7 +13486,7 @@ ErrorCode parse_for(){
         u1 previous_parse_trailing_semicolon = parse_trailing_semicolon;
         parse_trailing_semicolon = false;
 
-        if(parse_statement()) return 1;
+        if(parse_statement() != 0) return 1;
 
         // Restore previous trailing semicolon parsing setting
         parse_trailing_semicolon = previous_parse_trailing_semicolon;
@@ -13490,7 +13516,7 @@ ErrorCode parse_conditionless_block(){
     Expression statement = (Expression){
         .kind = EXPRESSION_CONDITIONLESS_BLOCK,
         .line = current_line_packed(),
-        .ops = 0,
+        .ops = (u32) 0,
     };
 
     u32 block = add_statement_else_print_error(statement);
@@ -13533,7 +13559,7 @@ ErrorCode parse_return(){
         .ops = value,
     };
 
-    return !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
+    return (ErrorCode) (!eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY);
 }
 
 ErrorCode parse_break(){
@@ -13543,10 +13569,10 @@ ErrorCode parse_break(){
     Expression statement = (Expression){
         .kind = EXPRESSION_BREAK,
         .line = tokens[parse_i - 1].line,
-        .ops = 0,
+        .ops = (u32) 0,
     };
 
-    return !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
+    return (ErrorCode) (!eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY);
 }
 
 ErrorCode parse_continue(){
@@ -13556,10 +13582,10 @@ ErrorCode parse_continue(){
     Expression statement = (Expression){
         .kind = EXPRESSION_CONTINUE,
         .line = tokens[parse_i - 1].line,
-        .ops = 0,
+        .ops = (u32) 0,
     };
 
-    return !eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
+    return (ErrorCode) (!eat_semicolon() || add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY);
 }
 
 ErrorCode parse_switch(){
@@ -13645,7 +13671,7 @@ ErrorCode parse_case(){
         return 1;
     }
 
-    return add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
+    return (ErrorCode) (add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY);
 }
 
 ErrorCode parse_default(){
@@ -13673,15 +13699,15 @@ ErrorCode parse_default(){
         return 1;
     }
 
-    return add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY;
+    return (ErrorCode) (add_statement_else_print_error(statement) >= STATEMENTS_CAPACITY);
 }
 
 
 
 Type parse_type(){
     Type type = (Type){
-        .name = 0,
-        .dimensions = 0,
+        .name = (u32) 0,
+        .dimensions = (u32) 0,
     };
 
     // Parse type name
@@ -13700,7 +13726,7 @@ Type parse_type(){
         type = types[unaliased];
         type.dimensions = parse_dimensions(dimensions[type.dimensions]);
     } else {
-        u32 starting[4] = {0, 0, 0, 0};
+        u32 starting[4] = { (u32) 0, (u32) 0, (u32) 0, (u32) 0};
         type.dimensions = parse_dimensions(starting);
     }
 
@@ -13758,7 +13784,7 @@ ErrorCode parse_typedef_struct(u24 line_number){
     u32 begin = num_statements;
 
     while(parse_i < num_tokens && !is_token(TOKEN_END)){
-        if(parse_statement()) return 1;
+        if(parse_statement() != 0) return 1;
     }
 
     if(!eat_token(TOKEN_END)){
@@ -13790,10 +13816,10 @@ ErrorCode parse_typedef_struct(u24 line_number){
         .name = name,
         .begin = begin,
         .num_fields = num_statements - begin,
-        .computed_size = -1,
+        .computed_size = -(u32) 1,
     });
 
-    return def >= TYPEDEFS_CAPACITY;
+    return (ErrorCode) (def >= TYPEDEFS_CAPACITY);
 }
 
 ErrorCode parse_typedef_enum(u24 line_number){
@@ -13830,7 +13856,7 @@ ErrorCode parse_typedef_enum(u24 line_number){
         }
 
         // Optionally eat ','
-        eat_token(TOKEN_NEXT);
+        (u0) eat_token(TOKEN_NEXT);
     }
 
     if(!eat_token(TOKEN_END)){
@@ -13878,14 +13904,14 @@ ErrorCode parse_typedef_enum(u24 line_number){
         .computed_size = size,
     });
 
-    return def >= TYPEDEFS_CAPACITY;
+    return (ErrorCode) (def >= TYPEDEFS_CAPACITY);
 }
 
 ErrorCode parse_typedef_alias(u24 line_number){
     // typedef substitution_type alias_name;
     //                 ^
 
-    if(parse_declaration(false)){
+    if(parse_declaration(false) != 0){
         return 1;
     }
 
@@ -13906,7 +13932,7 @@ ErrorCode parse_typedef_alias(u24 line_number){
         .rewritten_type = type,
     });
 
-    return alias >= TYPE_ALIASES_CAPACITY;
+    return (ErrorCode) (alias >= TYPE_ALIASES_CAPACITY);
 }
 
 ErrorCode parse_typedef(){
@@ -13940,9 +13966,9 @@ u0 print_lexed_construction(){
 
     printf("// Assume that num_tokens + delta_tokens < AUX_CAPACITY\n");
     for(u32 i = 0; i < num_tokens; i++){
-        u32 kind = tokens[i].kind;
+        u32 kind = (u32) (u8) tokens[i].kind;
         u32 data = tokens[i].data;
-        printf("tokens[(u32) %d] = (Token){ .kind = (TokenKind) %d, .data = (u32) %u };\n", i, kind, (u32) data);
+        printf("tokens[(u32) %d] = (Token){ .kind = (TokenKind) %d, .data = (u32) %d };\n", i, kind, (u32) data);
     }
     printf("num_tokens += (u32) %d;\n", delta_tokens);
 }
@@ -14139,7 +14165,7 @@ u32 emit_end_basicblock_jump_conditional(u32 then_basicblock_id, u32 else_basicb
         printf("<");
         emit_context.current_cell_index -= 1;
 
-        emit_jump_compatible(else_basicblock_id, pushed);
+        (u0) emit_jump_compatible(else_basicblock_id, pushed);
 
         // Go back to 'condition' cell
         printf("%d>", else_cell - emit_context.current_cell_index);
@@ -14166,7 +14192,7 @@ u0 emit_end_basicblock_jump_to(JumpContext context){
         emit_context.current_cell_index -= remove;
     }
 
-    emit_end_basicblock_jump_compatible(context.basicblock_id, context.num_cells_input);
+    (u0) emit_end_basicblock_jump_compatible(context.basicblock_id, context.num_cells_input);
 }
 
 u0 emit_stack_driver_post(){
@@ -25007,7 +25033,7 @@ TypeAlias type_aliases[TYPE_ALIASES_CAPACITY];
 u32 num_type_aliases = 0;
 
 Define defines[DEFINES_CAPACITY];
-u32 num_defines;
+u32 num_defines = 0;
 
 CloseNeeded closes_needed[CLOSES_NEEDED_CAPACITY];
 u32 num_closes_needed = 0;
@@ -26298,15 +26324,15 @@ HoneInfo hone_switch_case_or_skip(u32 current_statement, u32 target_statement, u
                 u32 num_case_statements = operands[expression.ops + 1];
 
                 if(target_statement <= i + num_case_statements){
-                    u32 delta_offset = emit_context.in_recursive_function ? 0 : 2;
-                    return (HoneInfo){ .delta_i = i - (current_statement + 1), .delta_depth = 1, .delta_offset = delta_offset };
+                    u32 delta_offset = emit_context.in_recursive_function ? (u32) 0 : (u32) 2;
+                    return (HoneInfo){ .delta_i = i - (current_statement + 1), .delta_depth = (u32) 1, .delta_offset = delta_offset };
                 }
             }
             break;
         }
     }
 
-    return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = 0 };
+    return (HoneInfo){ .delta_i = num_statements, .delta_depth = (u32) 0, .delta_offset = (u32) 0 };
 }
 
 HoneInfo hone_statement(u32 current_statement, u32 target_statement);
@@ -26331,7 +26357,7 @@ HoneInfo hone_for_body_or_skip(u32 current_statement, u32 target_statement, u32 
         }
     }
 
-    return (HoneInfo){ .delta_i = num_pre + num_post, .delta_depth = 1, .delta_offset = pre_offset + inner_variable_offset };
+    return (HoneInfo){ .delta_i = num_pre + num_post, .delta_depth = (u32) 1, .delta_offset = pre_offset + inner_variable_offset };
 }
 
 HoneInfo hone_statement(u32 current_statement, u32 target_statement){
@@ -26416,9 +26442,9 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
             u32 num_statements = operands[expression.ops + 1];
 
             if(target_statement <= current_statement + num_statements){
-                return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = (u32) 0, .delta_depth = (u32) 1, .delta_offset = (u32) 0 };
             } else {
-                return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = num_statements, .delta_depth = (u32) 0, .delta_offset = (u32) 0 };
             }
         }
         break;
@@ -26427,23 +26453,23 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
             u32 num_else = operands[expression.ops + 2];
 
             if(target_statement <= current_statement + num_then){
-                return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = (u32) 0, .delta_depth = (u32) 1, .delta_offset = (u32) 0 };
             } else if(target_statement <= current_statement + num_then + num_else){
-                return (HoneInfo){ .delta_i = num_then, .delta_depth = 1, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = num_then, .delta_depth = (u32) 1, .delta_offset = (u32) 0 };
             } else {
-                return (HoneInfo){ .delta_i = num_then + num_else, .delta_depth = 0, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = num_then + num_else, .delta_depth = (u32) 0, .delta_offset = (u32) 0 };
             }
         }
         break;
     case EXPRESSION_WHILE:
     case EXPRESSION_DO_WHILE: {
             u32 num_statements = operands[expression.ops + 1];
-            u32 inner_variable_offset = emit_context.in_recursive_function ? 0 : operands[expression.ops + 2];
+            u32 inner_variable_offset = emit_context.in_recursive_function ? (u32) 0 : operands[expression.ops + 2];
 
             if(target_statement <= current_statement + num_statements){
-                return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = inner_variable_offset };
+                return (HoneInfo){ .delta_i = (u32) 0, .delta_depth = (u32) 1, .delta_offset = inner_variable_offset };
             } else {
-                return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = num_statements, .delta_depth = (u32) 0, .delta_offset = (u32) 0 };
             }
         }
         break;
@@ -26451,9 +26477,9 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
             u32 num_statements = expression.ops;
 
             if(target_statement <= current_statement + num_statements){
-                return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = (u32) 0, .delta_depth = (u32) 1, .delta_offset = (u32) 0 };
             } else {
-                return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = num_statements, .delta_depth = (u32) 0, .delta_offset = (u32) 0 };
             }
         }
         break;
@@ -26461,17 +26487,17 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
             u32 num_pre = operands[expression.ops];
             u32 num_post = operands[expression.ops + 2];
             u32 len = operands[expression.ops + 3];
-            u32 inner_variable_offset = emit_context.in_recursive_function ? 0 : operands[expression.ops + 4];
+            u32 inner_variable_offset = emit_context.in_recursive_function ? (u32) 0 : operands[expression.ops + 4];
 
             if(target_statement <= current_statement + num_pre){
-                return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = (u32) 0, .delta_depth = (u32) 1, .delta_offset = (u32) 0 };
             } else if(target_statement <= current_statement + num_pre + num_post){
                 // NOTE: Should never happen since referencing these variables is not allowed under normal circumstances
-                return (HoneInfo){ .delta_i = num_pre, .delta_depth = 1, .delta_offset = inner_variable_offset };
+                return (HoneInfo){ .delta_i = num_pre, .delta_depth = (u32) 1, .delta_offset = inner_variable_offset };
             } else if(target_statement <= current_statement + num_pre + num_post + len){
                 return hone_for_body_or_skip(current_statement, target_statement, num_pre, num_post, len, inner_variable_offset);
             } else {
-                return (HoneInfo){ .delta_i = num_pre + num_post + len, .delta_depth = 0, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = num_pre + num_post + len, .delta_depth = (u32) 0, .delta_offset = (u32) 0 };
             }
         }
         break;
@@ -26484,7 +26510,7 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
         break;
     }
 
-    return (HoneInfo){ .delta_i = 0, .delta_depth = 0, .delta_offset = 0 };
+    return (HoneInfo){ .delta_i = (u32) 0, .delta_depth = (u32) 0, .delta_offset = (u32) 0 };
 }
 
 Variable get_variable_location_from_declaration_statement(u32 statement_index){
@@ -26493,14 +26519,15 @@ Variable get_variable_location_from_declaration_statement(u32 statement_index){
     u32 depth = 1;
     u32 offset = 0;
     u32 function_begin = functions[emit_context.function].begin;
-    u32 function_arity = functions[emit_context.function].arity;
+    u32 function_arity = (u32) functions[emit_context.function].arity;
+
+    // Account for 'incomplete_cell'
+    if(!emit_context.in_recursive_function && emit_context.can_function_early_return && statement_index >= function_begin + function_arity){
+        offset++;
+    }
 
     for(u32 i = function_begin; i < statement_index; i++){
         Expression expression = expressions[statements[i]];
-
-        if(emit_context.can_function_early_return && i == function_begin + function_arity){
-            offset++;
-        }
 
         if(expression.kind == EXPRESSION_DECLARE){
             u32 type_size = type_sizeof_or_max(operands[expression.ops], expression.line);
@@ -26563,7 +26590,7 @@ Variable variable_find(u32 name){
                 .name = name,
                 .type = global.type,
                 .defined = true,
-                .depth = 0,
+                .depth = (u32) 0,
                 .location = (VariableLocation){
                     .kind = VARIABLE_LOCATION_ON_TAPE,
                     .location = global_variable_cell_offset,
@@ -26590,7 +26617,7 @@ Variable variable_find(u32 name){
             if(aux_cstr_equals(variant.ops, name)){
                 u32 enum_type = add_type((Type){
                     .name = def.name,
-                    .dimensions = 0
+                    .dimensions = (u32) 0
                 });
 
                 if(enum_type == TYPES_CAPACITY){
@@ -26603,7 +26630,7 @@ Variable variable_find(u32 name){
                     .name = name,
                     .defined = true,
                     .type = enum_type,
-                    .depth = 0,
+                    .depth = (u32) 0,
                     .location = (VariableLocation){
                         .kind = VARIABLE_LOCATION_IMMUTABLE,
                         .location = variant_value,

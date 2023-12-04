@@ -31,7 +31,7 @@ u32 type_sizeof_or_max(u32 type_index, u24 line_on_error){
             printf("\nerror on line %d: Type '", u24_unpack(line_on_error));
             type_print(types[type_index]);
             printf("' doesn't have its size computed yet\n");
-            return -1;
+            return -(u32) 1;
         }
     }
 

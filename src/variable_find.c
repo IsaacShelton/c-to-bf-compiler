@@ -455,15 +455,15 @@ static HoneInfo hone_switch_case_or_skip(u32 current_statement, u32 target_state
                 u32 num_case_statements = operands[expression.ops + 1];
 
                 if(target_statement <= i + num_case_statements){
-                    u32 delta_offset = emit_context.in_recursive_function ? 0 : 2;
-                    return (HoneInfo){ .delta_i = i - (current_statement + 1), .delta_depth = 1, .delta_offset = delta_offset };
+                    u32 delta_offset = emit_context.in_recursive_function ? (u32) 0 : (u32) 2;
+                    return (HoneInfo){ .delta_i = i - (current_statement + 1), .delta_depth = (u32) 1, .delta_offset = delta_offset };
                 }
             }
             break;
         }
     }
 
-    return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = 0 };
+    return (HoneInfo){ .delta_i = num_statements, .delta_depth = (u32) 0, .delta_offset = (u32) 0 };
 }
 
 HoneInfo hone_statement(u32 current_statement, u32 target_statement);
@@ -488,7 +488,7 @@ static HoneInfo hone_for_body_or_skip(u32 current_statement, u32 target_statemen
         }
     }
 
-    return (HoneInfo){ .delta_i = num_pre + num_post, .delta_depth = 1, .delta_offset = pre_offset + inner_variable_offset };
+    return (HoneInfo){ .delta_i = num_pre + num_post, .delta_depth = (u32) 1, .delta_offset = pre_offset + inner_variable_offset };
 }
 
 HoneInfo hone_statement(u32 current_statement, u32 target_statement){
@@ -573,9 +573,9 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
             u32 num_statements = operands[expression.ops + 1];
 
             if(target_statement <= current_statement + num_statements){
-                return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = (u32) 0, .delta_depth = (u32) 1, .delta_offset = (u32) 0 };
             } else {
-                return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = num_statements, .delta_depth = (u32) 0, .delta_offset = (u32) 0 };
             }
         }
         break;
@@ -584,23 +584,23 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
             u32 num_else = operands[expression.ops + 2];
 
             if(target_statement <= current_statement + num_then){
-                return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = (u32) 0, .delta_depth = (u32) 1, .delta_offset = (u32) 0 };
             } else if(target_statement <= current_statement + num_then + num_else){
-                return (HoneInfo){ .delta_i = num_then, .delta_depth = 1, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = num_then, .delta_depth = (u32) 1, .delta_offset = (u32) 0 };
             } else {
-                return (HoneInfo){ .delta_i = num_then + num_else, .delta_depth = 0, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = num_then + num_else, .delta_depth = (u32) 0, .delta_offset = (u32) 0 };
             }
         }
         break;
     case EXPRESSION_WHILE:
     case EXPRESSION_DO_WHILE: {
             u32 num_statements = operands[expression.ops + 1];
-            u32 inner_variable_offset = emit_context.in_recursive_function ? 0 : operands[expression.ops + 2];
+            u32 inner_variable_offset = emit_context.in_recursive_function ? (u32) 0 : operands[expression.ops + 2];
 
             if(target_statement <= current_statement + num_statements){
-                return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = inner_variable_offset };
+                return (HoneInfo){ .delta_i = (u32) 0, .delta_depth = (u32) 1, .delta_offset = inner_variable_offset };
             } else {
-                return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = num_statements, .delta_depth = (u32) 0, .delta_offset = (u32) 0 };
             }
         }
         break;
@@ -608,9 +608,9 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
             u32 num_statements = expression.ops;
 
             if(target_statement <= current_statement + num_statements){
-                return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = (u32) 0, .delta_depth = (u32) 1, .delta_offset = (u32) 0 };
             } else {
-                return (HoneInfo){ .delta_i = num_statements, .delta_depth = 0, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = num_statements, .delta_depth = (u32) 0, .delta_offset = (u32) 0 };
             }
         }
         break;
@@ -618,17 +618,17 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
             u32 num_pre = operands[expression.ops];
             u32 num_post = operands[expression.ops + 2];
             u32 len = operands[expression.ops + 3];
-            u32 inner_variable_offset = emit_context.in_recursive_function ? 0 : operands[expression.ops + 4];
+            u32 inner_variable_offset = emit_context.in_recursive_function ? (u32) 0 : operands[expression.ops + 4];
 
             if(target_statement <= current_statement + num_pre){
-                return (HoneInfo){ .delta_i = 0, .delta_depth = 1, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = (u32) 0, .delta_depth = (u32) 1, .delta_offset = (u32) 0 };
             } else if(target_statement <= current_statement + num_pre + num_post){
                 // NOTE: Should never happen since referencing these variables is not allowed under normal circumstances
-                return (HoneInfo){ .delta_i = num_pre, .delta_depth = 1, .delta_offset = inner_variable_offset };
+                return (HoneInfo){ .delta_i = num_pre, .delta_depth = (u32) 1, .delta_offset = inner_variable_offset };
             } else if(target_statement <= current_statement + num_pre + num_post + len){
                 return hone_for_body_or_skip(current_statement, target_statement, num_pre, num_post, len, inner_variable_offset);
             } else {
-                return (HoneInfo){ .delta_i = num_pre + num_post + len, .delta_depth = 0, .delta_offset = 0 };
+                return (HoneInfo){ .delta_i = num_pre + num_post + len, .delta_depth = (u32) 0, .delta_offset = (u32) 0 };
             }
         }
         break;
@@ -641,7 +641,7 @@ HoneInfo hone_statement(u32 current_statement, u32 target_statement){
         break;
     }
 
-    return (HoneInfo){ .delta_i = 0, .delta_depth = 0, .delta_offset = 0 };
+    return (HoneInfo){ .delta_i = (u32) 0, .delta_depth = (u32) 0, .delta_offset = (u32) 0 };
 }
 
 Variable get_variable_location_from_declaration_statement(u32 statement_index){
@@ -650,7 +650,7 @@ Variable get_variable_location_from_declaration_statement(u32 statement_index){
     u32 depth = 1;
     u32 offset = 0;
     u32 function_begin = functions[emit_context.function].begin;
-    u32 function_arity = functions[emit_context.function].arity;
+    u32 function_arity = (u32) functions[emit_context.function].arity;
 
     // Account for 'incomplete_cell'
     if(!emit_context.in_recursive_function && emit_context.can_function_early_return && statement_index >= function_begin + function_arity){
@@ -721,7 +721,7 @@ Variable variable_find(u32 name){
                 .name = name,
                 .type = global.type,
                 .defined = true,
-                .depth = 0,
+                .depth = (u32) 0,
                 .location = (VariableLocation){
                     .kind = VARIABLE_LOCATION_ON_TAPE,
                     .location = global_variable_cell_offset,
@@ -748,7 +748,7 @@ Variable variable_find(u32 name){
             if(aux_cstr_equals(variant.ops, name)){
                 u32 enum_type = add_type((Type){
                     .name = def.name,
-                    .dimensions = 0
+                    .dimensions = (u32) 0
                 });
 
                 if(enum_type >= TYPES_CAPACITY){
@@ -761,7 +761,7 @@ Variable variable_find(u32 name){
                     .name = name,
                     .defined = true,
                     .type = enum_type,
-                    .depth = 0,
+                    .depth = (u32) 0,
                     .location = (VariableLocation){
                         .kind = VARIABLE_LOCATION_IMMUTABLE,
                         .location = variant_value,

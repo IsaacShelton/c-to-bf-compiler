@@ -23,7 +23,7 @@ u32 parse_dimensions(u32 start_type_dimensions[4]){
     // Unless some dimensions for the type already exist.
 
     u32 type_dimensions[4];
-    memcpy(type_dimensions, start_type_dimensions, sizeof(u32) * 4);
+    memcpy(type_dimensions, start_type_dimensions, sizeof(u32[4]));
 
     u32 next_dim = 0;
 

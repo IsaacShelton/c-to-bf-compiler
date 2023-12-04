@@ -12,6 +12,7 @@ set -ex
 "$self/../peck" "$self/array_pass_extend.peck"
 "$self/../peck" "$self/array_size_expressions.peck"
 "$self/../peck" "$self/array_u16_index.peck"
+"$self/../peck" "$self/array_u32_index.peck" "$self/array_u32_index.rlebf"
 "$self/../peck" "$self/bitwise_and_or_xor.peck"
 "$self/../peck" "$self/bitwise_complement.peck"
 "$self/../peck" "$self/c_types.peck"

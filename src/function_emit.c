@@ -407,10 +407,6 @@ static ErrorCode emit_body(u32 start_statement_i, u32 stop_statement_i, u1 allow
                 }
             }
         }
-
-        if(emit_context.current_cell_index == -1){
-            fprintf(stderr, "Here %d\n", expression.kind);
-        }
     }
 
     return emit_close_checks_until(closes_needed_waterline);
@@ -1525,7 +1521,7 @@ static ErrorCode emit_case_value_test(u32 value_expression){
     if(test_type != emit_context.switch_value_type){
         printf("\nerror on line %d: Expected 'case' value to be '", u24_unpack(expression.line));
         type_print(types[emit_context.switch_value_type]);
-        printf(", got '");
+        printf("', got '");
         type_print(types[test_type]);
         printf("'\n");
         return 1;
@@ -1979,7 +1975,7 @@ static ErrorCode emit_globals_initialization(){
             if(type >= TYPES_CAPACITY) return 1;
 
             if(type != global.type){
-                if(grow_type(type, global.type, 0) != 0){
+                if(grow_type(type, global.type, 0, global.line) != 0){
                     printf("\nerror on line %d: Cannot assign '", u24_unpack(global.line));
                     type_print(types[type]);
                     printf("' to '");
@@ -2048,6 +2044,8 @@ ErrorCode function_emit(u32 function_index, u32 start_function_cell_index, u32 s
 
     if(emit_context.current_cell_index > start_function_cell_index){
         printf("%d<", emit_context.current_cell_index - start_function_cell_index);
+    } else if (emit_context.current_cell_index != start_function_cell_index){
+        fprintf(stderr, "Failed to deallocate function locals (%d vs %d)\n", emit_context.current_cell_index, start_function_cell_index);
     }
 
     emit_context = old_emit_context;

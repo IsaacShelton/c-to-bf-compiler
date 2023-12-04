@@ -165,7 +165,7 @@ static Expression parse_expression_panicloop(u24 line_number){
     return (Expression){
         .kind = EXPRESSION_PANICLOOP,
         .line = line_number,
-        .ops = 0,
+        .ops = (u32) 0,
     };
 }
 
@@ -173,7 +173,7 @@ static Expression parse_expression_call(u32 name, u24 line_number){
     Expression expression = (Expression){
         .kind = EXPRESSION_CALL,
         .line = line_number,
-        .ops = 0,
+        .ops = (u32) 0,
     };
 
     if(aux_cstr_equals_printf(name)){
@@ -230,7 +230,7 @@ static Expression parse_expression_call(u32 name, u24 line_number){
         return expression;
     }
 
-    u32 arity_location = add_operand(arity);
+    u32 arity_location = add_operand((u32) arity);
     if(arity_location >= OPERANDS_CAPACITY){
         stop_parsing();
         return expression;
@@ -515,7 +515,7 @@ static Expression parse_primary_base_expression(){
         return (Expression){
             .kind = EXPRESSION_U1,
             .line = line_number,
-            .ops = 1,
+            .ops = (u32) 1,
         };
     }
 
@@ -523,7 +523,7 @@ static Expression parse_primary_base_expression(){
         return (Expression){
             .kind = EXPRESSION_U1,
             .line = line_number,
-            .ops = 0,
+            .ops = (u32) 0,
         };
     }
 
@@ -634,7 +634,7 @@ static u1 is_terminating_token(TokenKind token_kind){
     }
 }
 
-static u8 parse_get_precedence(u32 token_kind){
+u8 parse_get_precedence(TokenKind token_kind){
     switch(token_kind){
     case TOKEN_OPEN:
     case TOKEN_OPEN_BRACKET:
@@ -704,7 +704,7 @@ static u1 is_right_associative(TokenKind operator){
     }
 }
 
-static Expression parse_rhs(u32 operator_precedence){
+static Expression parse_rhs(u8 operator_precedence){
     // Returns right hand side of expression
 
     // Skip over operator token
@@ -721,7 +721,7 @@ static Expression parse_rhs(u32 operator_precedence){
     TokenKind next_operator = tokens[parse_i].kind;
     u8 next_precedence = parse_get_precedence(next_operator);
 
-    if(!(next_precedence + is_right_associative(next_operator) < operator_precedence)){
+    if(!(next_precedence + (u8) is_right_associative(next_operator) < operator_precedence)){
         rhs = parse_operator_expression(operator_precedence + 1, rhs);
         if(had_parse_error) return rhs;
     }
@@ -932,7 +932,7 @@ static Expression parse_operator_expression(u8 precedence, Expression lhs){
         u8 next_precedence = parse_get_precedence(operator);
         u24 line_number = current_line_packed();
 
-        if(is_terminating_token(operator) || next_precedence + is_right_associative(operator) < precedence){
+        if(is_terminating_token(operator) || next_precedence + (u8) is_right_associative(operator) < precedence){
             return lhs;
         }
 

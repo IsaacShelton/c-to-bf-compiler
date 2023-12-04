@@ -59,7 +59,7 @@ static u0 print_nth_argument_label(u8 number){
     }
 }
 
-ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u8 offset_size){
+ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u8 offset_size, u24 line_on_error){
     Type from_type = types[from_type_index];
     Type to_type = types[to_type_index];
 
@@ -70,6 +70,15 @@ ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u8 offset_size){
     if(from_type.dimensions == 0 || to_type.dimensions == 0){
         return 1;
     }
+
+    u32 base_type_index = add_type((Type){
+        .name = from_type.name,
+        .dimensions = (u32) 0,
+    });
+    if(base_type_index >= TYPES_CAPACITY) return 1;
+
+    u32 base_type_size = type_sizeof_or_max(base_type_index, line_on_error);
+    if(base_type_size == -1) return 1;
 
     u32 f[4];
     u32 t[4];
@@ -105,8 +114,10 @@ ErrorCode grow_type(u32 from_type_index, u32 to_type_index, u8 offset_size){
 
         // Zero extend array
         while(f_len < t_len){
-            printf("[-]>");
-            emit_context.current_cell_index++;
+            for(u32 i = 0; i < base_type_size; i++){
+                printf("[-]>");
+                emit_context.current_cell_index++;
+            }
             f_len++;
         }
 
@@ -494,7 +505,7 @@ static u32 expression_emit_call(Expression expression){
         u32 expected_type = operands[expressions[statements[function.begin + (u32) i]].ops];
 
         if(type != expected_type){
-            if(grow_type(type, expected_type, 0) != 0){
+            if(grow_type(type, expected_type, 0, argument.line) != 0){
                 printf("\nerror on line %d: ", u24_unpack(expression.line));
                 print_nth_argument_label(i + 1);
                 printf(" argument to function '");
@@ -817,10 +828,10 @@ Destination expression_get_destination(Expression expression, u32 tape_anchor){
     }
 }
 
-u32 write_destination(u32 new_value_type, Destination destination, u24 error_line_number){
+u32 write_destination(u32 new_value_type, Destination destination, u24 line_on_error){
     if(new_value_type != destination.type){
-        if(grow_type(new_value_type, destination.type, destination.offset_size) != 0){
-            printf("\nerror on line %d: Cannot assign '", u24_unpack(error_line_number));
+        if(grow_type(new_value_type, destination.type, destination.offset_size, line_on_error) != 0){
+            printf("\nerror on line %d: Cannot assign '", u24_unpack(line_on_error));
             type_print(types[new_value_type]);
             printf("' to '");
             type_print(types[destination.type]);
@@ -831,11 +842,11 @@ u32 write_destination(u32 new_value_type, Destination destination, u24 error_lin
         new_value_type = destination.type;
     }
 
-    return write_destination_unsafe(new_value_type, destination, error_line_number);
+    return write_destination_unsafe(new_value_type, destination, line_on_error);
 }
 
-u32 write_destination_unsafe(u32 new_value_type, Destination destination, u24 error_line_number){
-    u32 type_size = type_sizeof_or_max(new_value_type, error_line_number);
+u32 write_destination_unsafe(u32 new_value_type, Destination destination, u24 line_on_error){
+    u32 type_size = type_sizeof_or_max(new_value_type, line_on_error);
     if(type_size == -1) return TYPES_CAPACITY;
 
     if(destination.offset_size == 0){
@@ -854,7 +865,7 @@ u32 write_destination_unsafe(u32 new_value_type, Destination destination, u24 er
         move_cells_dynamic_u32(destination.tape_location, type_size);
         return u0_type;
     } else {
-        printf("\nerror on line %d: Cannot assign to destination with u%d offset\n", u24_unpack(error_line_number), 8*destination.offset_size);
+        printf("\nerror on line %d: Cannot assign to destination with u%d offset\n", u24_unpack(line_on_error), 8*destination.offset_size);
         return TYPES_CAPACITY;
     }
 }
@@ -1828,7 +1839,7 @@ static u32 expression_emit_return(Expression expression){
     }
 
     if(value_type != return_type){
-        if(grow_type(value_type, return_type, 0) != 0){
+        if(grow_type(value_type, return_type, 0, expression.line) != 0){
             printf("\nerror on line %d: ", u24_unpack(expression.line));
             printf("Expected '");
             type_print(types[return_type]);

@@ -49,7 +49,7 @@ TypeAlias type_aliases[TYPE_ALIASES_CAPACITY];
 u32 num_type_aliases = 0;
 
 Define defines[DEFINES_CAPACITY];
-u32 num_defines;
+u32 num_defines = 0;
 
 CloseNeeded closes_needed[CLOSES_NEEDED_CAPACITY];
 u32 num_closes_needed = 0;

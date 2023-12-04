@@ -9,8 +9,8 @@
 
 Type parse_type(){
     Type type = (Type){
-        .name = 0,
-        .dimensions = 0,
+        .name = (u32) 0,
+        .dimensions = (u32) 0,
     };
 
     // Parse type name
@@ -29,7 +29,7 @@ Type parse_type(){
         type = types[unaliased];
         type.dimensions = parse_dimensions(dimensions[type.dimensions]);
     } else {
-        u32 starting[4] = {0, 0, 0, 0};
+        u32 starting[4] = { (u32) 0, (u32) 0, (u32) 0, (u32) 0};
         type.dimensions = parse_dimensions(starting);
     }
 

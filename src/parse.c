@@ -26,7 +26,7 @@ static u32 parse_function_body(Function function){
     //   ^  starting token index
 
     while(parse_i < num_tokens && !is_token(TOKEN_END)){
-        if(parse_statement()) return 1;
+        if(parse_statement() != 0) return 1;
     }
 
     return (u32) had_parse_error;
@@ -98,15 +98,15 @@ ErrorCode parse_function(u32 symbol_name, u32 symbol_type, u24 line_number){
 
     Function function = (Function){
         .name = symbol_name,
-        .arity = num_statements - begin,
+        .arity = (u8) (num_statements - begin),
         .begin = begin,
-        .num_stmts = 0,
+        .num_stmts = (u32) 0,
         .return_type = symbol_type,
         .is_recursive = true, // assume recursive until we prove otherwise
         .line = line_number,
     };
 
-    if(parse_function_body(function)){
+    if(parse_function_body(function) != 0){
         return 1;
     }
 
@@ -130,19 +130,19 @@ u32 parse(){
     had_parse_error = false;
     parse_trailing_semicolon = true;
     
-    if(add_builtin_types()) return 1;
-    if(add_builtin_functions()) return 1;
+    if(add_builtin_types() != 0) return 1;
+    if(add_builtin_functions() != 0) return 1;
 
     while(parse_i < num_tokens){
         u24 line_number = tokens[parse_i].line;
 
         if(eat_token(TOKEN_TYPEDEF)){
-            if(parse_typedef()) return 1;
+            if(parse_typedef() != 0) return 1;
             continue;
         }
 
         if(eat_token(TOKEN_HASH)){
-            if(parse_macro()) return 1;
+            if(parse_macro() != 0) return 1;
             continue;
         }
 
@@ -194,7 +194,7 @@ u32 parse(){
             if(symbol_type >= TYPES_CAPACITY) return 1;
 
             // Function
-            if(parse_function(symbol_name, symbol_type, line_number)){
+            if(parse_function(symbol_name, symbol_type, line_number) != 0){
                 return 1;
             }
         }

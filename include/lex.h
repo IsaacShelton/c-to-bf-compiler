@@ -4,7 +4,7 @@
 
 #include "utypes.h"
 
-u32 lex();
+ErrorCode lex();
 
 #endif // _PECK_LEX_H
 

@@ -25,7 +25,7 @@ static ErrorCode add_put_function(){
     u32 implementation = add_statement_from_new((Expression){
         .kind = EXPRESSION_IMPLEMENT_PUT,
         .line = u24_pack(0),
-        .ops = 0,
+        .ops = (u32) 0,
     });
 
     if(implementation >= STATEMENTS_CAPACITY) return 1;
@@ -35,7 +35,7 @@ static ErrorCode add_put_function(){
         .arity = 1,
         .return_type = u0_type,
         .begin = argument,
-        .num_stmts = 2,
+        .num_stmts = (u32) 2,
         .is_recursive = false,
         .line = u24_pack(0),
     };
@@ -65,7 +65,7 @@ static ErrorCode add_printu1_function(){
     u32 implementation = add_statement_from_new((Expression){
         .kind = EXPRESSION_IMPLEMENT_PRINTU1,
         .line = u24_pack(0),
-        .ops = 0,
+        .ops = (u32) 0,
     });
 
     if(implementation >= STATEMENTS_CAPACITY) return 1;
@@ -75,7 +75,7 @@ static ErrorCode add_printu1_function(){
         .arity = 1,
         .return_type = u0_type,
         .begin = argument,
-        .num_stmts = 2,
+        .num_stmts = (u32) 2,
         .is_recursive = false,
         .line = u24_pack(0),
     };
@@ -105,7 +105,7 @@ static ErrorCode add_printu8_function(){
     u32 implementation = add_statement_from_new((Expression){
         .kind = EXPRESSION_IMPLEMENT_PRINTU8,
         .line = u24_pack(0),
-        .ops = 0,
+        .ops = (u32) 0,
     });
 
     if(implementation >= STATEMENTS_CAPACITY) return 1;
@@ -115,7 +115,7 @@ static ErrorCode add_printu8_function(){
         .arity = 1,
         .return_type = u0_type,
         .begin = argument,
-        .num_stmts = 2,
+        .num_stmts = (u32) 2,
         .is_recursive = false,
         .line = u24_pack(0),
     };
@@ -133,7 +133,7 @@ static ErrorCode add_get_function(){
     u32 implementation = add_statement_from_new((Expression){
         .kind = EXPRESSION_IMPLEMENT_GET,
         .line = u24_pack(0),
-        .ops = 0,
+        .ops = (u32) 0,
     });
 
     if(implementation >= STATEMENTS_CAPACITY) return 1;
@@ -143,7 +143,7 @@ static ErrorCode add_get_function(){
         .arity = 0,
         .return_type = u8_type,
         .begin = implementation,
-        .num_stmts = 1,
+        .num_stmts = (u32) 1,
         .is_recursive = false,
         .line = u24_pack(0),
     };
@@ -161,7 +161,7 @@ static ErrorCode add_readu8_function(){
     u32 implementation = add_statement_from_new((Expression){
         .kind = EXPRESSION_IMPLEMENT_READU8,
         .line = u24_pack(0),
-        .ops = 0,
+        .ops = (u32) 0,
     });
 
     if(implementation >= STATEMENTS_CAPACITY) return 1;
@@ -171,7 +171,7 @@ static ErrorCode add_readu8_function(){
         .arity = 0,
         .return_type = u8_type,
         .begin = implementation,
-        .num_stmts = 1,
+        .num_stmts = (u32) 1,
         .is_recursive = false,
         .line = u24_pack(0),
     };
@@ -181,11 +181,11 @@ static ErrorCode add_readu8_function(){
 }
 
 ErrorCode add_builtin_functions(){
-    if(add_put_function()) return 1;
-    if(add_printu1_function()) return 1;
-    if(add_printu8_function()) return 1;
-    if(add_get_function()) return 1;
-    if(add_readu8_function()) return 1;
+    if(add_put_function() != 0) return 1;
+    if(add_printu1_function() != 0) return 1;
+    if(add_printu8_function() != 0) return 1;
+    if(add_get_function() != 0) return 1;
+    if(add_readu8_function() != 0) return 1;
     return 0;
 }
 

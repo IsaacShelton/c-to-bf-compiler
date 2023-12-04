@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <string.h>
 #include "../include/mark_recursive_functions.h"
 #include "../include/config.h"
 #include "../include/storage.h"
@@ -27,7 +28,7 @@ ErrorCode mark_recursive_functions(){
         if(!function.is_recursive) continue;
 
         u32 function_arrows_begin = num_arrows;
-        u32 statements_start = function.begin + function.arity;
+        u32 statements_start = function.begin + (u32) function.arity;
         u32 statements_end = function.begin + function.num_stmts;
         u32 statement_i = statements_start;
 
@@ -196,7 +197,8 @@ ErrorCode mark_recursive_functions(){
     }
     */
 
-    u16 outgoing[FUNCTIONS_CAPACITY] = {0};
+    u16 outgoing[FUNCTIONS_CAPACITY];
+    memset(outgoing, 0, sizeof outgoing);
 
     // Tally outgoing arrows for each function
     for(u32 i = 0; i < num_arrows; i++){

@@ -15,7 +15,7 @@ u0 print_lexed_construction(){
 
     printf("// Assume that num_tokens + delta_tokens < AUX_CAPACITY\n");
     for(u32 i = 0; i < num_tokens; i++){
-        u32 kind = tokens[i].kind;
+        u32 kind = (u32) (u8) tokens[i].kind;
         u32 data = tokens[i].data;
         printf("tokens[(u32) %d] = (Token){ .kind = (TokenKind) %d, .data = (u32) %u };\n", i, kind, (u32) data);
     }

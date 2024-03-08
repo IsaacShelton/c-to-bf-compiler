@@ -4,7 +4,7 @@ A compiler which compiles a large subset of C to Brainf\*ck
 
 Also it can compile itself in theory, however the compiled version is several petabytes uncompressed and hasn't been successfully run end-to-end yet.
 
-We recommend you use our [blazing-fast-interpreter](https://github.com/Practical-Brainf-ck/blazing-fast-interpreter) in combination with this project, since other interpreters are simply not fast enough to handle some of the complicated programs that this compiler is capable of producing.
+We recommend you use our [blazing-fast-interpreter](https://github.com/IsaacShelton/blazing-fast-interpreter) in combination with this project, since other interpreters are simply not fast enough to handle some of the complicated programs that this compiler is capable of producing.
 
 ### Supported Features Include:
 - recursion

@@ -200,6 +200,6 @@ u32 parse(){
         }
     }
 
-    return (u32) had_parse_error;
+    return (ErrorCode) had_parse_error;
 }
 

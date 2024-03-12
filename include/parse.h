@@ -4,7 +4,7 @@
 
 #include "utypes.h"
 
-u32 parse();
+ErrorCode parse();
 
 #endif // _PECK_PARSE_H
 

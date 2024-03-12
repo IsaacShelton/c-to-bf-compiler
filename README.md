@@ -56,7 +56,7 @@ We recommend you use our [blazing-fast-interpreter](https://github.com/IsaacShel
 - All types must be typedef'd (no bare struct declarations are allowed)
 - There are no signed types (although they could be added in the future)
 - There are no `signed`/`unsigned` keywords
-- There are no 64-bit types, only `u0`/`void`, `u8`/`char`, `u16`/`short`/`int`, and `u32`/`int`
+- There are no 64-bit types, only `u0`/`void`, `u8`/`char`, `u16`/`short`/`int`, and `u32`/`long`
 - There are no dynamically sized arrays, all arrays have a compile-time known size.
 - Strings are char arrays e.g. `u8[128]` or `char[128]`
 - Arrays are allowed to grow in order to coalsce to bigger arrays of the same type (additional elements are zero initialized)
